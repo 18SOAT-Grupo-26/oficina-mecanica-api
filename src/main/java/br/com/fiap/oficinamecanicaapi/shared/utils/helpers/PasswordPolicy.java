@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.shared.utils.helpers;
 
-import br.com.vittavetgo.clinicmanagement.shared.exceptions.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
