@@ -60,8 +60,10 @@ public class IdentityPayload {
         if (contactRepository.findByContactEmail(identityRequest.contact().email()).isPresent()) {
             throw new ApplicationException(409, "Email already in use");
         }
-        if (identityRequest.cpf() != null && !identityRequest.cpf().isBlank()
-                && identityRepository.existsByCpf(identityRequest.cpf().trim())) {
+
+        String docDigits = CpfValidator.digits(identityRequest.cpf());
+        if (docDigits != null && !docDigits.isBlank()
+                && identityRepository.existsByCpf(docDigits)) {
             throw new ApplicationException(409, "Document already in use by another user");
         }
 
