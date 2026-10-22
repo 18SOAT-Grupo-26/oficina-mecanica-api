@@ -11,7 +11,21 @@ public record Pagina<T>(
         long total
 ) {
 
+    public static final int PAGINA_PADRAO = 0;
+    public static final int TAMANHO_PADRAO = 20;
+    public static final int TAMANHO_MAXIMO = 100;
+
     public <R> Pagina<R> map(Function<T, R> conversor) {
         return new Pagina<>(itens.stream().map(conversor).toList(), pagina, tamanho, total);
+    }
+
+    /** Página ausente ou negativa vira a primeira. */
+    public static int paginaValida(Integer pagina) {
+        return pagina == null || pagina < 0 ? PAGINA_PADRAO : pagina;
+    }
+
+    /** Tamanho ausente ou menor que 1 usa o padrão; acima do máximo é limitado. */
+    public static int tamanhoValido(Integer tamanho) {
+        return tamanho == null || tamanho < 1 ? TAMANHO_PADRAO : Math.min(tamanho, TAMANHO_MAXIMO);
     }
 }
