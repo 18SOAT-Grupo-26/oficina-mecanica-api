@@ -10,10 +10,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 
 public interface PecaInsumoAPI {
 
@@ -25,7 +21,6 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "503", description = "Service unavailable", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "504", description = "Gateway timeout", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @PostMapping
     ResponseEntity<PecaInsumoResponse> criar(PecaInsumoRequest request) throws ApplicationException;
 
     @Operation(summary = "Listar insumos", tags = "Insumo")
@@ -36,7 +31,6 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "503", description = "Service unavailable", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "504", description = "Gateway timeout", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @GetMapping
     ResponseEntity<Pagina<PecaInsumoResponse>> listar(Integer page, Integer size) throws ApplicationException;
 
     @Operation(summary = "Buscar insumo por id", tags = "Insumo")
@@ -44,7 +38,6 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
     @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @GetMapping("/{id}")
     ResponseEntity<PecaInsumoResponse> buscarPorId(Long id) throws ApplicationException;
 
 
@@ -55,7 +48,6 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Nome de insumo já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @PutMapping("/{id}")
     ResponseEntity<PecaInsumoResponse> atualizar(Long id, PecaInsumoRequest request) throws ApplicationException;
 
     @Operation(summary = "Excluir insumo", tags = "Insumo")
@@ -63,6 +55,5 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
     @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @DeleteMapping("/{id}")
     ResponseEntity<Void> excluir(Long id) throws ApplicationException;
 }

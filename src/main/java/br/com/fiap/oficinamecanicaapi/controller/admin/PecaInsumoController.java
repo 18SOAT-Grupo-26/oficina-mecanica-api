@@ -5,24 +5,16 @@ import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumoRes
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecaInsumo.PecaInsumoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 
 @RestController
 @RequestMapping("/insumos")
 @PreAuthorize("hasRole('MANAGER')")
 public class PecaInsumoController implements PecaInsumoAPI {
-    private static final Logger log = LoggerFactory.getLogger(PecaInsumoController.class);
-
     private final PecaInsumoUseCasePortIn useCase;
 
     public PecaInsumoController(PecaInsumoUseCasePortIn useCase) {
@@ -30,27 +22,32 @@ public class PecaInsumoController implements PecaInsumoAPI {
     }
 
     @Override
+    @PostMapping
     public ResponseEntity<PecaInsumoResponse> criar(@RequestBody PecaInsumoRequest request) throws ApplicationException {
         return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
     }
 
     @Override
+    @GetMapping
     public ResponseEntity<Pagina<PecaInsumoResponse>> listar(@RequestParam(required = false) Integer page,
                                                              @RequestParam(required = false) Integer size) {
         return ResponseEntity.ok(useCase.listar(page, size));
     }
 
     @Override
+    @GetMapping("/{id}")
     public ResponseEntity<PecaInsumoResponse> buscarPorId(@PathVariable Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.buscarPorId(id));
     }
 
     @Override
+    @PutMapping("/{id}")
     public ResponseEntity<PecaInsumoResponse> atualizar(@PathVariable Long id, @RequestBody PecaInsumoRequest request) throws ApplicationException {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable Long id) throws ApplicationException {
         useCase.excluir(id);
         return ResponseEntity.noContent().build();
