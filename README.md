@@ -1,43 +1,40 @@
 # Oficina Mecânica API
 
-## Rodando com Docker
+API para gestão de oficina mecânica, construída com Java 25 e Spring Boot 4, usando PostgreSQL como banco de dados.
 
-### Pré-requisitos
+## Pré-requisitos
 
-- [Docker](https://docs.docker.com/get-docker/) com Docker Compose
+- [Git](https://git-scm.com/downloads)
+- [Docker](https://docs.docker.com/get-docker/)
 
-### 1. Configurar as variáveis de ambiente
-
-Copie o arquivo de exemplo e ajuste os valores:
-
-```bash
-cp .env.example .env
-```
-
-| Variável            | Descrição                                       |
-|---------------------|-------------------------------------------------|
-| `POSTGRES_DB`       | Nome do banco de dados                          |
-| `POSTGRES_USER`     | Usuário do Postgres                             |
-| `POSTGRES_PASSWORD` | Senha do Postgres                               |
-| `API_SECRET`        | Chave de assinatura do JWT (base64, mín. 64 bytes) |
-
-### 2. Subir os containers
+## Rodando a aplicação
 
 ```bash
+git clone git@github.com:18SOAT-Grupo-26/oficina-mecanica-api.git
+cd oficina-mecanica-api
 docker compose up -d --build
 ```
 
-Isso sobe o Postgres (`db`) e a API (`api`). A API só inicia depois que o banco estiver saudável.
+Isso sobe o Postgres e a API em containers. A API só inicia depois que o banco estiver saudável. As configurações de desenvolvimento já estão definidas no `docker-compose.yml`.
 
-### 3. Acessar
+| Serviço | Container | Porta |
+|---|---|---|
+| `db` | `oficina-mecanica-db` | 5432 |
+| `api` | `oficina-mecanica-api` | 8081 |
+
+Depois de alterar o código, rode `docker compose up -d --build` novamente para reconstruir a imagem.
+
+## Acessar
 
 - API: http://localhost:8081/api/v1
 - Swagger: http://localhost:8081/api/v1/documentation
+- Health check: http://localhost:8081/api/v1/actuator/health
 
-### Comandos úteis
+## Comandos úteis
 
 ```bash
 docker compose logs -f api   # acompanhar logs da API
+docker compose ps            # status dos containers
 docker compose down          # parar os containers
 docker compose down -v       # parar e apagar os dados do banco
 ```
