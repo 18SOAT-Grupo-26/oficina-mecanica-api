@@ -78,6 +78,28 @@ docker run --rm -v "$PWD":/app -w /app maven:3-amazoncorretto-25-alpine mvn test
 
 Com Java 25 e Maven instalados, basta rodar `mvn test`.
 
+## Qualidade de código e cobertura (Sonar + JaCoCo)
+
+`mvn verify` roda os testes e gera o relatório de cobertura do JaCoCo em `target/site/jacoco/index.html` (o XML em `target/site/jacoco/jacoco.xml` é o que o Sonar lê).
+
+### SonarCloud (automático)
+
+O workflow `.github/workflows/ci.yml` roda build e testes em todo push e PR para `main` e `develop`. Quando o secret `SONAR_TOKEN` está configurado no repositório, o workflow também envia a análise ao SonarCloud (organização `18soat-grupo-26`, projeto `18SOAT-Grupo-26_oficina-mecanica-api`). O resultado e o quality gate aparecem no próprio PR.
+
+### SonarQube local (antes de abrir o PR)
+
+```bash
+docker compose -f docker-compose.sonar.yml up -d   # SonarQube em http://localhost:9000 (login inicial admin/admin)
+```
+
+No SonarQube, gere um token em *My Account > Security* e rode a análise:
+
+```bash
+mvn verify sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.token=<seu-token>
+```
+
+O token é pessoal: não o commite nem o coloque em arquivos do projeto.
+
 ## Acesso ao Swagger / documentação da API
 
 Com a aplicação rodando, acesse http://localhost:8081/api/v1/documentation.
