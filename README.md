@@ -1,13 +1,43 @@
 # Oficina Mecânica API
 
-API para gestão de oficina mecânica, construída com Java 25 e Spring Boot 4, usando PostgreSQL como banco de dados.
+## Objetivo do projeto
+
+API para gestão de oficina mecânica.
+
+## Descrição resumida da solução
+
+Funcionalidades disponíveis até o momento:
+
+- Autenticação de usuários com JWT (cadastro, login e validação de token)
+- CRUD de clientes, com validação de CPF e CNPJ (restrito ao perfil `ADMINISTRATOR`)
+- Cadastro de peças e insumos
+
+## Arquitetura utilizada
+
+Arquitetura hexagonal (ports and adapters):
+
+- `core` concentra o domínio, os casos de uso e as portas de entrada (`port/in`) e saída (`port/out`)
+- `controller` é o adapter de entrada (REST)
+- `infrastructure` é o adapter de saída (persistência com JPA) e as configurações de segurança e documentação
+
+## Tecnologias utilizadas
+
+- Java 25
+- Spring Boot 4 (Web MVC, Data JPA, Validation, Security, Actuator)
+- PostgreSQL 17
+- JWT (jjwt)
+- MapStruct e Lombok
+- springdoc-openapi (Swagger UI)
+- Micrometer com Prometheus
+- JUnit 5 e Mockito
+- Docker e Docker Compose
 
 ## Pré-requisitos
 
 - [Git](https://git-scm.com/downloads)
 - [Docker](https://docs.docker.com/get-docker/)
 
-## Rodando a aplicação
+## Instruções para execução
 
 ```bash
 git clone git@github.com:18SOAT-Grupo-26/oficina-mecanica-api.git
@@ -24,13 +54,12 @@ Isso sobe o Postgres e a API em containers. A API só inicia depois que o banco 
 
 Depois de alterar o código, rode `docker compose up -d --build` novamente para reconstruir a imagem.
 
-## Acessar
+Endereços:
 
 - API: http://localhost:8081/api/v1
-- Swagger: http://localhost:8081/api/v1/documentation
 - Health check: http://localhost:8081/api/v1/actuator/health
 
-## Comandos úteis
+Comandos úteis:
 
 ```bash
 docker compose logs -f api   # acompanhar logs da API
@@ -38,3 +67,59 @@ docker compose ps            # status dos containers
 docker compose down          # parar os containers
 docker compose down -v       # parar e apagar os dados do banco
 ```
+
+## Instruções para execução dos testes
+
+Os testes não dependem do banco. Para rodá-los sem instalar Java ou Maven localmente:
+
+```bash
+docker run --rm -v "$PWD":/app -w /app maven:3-amazoncorretto-25-alpine mvn test
+```
+
+Com Java 25 e Maven instalados, basta rodar `mvn test`.
+
+## Acesso ao Swagger / documentação da API
+
+Com a aplicação rodando, acesse http://localhost:8081/api/v1/documentation.
+
+## Decisão e justificativa do banco de dados escolhido
+
+_A definir._
+
+## Usuários, credenciais de demonstração e autenticação
+
+A autenticação usa JWT. O fluxo é:
+
+1. Cadastrar um usuário em `POST /api/v1/auth/register`
+2. Fazer login em `POST /api/v1/auth/login` informando `identifier` e `password`; a resposta traz o token
+3. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`
+
+Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`.
+
+Credenciais de demonstração: _a definir._
+
+## Estrutura dos principais diretórios
+
+```
+src/main/java/br/com/fiap/oficinamecanicaapi
+├── controller          # endpoints REST (admin, auth, cliente)
+├── core
+│   ├── domain          # modelos e entidades de domínio
+│   ├── port
+│   │   ├── in          # portas de entrada (casos de uso)
+│   │   └── out         # portas de saída (persistência)
+│   └── usecase         # implementação dos casos de uso
+├── infrastructure
+│   ├── config          # segurança (JWT) e documentação (OpenAPI)
+│   └── persistence     # repositórios e adapters JPA
+└── shared              # exceções, handler global e utilitários
+src/test/java           # testes unitários e de controller
+```
+
+## Documentação DDD
+
+_A definir._
+
+## Vídeo da entrega
+
+_A definir._
