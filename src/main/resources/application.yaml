@@ -2,9 +2,9 @@ spring:
   application:
     name: "${APPLICATION_NAME:oficina-mecanica-api}"
   datasource:
-    url: ${DATASOURCE_HOST:jdbc:postgresql://localhost}:${DATASOURCE_PORT:5432}/
+    url: ${DATASOURCE_HOST:jdbc:postgresql://localhost:5432/oficina}
     username: ${DATASOURCE_USERNAME:}
-    password: ${DATASOURCE_PASSWORD:}
+    password: ${DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
 server:
@@ -35,7 +35,7 @@ logging:
 
 # Linha 1 — adicionar $ antes da chave
 api:
-  secret: "${API_SECRET:eVglP1OZPeWfkZ4ulC4dNfTHytY21dJXaP7jjNrbHmiNsup5GpevNl7W40Br5AXwpOS5CjdG/wkaJmXsQ6YFOQ==}"
+  secret: "${API_SECRET}"
 
 # Linha 2 — remover o espaço
 springdoc:

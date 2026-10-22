@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: oficina-mecanica-db
+    environment:
+      POSTGRES_DB: oficina
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d oficina"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    container_name: oficina-mecanica-api
+    ports:
+      - "8081:8081"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATASOURCE_HOST: jdbc:postgresql://db:5432/oficina
+      DATASOURCE_USERNAME: postgres
+      DATASOURCE_PASSWORD: postgres
+      API_SECRET: 7hWsr9pC7/PMXCiBpB9inV316HGatXwIF5R8rt/1b/9XKjrUxTbGhs9ABJZwRvM03ye44zgLP7lUumCXuhgj0g==
+
+volumes:
+  pgdata:
