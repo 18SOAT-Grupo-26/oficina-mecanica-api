@@ -6,8 +6,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -49,6 +57,28 @@ public class HandlerException {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errorBody);
     }
 
+    /** Bean Validation (@Valid) — informa só o nome do campo, nunca o valor recebido. */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorTemplate> handleInvalidArgument(MethodArgumentNotValidException e) {
+        String campos = e.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getField)
+                .distinct()
+                .sorted()
+                .collect(Collectors.joining(", "));
+        return buildError(HttpStatus.BAD_REQUEST, "Campos inválidos: " + campos);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorTemplate> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        return buildError(HttpStatus.BAD_REQUEST, "Parâmetro inválido: " + e.getName());
+    }
+
+    /** @PreAuthorize negado; sem este handler o genérico abaixo devolveria 500. */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorTemplate> handleAccessDenied(AccessDeniedException e) {
+        return buildError(HttpStatus.FORBIDDEN, "Acesso negado");
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorTemplate> handleGenericException(Exception e) {
 
@@ -62,5 +92,16 @@ public class HandlerException {
                 .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorBody);
+    }
+
+    private static ResponseEntity<ErrorTemplate> buildError(HttpStatus status, String message) {
+        ErrorTemplate errorBody = ErrorTemplate.builder()
+                .errorCode(status.value())
+                .message(message)
+                .timestamp(LocalDateTime.now())
+                .traceId(UUID.randomUUID().toString())
+                .build();
+
+        return ResponseEntity.status(status).body(errorBody);
     }
 }
