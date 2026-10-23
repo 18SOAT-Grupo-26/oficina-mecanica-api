@@ -1,0 +1,44 @@
+#!/bin/sh
+# Pré-validação antes do push: testes + cobertura (JaCoCo, com mínimo nos domínios críticos).
+# Ativação (uma vez por clone): git config core.hooksPath .githooks
+# Emergência: git push --no-verify (o CI roda a mesma validação no PR).
+# Argumentos extras para o Maven: PRE_PUSH_MVN_ARGS="-Djacoco.minimo.linhas=0.90" git push
+
+set -u
+
+cd "$(git rev-parse --show-toplevel)" || exit 1
+
+# "clean" evita que classes de outra branch, esquecidas em target/, inflem testes e cobertura
+GOALS="-B clean verify ${PRE_PUSH_MVN_ARGS:-}"
+
+if command -v mvn >/dev/null 2>&1; then
+    RUN="mvn $GOALS"
+elif [ -x ./mvnw ]; then
+    RUN="./mvnw $GOALS"
+elif command -v docker >/dev/null 2>&1; then
+    RUN="docker run --rm -v $PWD:/app -w /app maven:3-amazoncorretto-25-alpine mvn $GOALS"
+else
+    echo "[pre-push] Maven nem Docker encontrados; instale um deles ou use git push --no-verify." >&2
+    exit 1
+fi
+
+# log fora de target/, que é apagado pelo clean
+LOG="$(git rev-parse --git-dir)/pre-push.log"
+
+echo "[pre-push] Rodando testes e cobertura antes do push (log em $LOG)..."
+if ! $RUN >"$LOG" 2>&1; then
+    # só o que explica a falha: testes quebrados, regras de cobertura violadas e erros do Maven
+    grep -E 'Tests run:.*(Failures|Errors): [1-9]|<<< (FAILURE|ERROR)|Rule violated|^\[ERROR\] [^ ]' "$LOG" | head -n 30 >&2
+    echo "" >&2
+    echo "[pre-push] Push bloqueado: testes falharam ou a cobertura de um domínio crítico ficou abaixo do mínimo." >&2
+    echo "[pre-push] Log completo em $LOG; cobertura em target/site/jacoco/index.html." >&2
+    exit 1
+fi
+
+CSV=target/site/jacoco/jacoco.csv
+if [ -f "$CSV" ]; then
+    # colunas 8 e 9 = LINE_MISSED e LINE_COVERED
+    awk -F, 'NR > 1 { m += $8; c += $9 } END { if (m + c > 0) printf "[pre-push] OK: cobertura total de linhas %.1f%%\n", 100 * c / (m + c) }' "$CSV"
+else
+    echo "[pre-push] OK"
+fi

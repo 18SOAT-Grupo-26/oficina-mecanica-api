@@ -13,6 +13,14 @@
 	<version>1.0.0</version>
 	<properties>
 		<java.version>25</java.version>
+		<jacoco.version>0.8.15</jacoco.version>
+		<!-- cobertura mínima de linhas por pacote nos domínios críticos (regra "check" do JaCoCo) -->
+		<jacoco.minimo.linhas>0.80</jacoco.minimo.linhas>
+		<sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
+		<!-- Sonar: mesma chave no SonarCloud (CI) e no SonarQube local; host, organização e token vêm por -D/variável de ambiente -->
+		<sonar.projectKey>18SOAT-Grupo-26_oficina-mecanica-api</sonar.projectKey>
+		<sonar.projectName>oficina-mecanica-api</sonar.projectName>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -155,7 +163,65 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>${jacoco.version}</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<!-- falha o build se um domínio crítico ficar abaixo do mínimo; ampliar os includes
+					     conforme OS, orçamento e estoque ganharem testes -->
+					<execution>
+						<id>check</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<rule>
+									<element>PACKAGE</element>
+									<includes>
+										<include>br.com.fiap.oficinamecanicaapi.core.domain.cliente*</include>
+										<include>br.com.fiap.oficinamecanicaapi.core.usecase.cliente*</include>
+										<include>br.com.fiap.oficinamecanicaapi.core.domain.veiculo*</include>
+										<include>br.com.fiap.oficinamecanicaapi.core.usecase.veiculo*</include>
+									</includes>
+									<limits>
+										<limit>
+											<counter>LINE</counter>
+											<value>COVEREDRATIO</value>
+											<minimum>${jacoco.minimo.linhas}</minimum>
+										</limit>
+									</limits>
+								</rule>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.sonarsource.scanner.maven</groupId>
+					<artifactId>sonar-maven-plugin</artifactId>
+					<version>${sonar-maven-plugin.version}</version>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 </project>
