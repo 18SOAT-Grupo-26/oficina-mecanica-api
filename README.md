@@ -24,7 +24,7 @@ Arquitetura hexagonal (ports and adapters):
 
 - Java 25
 - Spring Boot 4 (Web MVC, Data JPA, Validation, Security, Actuator)
-- PostgreSQL 17
+- PostgreSQL 18
 - JWT (jjwt)
 - MapStruct e Lombok
 - springdoc-openapi (Swagger UI)
@@ -124,7 +124,7 @@ Com a aplicação rodando, acesse http://localhost:8081/api/v1/documentation.
 
 ## Decisão e justificativa do banco de dados escolhido
 
-_A definir._
+Usamos o **PostgreSQL 18**, rodando em container via Docker Compose. Os dados da oficina são relacionais (a OS reúne cliente, veículo, serviços e peças), e regras como a reserva de estoque precisam de transações ACID e de integridade garantida pelo banco (chaves estrangeiras e constraints `UNIQUE` para CPF/CNPJ e placa). Pelo teorema PACELC, precisamos de um banco que priorize consistência (CP/EC). Como a aplicação é um monólito com um único banco, não precisamos de um banco distribuído. Além disso, o PostgreSQL é open source e o time já tem familiaridade com ele. Os detalhes e as alternativas avaliadas estão na [ADR 002](docs/adr/0002-escolha-do-banco-de-dados.md).
 
 ## Usuários, credenciais de demonstração e autenticação
 
