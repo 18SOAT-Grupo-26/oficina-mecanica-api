@@ -100,6 +100,24 @@ mvn verify sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.token=<seu
 
 O token é pessoal: não o commite nem o coloque em arquivos do projeto.
 
+### Meta de cobertura nos domínios críticos
+
+O `mvn verify` falha se algum pacote de domínio ou de caso de uso de `cliente` ou `veiculo` ficar abaixo de **80% de linhas cobertas** (regra `check` do JaCoCo no `pom.xml`, propriedade `jacoco.minimo.linhas`). Novos domínios críticos (OS, orçamento, estoque) entram na regra conforme ganham testes.
+
+### Pré-validação antes do push
+
+O hook `.githooks/pre-push` roda `mvn clean verify` (testes + cobertura) antes de cada `git push` e bloqueia o envio se algo falhar. Ative uma vez por clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+- Leva cerca de 10 a 60 segundos; o log completo fica em `.git/pre-push.log`.
+- Usa `mvn`; sem Maven instalado, usa a imagem Docker `maven:3-amazoncorretto-25-alpine`.
+- Em emergência, `git push --no-verify` pula o hook (o CI roda a mesma validação no PR).
+
+Para ver os problemas do Sonar enquanto programa, instale a extensão **SonarQube for IDE** e conecte-a ao SonarCloud (*connected mode*, organização `18soat-grupo-26`, projeto `18SOAT-Grupo-26_oficina-mecanica-api`). Ela aplica as mesmas regras do quality gate direto no editor.
+
 ## Acesso ao Swagger / documentação da API
 
 Com a aplicação rodando, acesse http://localhost:8081/api/v1/documentation.
