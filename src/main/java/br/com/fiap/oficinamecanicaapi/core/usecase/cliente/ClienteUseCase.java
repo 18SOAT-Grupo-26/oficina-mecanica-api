@@ -18,10 +18,6 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
 
     private static final Logger log = LoggerFactory.getLogger(ClienteUseCase.class);
 
-    static final int PAGINA_PADRAO = 0;
-    static final int TAMANHO_PADRAO = 20;
-    static final int TAMANHO_MAXIMO = 100;
-
     private final ClientePortOut clientePortOut;
     private final ClienteMapper clienteMapper;
 
@@ -57,9 +53,8 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
 
     @Override
     public Pagina<ClienteResponse> listar(Integer pagina, Integer tamanho) {
-        int paginaValida = pagina == null || pagina < 0 ? PAGINA_PADRAO : pagina;
-        int tamanhoValido = tamanho == null || tamanho < 1 ? TAMANHO_PADRAO : Math.min(tamanho, TAMANHO_MAXIMO);
-        return clientePortOut.listarAtivos(paginaValida, tamanhoValido).map(clienteMapper::toResponse);
+        return clientePortOut.listarAtivos(Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho))
+                .map(clienteMapper::toResponse);
     }
 
     @Override
