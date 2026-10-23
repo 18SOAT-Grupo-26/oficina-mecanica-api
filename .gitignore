@@ -36,3 +36,6 @@ build/
 .DS_Store
 
 ### Secrets ###
+
+### Local notes ###
+temp/
