@@ -8,12 +8,11 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.pecaInsumo.PecaInsumoUseCaseP
 import br.com.fiap.oficinamecanicaapi.core.port.out.pecaInsumo.PecaInsumoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.pecaInsumo.mapper.PecaInsumoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.utils.NormalizadorNome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.text.Normalizer;
-import java.util.Locale;
 
 @Service
 public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
@@ -39,7 +38,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
     @Override
     public PecaInsumoResponse criar(PecaInsumoRequest request) throws ApplicationException {
         validarCampos(request);
-        String nomeNormalizado = normalizarNome(request.nome());
+        String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
         validarNomeDisponivel(nomeNormalizado);
 
         PecaInsumoEntity entity = new PecaInsumoEntity();
@@ -67,7 +66,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
         PecaInsumoEntity entity = buscarInsumo(id);
         validarCampos(request);
 
-        String nomeNormalizado = normalizarNome(request.nome());
+        String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
         if (!nomeNormalizado.equals(entity.getNomeNormalizado())) {
             validarNomeDisponivel(nomeNormalizado);
         }
@@ -140,14 +139,5 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
         entity.setQuantidade(request.quantidade());
         entity.setReservado(request.reservado() == null ? 0 : request.reservado());
         entity.setPreco(request.preco().setScale(PRECO_MAX_CASAS_DECIMAIS));
-    }
-
-    /** Ignora acentos, maiúsculas/minúsculas e espaços extras. */
-    private static String normalizarNome(String nome) {
-        return Normalizer.normalize(nome.trim(), Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .trim()
-                .replaceAll("\\s+", " ")
-                .toLowerCase(Locale.ROOT);
     }
 }

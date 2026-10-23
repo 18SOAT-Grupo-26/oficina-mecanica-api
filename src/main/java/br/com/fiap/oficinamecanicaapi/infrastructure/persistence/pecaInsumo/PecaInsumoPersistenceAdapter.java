@@ -10,6 +10,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -31,6 +33,12 @@ public class PecaInsumoPersistenceAdapter implements PecaInsumoPortOut {
     @Transactional(readOnly = true)
     public Optional<PecaInsumoEntity> buscarPorId(Long id) {
         return repository.findById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PecaInsumoEntity> buscarPorIds(Collection<Long> ids) {
+        return repository.findAllById(ids);
     }
 
     @Override

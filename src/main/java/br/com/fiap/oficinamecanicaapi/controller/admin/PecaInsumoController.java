@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/insumos")
-@PreAuthorize("hasRole('MANAGER')")
+@PreAuthorize("hasRole('MANAGER') or hasRole('ADMINISTRATOR')")
 public class PecaInsumoController implements PecaInsumoAPI {
     private final PecaInsumoUseCasePortIn useCase;
 
