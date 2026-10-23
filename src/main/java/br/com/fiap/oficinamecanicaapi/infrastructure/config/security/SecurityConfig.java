@@ -40,8 +40,17 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
 
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest()
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/api-docs-personalized/**",
+                                "/documentation/**")
                         .permitAll()
+                        .anyRequest()
+                        .authenticated()
                 )
 
                 .sessionManagement(session ->
