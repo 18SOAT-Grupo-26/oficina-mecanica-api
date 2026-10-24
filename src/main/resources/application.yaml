@@ -6,6 +6,11 @@ spring:
     username: ${DATASOURCE_USERNAME:}
     password: ${DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      # o schema vem só das migrations do Flyway (src/main/resources/db/migration);
+      # o Hibernate apenas confere na subida se as entidades batem com as tabelas
+      ddl-auto: validate
 
 server:
   port: ${CLINIC_MANAGEMENT_PORT:8081}
