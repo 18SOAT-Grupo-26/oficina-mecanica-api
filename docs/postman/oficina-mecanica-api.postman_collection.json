@@ -1,0 +1,1219 @@
+{
+  "info": {
+    "name": "Oficina Mecânica API",
+    "description": "Endpoints implementados da API da oficina mecânica.\n\n**Como usar**\n1. Suba a aplicação (`docker compose up`).\n2. Rode **Auth → Cadastrar usuário** e **Auth → Login**: o token fica salvo em `{{token}}` e é enviado como Bearer nas demais pastas.\n3. As requisições de cadastro salvam os ids (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`) usados pelas seguintes.\n\nA collection inteira pode ser executada no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução para não violar as constraints UNIQUE.\n\nOrdem de serviço e acompanhamento da OS ainda não têm endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "function gerarCpf() {",
+          "    const n = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));",
+          "    const dv = (base) => {",
+          "        const soma = base.reduce((acc, d, i) => acc + d * (base.length + 1 - i), 0);",
+          "        const resto = (soma * 10) % 11;",
+          "        return resto === 10 ? 0 : resto;",
+          "    };",
+          "    n.push(dv(n));",
+          "    n.push(dv(n));",
+          "    return n.join(\"\");",
+          "}",
+          "",
+          "function gerarPlaca() {",
+          "    const letra = () => String.fromCharCode(65 + Math.floor(Math.random() * 26));",
+          "    const digito = () => Math.floor(Math.random() * 10);",
+          "    return letra() + letra() + letra() + digito() + letra() + digito() + digito();",
+          "}",
+          "",
+          "pm.variables.set(\"sufixo\", Date.now().toString(36));",
+          "pm.variables.set(\"cpfGerado\", gerarCpf());",
+          "pm.variables.set(\"placaGerada\", gerarPlaca());"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081/api/v1"
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": "Oficina@2026"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "pecaInsumoId",
+      "value": ""
+    },
+    {
+      "key": "servicoId",
+      "value": ""
+    },
+    {
+      "key": "clienteId",
+      "value": ""
+    },
+    {
+      "key": "clienteDocumento",
+      "value": ""
+    },
+    {
+      "key": "veiculoId",
+      "value": ""
+    },
+    {
+      "key": "veiculoPlaca",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Cadastro, login e validação do token. Rotas públicas (`/auth/**`).",
+      "auth": {
+        "type": "noauth"
+      },
+      "item": [
+        {
+          "name": "Cadastrar usuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Cadastra identidade, contato, endereço e usuário numa transação só. O perfil (`role`) deve existir: `ADMINISTRATOR`, `MANAGER` ou `OPERATOR`. O script gera username, e-mail e CPF únicos e guarda as credenciais para o login.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identity\": {\n    \"fullName\": \"Administrador da Oficina\",\n    \"givenName\": \"Admin\",\n    \"cpf\": \"{{cpfGerado}}\",\n    \"rg\": \"123456789\",\n    \"dateOfBirth\": \"1990-05-20\",\n    \"contact\": {\n      \"phoneNumber\": \"11987654321\",\n      \"email\": \"{{username}}@oficina.com\"\n    },\n    \"address\": {\n      \"street\": \"Rua das Oficinas\",\n      \"number\": \"100\",\n      \"district\": \"Centro\",\n      \"city\": \"São Paulo\",\n      \"state\": \"SP\",\n      \"zipCode\": \"01001000\",\n      \"complement\": \"Galpão 2\"\n    }\n  },\n  \"user\": {\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\",\n    \"changeRequired\": false,\n    \"role\": \"ADMINISTRATOR\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"username\", \"admin_\" + pm.variables.get(\"sufixo\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Gera o token JWT. `identifier` aceita username ou e-mail. O script guarda o token em `{{token}}`, usado pelas demais pastas.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identifier\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "const token = pm.response.json().token || \"\";",
+                  "pm.collectionVariables.set(\"token\", token.replace(/^Bearer\\s+/, \"\"));",
+                  "pm.test(\"Token recebido\", function () {",
+                  "    pm.expect(pm.collectionVariables.get(\"token\")).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Validar token",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/validate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "validate"
+              ]
+            },
+            "description": "Retorna `true` se o token enviado no header `Authorization` for válido."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Peças e insumos",
+      "description": "Perfis: `ADMINISTRATOR` ou `MANAGER`.",
+      "item": [
+        {
+          "name": "Cadastrar peça/insumo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/insumos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "insumos"
+              ]
+            },
+            "description": "`reservado` é opcional (padrão 0) e deve ficar entre 0 e `quantidade`. O nome é único.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Filtro de óleo {{sufixo}}\",\n  \"descricao\": \"Filtro de óleo para motores 1.0 a 2.0\",\n  \"quantidade\": 50,\n  \"reservado\": 0,\n  \"preco\": 39.9\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set(\"pecaInsumoId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar peças/insumos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/insumos?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "insumos"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (começa em 0). Padrão: 0"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Itens por página. Padrão: 20, máximo: 100"
+                }
+              ]
+            },
+            "description": "Lista paginada, ordenada por id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar peça/insumo por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/insumos/{{pecaInsumoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "insumos",
+                "{{pecaInsumoId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar peça/insumo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/insumos/{{pecaInsumoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "insumos",
+                "{{pecaInsumoId}}"
+              ]
+            },
+            "description": "Substitui todos os campos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Filtro de óleo {{sufixo}}\",\n  \"descricao\": \"Filtro de óleo para motores 1.0 a 2.0\",\n  \"quantidade\": 80,\n  \"reservado\": 0,\n  \"preco\": 42.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Serviços",
+      "description": "Perfil: `ADMINISTRATOR`. Um serviço referencia as peças e insumos que usa.",
+      "item": [
+        {
+          "name": "Cadastrar serviço",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servico"
+              ]
+            },
+            "description": "`pecasInsumoIds` deve conter ids de peças existentes. O nome é único.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Troca de óleo {{sufixo}}\",\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"preco\": 150.0,\n  \"pecasInsumoIds\": [\n    {{pecaInsumoId}}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set(\"servicoId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar serviços",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/servico?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servico"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (começa em 0). Padrão: 0"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Itens por página. Padrão: 20, máximo: 100"
+                }
+              ]
+            },
+            "description": "Lista paginada."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar serviço por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/servico/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servico",
+                "{{servicoId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar serviço",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/servico/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servico",
+                "{{servicoId}}"
+              ]
+            },
+            "description": "Substitui todos os campos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Troca de óleo {{sufixo}}\",\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"preco\": 180.0,\n  \"pecasInsumoIds\": [\n    {{pecaInsumoId}}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Clientes",
+      "description": "Perfil: `ADMINISTRATOR`. `documento` aceita CPF ou CNPJ (numérico ou alfanumérico), com ou sem máscara.",
+      "item": [
+        {
+          "name": "Cadastrar cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ]
+            },
+            "description": "O script gera um CPF válido e o guarda em `{{clienteDocumento}}`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria da Silva\",\n  \"documento\": \"{{clienteDocumento}}\",\n  \"email\": \"maria.{{sufixo}}@email.com\",\n  \"telefone\": \"11912345678\",\n  \"endereco\": {\n    \"logradouro\": \"Av. Paulista\",\n    \"numero\": \"1000\",\n    \"bairro\": \"Bela Vista\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310100\",\n    \"complemento\": \"Apto 12\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"clienteDocumento\", pm.variables.get(\"cpfGerado\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set(\"clienteId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar clientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (começa em 0). Padrão: 0"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Itens por página. Padrão: 20, máximo: 100"
+                }
+              ]
+            },
+            "description": "Lista paginada de clientes ativos."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar cliente por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{clienteId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar cliente por documento",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/documento/{{clienteDocumento}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "documento",
+                "{{clienteDocumento}}"
+              ]
+            },
+            "description": "CPF ou CNPJ, com ou sem máscara."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar cliente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{clienteId}}"
+              ]
+            },
+            "description": "Substitui todos os campos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria da Silva\",\n  \"documento\": \"{{clienteDocumento}}\",\n  \"email\": \"maria.{{sufixo}}@email.com\",\n  \"telefone\": \"11999998888\",\n  \"endereco\": {\n    \"logradouro\": \"Av. Paulista\",\n    \"numero\": \"1000\",\n    \"bairro\": \"Bela Vista\",\n    \"cidade\": \"São Paulo\",\n    \"estado\": \"SP\",\n    \"cep\": \"01310100\",\n    \"complemento\": \"Apto 12\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Veículos",
+      "description": "Perfil: `ADMINISTRATOR`. Todo veículo pertence a um cliente ativo.",
+      "item": [
+        {
+          "name": "Cadastrar veículo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos"
+              ]
+            },
+            "description": "Placa no padrão antigo (`ABC1234`) ou Mercosul (`ABC1D23`). Ano entre 1900 e o ano seguinte ao atual. O script gera uma placa e a guarda em `{{veiculoPlaca}}`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"{{veiculoPlaca}}\",\n  \"marca\": \"Volkswagen\",\n  \"modelo\": \"Gol\",\n  \"ano\": 2020,\n  \"clienteId\": {{clienteId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"veiculoPlaca\", pm.variables.get(\"placaGerada\"));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set(\"veiculoId\", pm.response.json().id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar veículos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos"
+              ],
+              "query": [
+                {
+                  "key": "clienteId",
+                  "value": "{{clienteId}}",
+                  "description": "(opcional, desativado) Filtra pelos veículos do cliente",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Página (começa em 0). Padrão: 0"
+                },
+                {
+                  "key": "size",
+                  "value": "20",
+                  "description": "Itens por página. Padrão: 20, máximo: 100"
+                }
+              ]
+            },
+            "description": "Lista paginada de veículos ativos. Filtro opcional por cliente."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar veículo por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "{{veiculoId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar veículo por placa",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/placa/{{veiculoPlaca}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "placa",
+                "{{veiculoPlaca}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar veículo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "{{veiculoId}}"
+              ]
+            },
+            "description": "Substitui todos os campos.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"placa\": \"{{veiculoPlaca}}\",\n  \"marca\": \"Volkswagen\",\n  \"modelo\": \"Gol 1.6\",\n  \"ano\": 2021,\n  \"clienteId\": {{clienteId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Exclusões",
+      "description": "Fica por último para o Runner: o veículo depende do cliente e o serviço depende da peça. Cliente e veículo são desativados (delete lógico).",
+      "item": [
+        {
+          "name": "Desativar veículo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "veiculos",
+                "{{veiculoId}}"
+              ]
+            },
+            "description": "Delete lógico."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Desativar cliente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clientes",
+                "{{clienteId}}"
+              ]
+            },
+            "description": "Delete lógico."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir serviço",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/servico/{{servicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "servico",
+                "{{servicoId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Excluir peça/insumo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/insumos/{{pecaInsumoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "insumos",
+                "{{pecaInsumoId}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Observabilidade",
+      "description": "Rotas públicas do Actuator.",
+      "auth": {
+        "type": "noauth"
+      },
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Métricas Prometheus",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/prometheus",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "actuator",
+                "prometheus"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

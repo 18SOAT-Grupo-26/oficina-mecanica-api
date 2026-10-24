@@ -140,6 +140,16 @@ Para ver os problemas do Sonar enquanto programa, instale a extensão **SonarQub
 
 Com a aplicação rodando, acesse http://localhost:8081/api/v1/documentation.
 
+### Collection do Postman
+
+A collection [`docs/postman/oficina-mecanica-api.postman_collection.json`](docs/postman/oficina-mecanica-api.postman_collection.json) traz todos os endpoints implementados (auth, peças e insumos, serviços, clientes, veículos e actuator). Para usar:
+
+1. No Postman, **Import** → selecione o arquivo.
+2. Rode **Auth → Cadastrar usuário** e depois **Auth → Login**. O token fica salvo na variável `token` e é enviado como Bearer nas demais requisições.
+3. Os cadastros salvam os ids criados (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`) para as requisições seguintes.
+
+Também dá para executar a collection inteira no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução, então ela pode ser rodada várias vezes sem violar as constraints `UNIQUE`. Para apontar para outro ambiente, altere a variável `baseUrl` (padrão: `http://localhost:8081/api/v1`).
+
 ## Decisão e justificativa do banco de dados escolhido
 
 Usamos o **PostgreSQL 18**, rodando em container via Docker Compose. Os dados da oficina são relacionais (a OS reúne cliente, veículo, serviços e peças), e regras como a reserva de estoque precisam de transações ACID e de integridade garantida pelo banco (chaves estrangeiras e constraints `UNIQUE` para CPF/CNPJ e placa). Pelo teorema PACELC, precisamos de um banco que priorize consistência (CP/EC). Como a aplicação é um monólito com um único banco, não precisamos de um banco distribuído. Além disso, o PostgreSQL é open source e o time já tem familiaridade com ele. Os detalhes e as alternativas avaliadas estão na [ADR 002](docs/adr/0002-escolha-do-banco-de-dados.md).
