@@ -71,6 +71,7 @@ public class UserUseCase implements UserUseCasePortIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails retrieveUser(SigninRequest request) {
         var identifier = request.identifier();
         var identifierType = userPayload.isEmail(identifier) ? "email" : "username";

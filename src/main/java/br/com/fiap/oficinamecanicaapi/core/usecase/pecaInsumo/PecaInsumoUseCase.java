@@ -12,6 +12,7 @@ import br.com.fiap.oficinamecanicaapi.shared.utils.NormalizadorNome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
@@ -36,6 +37,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
     }
 
     @Override
+    @Transactional
     public PecaInsumoResponse criar(PecaInsumoRequest request) throws ApplicationException {
         validarCampos(request);
         String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
@@ -50,6 +52,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Pagina<PecaInsumoResponse> listar(Integer page, Integer size) {
         int paginaValida = page == null || page < 0 ? PAGINA_PADRAO : page;
         int tamanhoValido = size == null || size < 1 ? TAMANHO_PADRAO : Math.min(size, TAMANHO_MAXIMO);
@@ -57,11 +60,13 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PecaInsumoResponse buscarPorId(Long id) throws ApplicationException {
         return pecaInsumoMapper.toResponse(buscarInsumo(id));
     }
 
     @Override
+    @Transactional
     public PecaInsumoResponse atualizar(Long id, PecaInsumoRequest request) throws ApplicationException {
         PecaInsumoEntity entity = buscarInsumo(id);
         validarCampos(request);
@@ -79,6 +84,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
     }
 
     @Override
+    @Transactional
     public void excluir(Long id) throws ApplicationException {
         PecaInsumoEntity entity = buscarInsumo(id);
         pecaInsumoPortOut.excluir(entity);

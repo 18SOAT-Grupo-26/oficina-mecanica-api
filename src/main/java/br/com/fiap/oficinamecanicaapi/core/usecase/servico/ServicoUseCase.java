@@ -14,6 +14,7 @@ import br.com.fiap.oficinamecanicaapi.shared.utils.NormalizadorNome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,7 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     }
 
     @Override
+    @Transactional
     public ServicoResponse criar(ServicoRequest request) throws ApplicationException {
         validarCampos(request);
         String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
@@ -58,6 +60,7 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Pagina<ServicoResponse> listar(Integer page, Integer size) {
         int paginaValida = page == null || page < 0 ? PAGINA_PADRAO : page;
         int tamanhoValido = size == null || size < 1 ? TAMANHO_PADRAO : Math.min(size, TAMANHO_MAXIMO);
@@ -65,11 +68,13 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ServicoResponse buscarPorId(Long id) throws ApplicationException {
         return servicoMapper.toResponse(buscarServico(id));
     }
 
     @Override
+    @Transactional
     public ServicoResponse atualizar(Long id, ServicoRequest request) throws ApplicationException {
         ServicoEntity entity = buscarServico(id);
         validarCampos(request);
@@ -87,6 +92,7 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     }
 
     @Override
+    @Transactional
     public void excluir(Long id) throws ApplicationException {
         ServicoEntity entity = buscarServico(id);
         servicoPortOut.excluir(entity);
