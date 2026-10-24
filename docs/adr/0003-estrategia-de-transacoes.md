@@ -2,6 +2,7 @@
 
 - **Status:** Proposto
 - **Data:** AAAA-MM-DD
+- **Responsável:** Ana Albuquerque
 
 ## Contexto
 

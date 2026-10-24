@@ -2,6 +2,7 @@
 
 - **Status:** Proposto
 - **Data:** 2026-10-23
+- **Responsável:** Ana Albuquerque
 
 ## Contexto
 
