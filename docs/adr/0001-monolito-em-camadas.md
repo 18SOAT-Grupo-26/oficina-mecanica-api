@@ -96,7 +96,7 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 
 - **Prós:** é o padrão mais conhecido no Spring, tem menos classes e menos mapeamentos, e a curva de aprendizado é menor.
 - **Contras:** as entidades JPA viram o modelo de domínio, então regra de negócio e persistência ficam acopladas. Os services dependem direto dos repositórios, o que dificulta testar sem banco e trocar a persistência.
-- **Por que não:** perdemos o domínio testável e isolado. Parte do código atual (`servico`, `pecaInsumo`, `identity`, `user`) ainda segue esse formato e é listada abaixo como dívida.
+- **Por que não:** perdemos o domínio testável e isolado. Parte do código atual (`servico`, `pecaInsumo`, `identity`, `user`) ainda segue esse formato e está registrada como dívida técnica nas issues do repositório.
 
 ### 3. Monólito modular com módulos isolados (Spring Modulith ou módulos Maven)
 
@@ -146,24 +146,7 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 - A aplicação escala só como um todo. Um bug ou um deploy afeta todos os contextos.
 - Hoje, a regra de dependência depende de disciplina e de code review. A mitigação planejada é adicionar testes de arquitetura (ArchUnit) ao pipeline que já roda Sonar e JaCoCo em cada PR, para que uma violação de camada reprove o PR.
 - Observabilidade (métricas e padronização de logs) ficou para as próximas fases (decisão de 21/10). Quando entrar, ficará em `infrastructure`/config, sem acoplar o `core`.
-
-### Dívida técnica conhecida (código fora do padrão em 2026-10-23)
-
-1. Os casos de uso de `identity` e `user` usam repositórios JPA direto (`infrastructure.persistence.repository.*`), sem `PortOut`.
-2. Há entidades JPA dentro de `core/domain` (`identity`, `user`, `servico`, `pecaInsumo`). Elas devem ir para `infrastructure/persistence/<contexto>/`, com modelo de domínio próprio e `*PersistenceMapper`. O modelo de `identity`/`user` já está em revisão pelo grupo: `Identity` tem dados comuns a cliente e funcionário (19/10), e `User` tem campos demais (21/10). Os itens 1 e 2 devem ser feitos junto com essa revisão, que também precisa resolver a sobreposição entre `Cliente`/`Endereco` e `Identity`/`Address`.
-3. Alguns ports expõem entidades JPA: `ServicoPortOut`, `PecaInsumoPortOut` e os `PortIn` de `identity` e `user`.
-4. `shared/utils/helpers/IdentityPayload` e `UserPayload` dependem de `core` e de `infrastructure`.
-5. `JwtAuthenticationFilter` injeta a implementação `JwtTokenProviderUseCase` em vez de `JwtTokenUseCasePortIn`.
-6. Spring Security está no domínio e nos casos de uso: `Role` implementa `GrantedAuthority`, e `PasswordEncoder` é usado direto. Isso deve virar um adapter e um port de hash de senha.
-7. Os DTOs `*Request` e `*Response` estão em `core/domain/*/model`, misturados aos modelos de domínio. Devem ir para um pacote de contratos do port in.
-8. Há dois layouts de repositório: `persistence/repository/<contexto>` e `persistence/<contexto>/*JpaRepository`. Padronizar no segundo.
-9. O `@Transactional` fica nos adapters, mas `IdentityUseCase` o declara no use case. A regra será definida na ADR 003.
-10. O pacote `pecaInsumo` está em camelCase. A convenção Java pede `pecainsumo`.
-11. Ordem de serviço: `OrdemServicoUseCase` está em `usecase/catalogo` e `OrdemServicoUseCasePortIn` na raiz de `port/in`. Os dois devem ir para o contexto `ordemservico`, já que a OS é o core e não faz parte do catálogo. Os controllers de OS ainda são esqueletos, sem interface `*API`.
-12. Os contextos `identity`, `user` e `auth` ainda usam nomes em inglês (`registerIdentity`, `AddressEntity`...). Devem ser renomeados para português, conforme a convenção decidida em 21/10.
-13. Não existe teste automatizado das regras de camada. Proposta: adicionar ArchUnit com as regras da tabela acima e rodá-lo no pipeline de CI (Sonar/JaCoCo).
-
-Cada item deve virar uma issue e ser corrigido em PRs separados por contexto.
+- Parte do código atual ainda não segue esta decisão (`identity`, `user`, `servico`, `pecaInsumo` e `ordemservico`). As correções são acompanhadas como issues de dívida técnica no repositório, em PRs separados por contexto.
 
 ## Referências
 

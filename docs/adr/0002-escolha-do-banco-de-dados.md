@@ -141,11 +141,6 @@ As alternativas estão agrupadas pela classificação PACELC e pelo tipo de banc
 - Ainda não há dados iniciais (perfis, permissões, usuário administrador e credenciais de demonstração). Eles precisam ser definidos para a avaliação.
 - As credenciais do compose são de desenvolvimento e ficam em texto no repositório. Não devem ser usadas em outro ambiente.
 
-### Pendências (em 2026-10-23)
-
-1. A propriedade `spring.jpa.hibernate.ddl-auto` ainda não está no `application.yaml`. Ela precisa ser adicionada para que as tabelas sejam criadas na subida da aplicação.
-2. Definir a carga inicial de perfis, permissões e usuário de demonstração.
-
 ## Referências
 
 - [ADR 001 — Monólito em camadas (ports & adapters)](0001-monolito-em-camadas.md)
