@@ -18,39 +18,27 @@ public interface ServicoAPI {
     @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Service with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "503", description = "Service unavailable", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "504", description = "Gateway timeout", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<ServicoResponse> criar(ServicoRequest request) throws ApplicationException;
 
     @Operation(summary = "Listar services", tags = "Service")
     @ApiResponse(responseCode = "200", description = "Página de services")
     @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "503", description = "Service unavailable", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "504", description = "Gateway timeout", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<Pagina<ServicoResponse>> listar(Integer page, Integer size) throws ApplicationException;
 
     @Operation(summary = "Buscar service por id", tags = "Service")
     @ApiResponse(responseCode = "200", description = "Service encontrado", content = @Content(schema = @Schema(implementation = ServicoResponse.class)))
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Service não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<ServicoResponse> buscarPorId(Long id) throws ApplicationException;
 
     @Operation(summary = "Atualizar service", tags = "Service")
     @ApiResponse(responseCode = "200", description = "Service atualizado", content = @Content(schema = @Schema(implementation = ServicoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Service não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Nome de service já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<ServicoResponse> atualizar(Long id, ServicoRequest request) throws ApplicationException;
 
     @Operation(summary = "Excluir service", tags = "Service")
     @ApiResponse(responseCode = "204", description = "Service excluído")
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Service não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<Void> excluir(Long id) throws ApplicationException;
 }
