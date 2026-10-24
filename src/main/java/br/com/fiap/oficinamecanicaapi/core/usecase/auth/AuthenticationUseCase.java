@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
@@ -35,7 +36,9 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
+    /** Identidade, contato, endereço e usuário numa transação só (ADR 003). */
     @Override
+    @Transactional
     public void registerUser(RegisterRequest registerRequest) throws ApplicationException {
         try {
             log.info("action=register_start username={}", registerRequest.user().username());

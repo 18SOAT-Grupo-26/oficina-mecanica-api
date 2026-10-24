@@ -41,6 +41,7 @@ public class IdentityUseCase implements IdentityUseCasePortIn {
     }
 
     @Override
+    @Transactional
     public IdentityEntity registerIdentity(Identity identityRequest) throws ApplicationException {
         log.info("Validating payloads: {}", identityRequest);
         validatePayloads(identityRequest);
@@ -49,7 +50,6 @@ public class IdentityUseCase implements IdentityUseCasePortIn {
         return saveIdentity(identityRequest);
     }
 
-    @Transactional
     private IdentityEntity saveIdentity(Identity identityRequest) {
         var contact = contactService.registerContact(identityRequest.contact());
 
