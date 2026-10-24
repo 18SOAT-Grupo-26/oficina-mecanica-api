@@ -18,6 +18,14 @@ Restrições do projeto:
 - Na mesma reunião, o André propôs a arquitetura hexagonal adaptada que ele já usa em outros projetos, "porque é bem fácil de se encontrar no fluxo". Ele montou a estrutura base do repositório nesse formato.
 - O Event Storming (16/10) separou o problema em três agrupamentos: **ordem de serviço** (criação e ciclo de vida da OS, o core), **acompanhamento da OS pelo cliente** e **gestão administrativa** (cadastros de cliente, veículo, serviço e peça/insumo). Na OS, esses cadastros são apenas *selecionados*, e não criados.
 
+Requisitos não funcionais que orientam esta decisão ([Miro](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)):
+
+- **RNF05:** arquitetura em camadas com núcleo independente de infraestrutura. Controllers adaptam HTTP, casos de uso concentram a aplicação, portas definem dependências e adaptadores implementam integrações e persistência.
+- **RNF06:** regras de negócio ficam no domínio e nos casos de uso. O núcleo não depende de controllers, frameworks web ou implementações de persistência.
+- **RNF09:** casos de uso testáveis isoladamente, sem iniciar servidor HTTP ou banco de dados.
+- **RNF10:** documentação OpenAPI gerada a partir dos contratos implementados.
+- **RNF20:** cobertura de pelo menos 80% com testes unitários.
+
 Precisamos decidir duas coisas: **como a aplicação é implantada** (um ou vários deployables) e **como o código é organizado internamente**, para que as regras de negócio não fiquem presas ao framework e à persistência.
 
 ## Decisão
@@ -153,5 +161,6 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 - [ADR 002 — Escolha do banco de dados](0002-escolha-do-banco-de-dados.md)
 - [ADR 003 — Estratégia de transações](0003-estrategia-de-transacoes.md): inclui a reserva de estoque na geração do orçamento e a liberação quando o orçamento é reprovado, discutidas no Event Storming.
 - Event Storming do grupo (Miro) e a reunião de 16/10/2026
+- [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
 - Decisões registradas no grupo do time entre 16/10 e 23/10/2026
 - Alistair Cockburn, *Hexagonal Architecture* (2005)
