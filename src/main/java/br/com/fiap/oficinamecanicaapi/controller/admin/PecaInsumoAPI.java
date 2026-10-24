@@ -18,9 +18,6 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Insumo with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "503", description = "Service unavailable", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "504", description = "Gateway timeout", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<PecaInsumoResponse> criar(PecaInsumoRequest request) throws ApplicationException;
 
     @Operation(summary = "Listar insumos", tags = "Insumo")
@@ -28,15 +25,10 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Insumo with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "503", description = "Service unavailable", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "504", description = "Gateway timeout", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<Pagina<PecaInsumoResponse>> listar(Integer page, Integer size) throws ApplicationException;
 
     @Operation(summary = "Buscar insumo por id", tags = "Insumo")
     @ApiResponse(responseCode = "200", description = "Insumo encontrado", content = @Content(schema = @Schema(implementation = PecaInsumoResponse.class)))
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<PecaInsumoResponse> buscarPorId(Long id) throws ApplicationException;
 
@@ -44,16 +36,12 @@ public interface PecaInsumoAPI {
     @Operation(summary = "Atualizar insumo", tags = "Insumo")
     @ApiResponse(responseCode = "200", description = "Insumo atualizado", content = @Content(schema = @Schema(implementation = PecaInsumoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Nome de insumo já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<PecaInsumoResponse> atualizar(Long id, PecaInsumoRequest request) throws ApplicationException;
 
     @Operation(summary = "Excluir insumo", tags = "Insumo")
     @ApiResponse(responseCode = "204", description = "Insumo excluído")
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<Void> excluir(Long id) throws ApplicationException;
 }

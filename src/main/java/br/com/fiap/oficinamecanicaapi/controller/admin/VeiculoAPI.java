@@ -24,8 +24,6 @@ public interface VeiculoAPI {
     @Operation(summary = "Cadastrar veículo", tags = "Veículo")
     @ApiResponse(responseCode = "201", description = "Veículo cadastrado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Dados inválidos (inclui placa ou ano inválido)", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Placa já cadastrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PostMapping
@@ -33,8 +31,6 @@ public interface VeiculoAPI {
 
     @Operation(summary = "Listar veículos ativos, opcionalmente por cliente", tags = "Veículo")
     @ApiResponse(responseCode = "200", description = "Página de veículos ativos")
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping
     ResponseEntity<Pagina<VeiculoResponse>> listar(@RequestParam(required = false) Long clienteId,
                                                   @RequestParam(required = false) Integer page,
@@ -42,8 +38,6 @@ public interface VeiculoAPI {
 
     @Operation(summary = "Buscar veículo por id", tags = "Veículo")
     @ApiResponse(responseCode = "200", description = "Veículo encontrado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/{id}")
     ResponseEntity<VeiculoResponse> buscarPorId(@PathVariable Long id) throws ApplicationException;
@@ -51,8 +45,6 @@ public interface VeiculoAPI {
     @Operation(summary = "Buscar veículo por placa", tags = "Veículo")
     @ApiResponse(responseCode = "200", description = "Veículo encontrado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Placa inválida", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/placa/{placa}")
     ResponseEntity<VeiculoResponse> buscarPorPlaca(@PathVariable String placa) throws ApplicationException;
@@ -60,8 +52,6 @@ public interface VeiculoAPI {
     @Operation(summary = "Atualizar veículo", tags = "Veículo")
     @ApiResponse(responseCode = "200", description = "Veículo atualizado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Veículo ou cliente não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Placa já cadastrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PutMapping("/{id}")
@@ -69,8 +59,6 @@ public interface VeiculoAPI {
 
     @Operation(summary = "Remover veículo (soft delete)", tags = "Veículo")
     @ApiResponse(responseCode = "204", description = "Veículo desativado")
-    @ApiResponse(responseCode = "401", description = "Token ausente ou inválido")
-    @ApiResponse(responseCode = "403", description = "Usuário sem perfil ADMINISTRATOR", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @DeleteMapping("/{id}")
     ResponseEntity<Void> desativar(@PathVariable Long id) throws ApplicationException;
