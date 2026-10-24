@@ -68,6 +68,22 @@ docker compose down          # parar os containers
 docker compose down -v       # parar e apagar os dados do banco
 ```
 
+### Banco de dados e migrations (Flyway)
+
+O schema é criado e evoluído pelo **Flyway**, que roda sozinho na subida da API:
+
+- o container `db` cria o banco `oficina` na primeira subida;
+- a API aplica as migrations de `src/main/resources/db/migration` que ainda não rodaram: tabelas (`V1__schema_inicial.sql`) e perfis `ADMINISTRATOR`, `MANAGER` e `OPERATOR` (`V2__perfis_iniciais.sql`);
+- o Hibernate roda com `ddl-auto: validate`: só confere se as entidades batem com as tabelas. A API não sobe se alguma entidade divergir do schema.
+
+Para mudar o banco (nova tabela, coluna, índice...), crie um novo arquivo `V<próximo número>__descricao.sql` junto com a alteração da entidade. **Nunca edite uma migration já aplicada**: o Flyway valida o checksum e a API deixa de subir.
+
+Possíveis problemas:
+
+- **"Found non-empty schema(s) ... without schema history table"**: o volume foi criado antes das migrations e já tem tabelas. Rode `docker compose down -v` uma vez (apaga os dados locais) e suba de novo.
+- **Porta 5432 já em uso**: há um Postgres instalado na máquina. Pare-o ou troque a porta publicada do `db` no `docker-compose.yml` (ex.: `"5433:5432"`); a API não é afetada, porque acessa o banco pela rede interna do Docker.
+- **Rodando a API fora do Docker**: crie antes o banco vazio (`createdb oficina`) e informe `DATASOURCE_HOST`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD` e `API_SECRET`.
+
 ## Instruções para execução dos testes
 
 Os testes não dependem do banco. Para rodá-los sem instalar Java ou Maven localmente:
@@ -134,7 +150,7 @@ A autenticação usa JWT. O fluxo é:
 2. Fazer login em `POST /api/v1/auth/login` informando `identifier` e `password`; a resposta traz o token
 3. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`
 
-Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`.
+Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, criados pela migration `V2__perfis_iniciais.sql`. Nenhum usuário é criado automaticamente: o primeiro administrador é cadastrado pelo próprio `POST /api/v1/auth/register` com `"role": "ADMINISTRATOR"`.
 
 Credenciais de demonstração: _a definir._
 
