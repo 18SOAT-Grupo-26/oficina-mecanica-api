@@ -110,7 +110,19 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 - **Contras:** exige configuração manual de beans, comandos e modelos de saída separados dos DTOs, e muito mais mapeamento.
 - **Por que não:** pouco ganho prático para o tamanho do projeto. Aceitamos as exceções listadas na Decisão.
 
-### 5. Comunicação assíncrona entre contextos (fila/eventos)
+### 5. Vertical Slice (organização por funcionalidade)
+
+- **Prós:** cada funcionalidade (ex.: abrir OS, aprovar orçamento) fica numa fatia própria, com entrada, caso de uso e persistência juntos. Tem menos abstrações, baixo acoplamento entre funcionalidades e combina bem com CQRS.
+- **Contras:** há risco de duplicação e de inconsistência entre as fatias. Várias funcionalidades da OS usam as mesmas regras (reserva de estoque, validação de CPF/CNPJ, placa), que teriam de ser compartilhadas de qualquer forma. O padrão também não isola o domínio do framework e da persistência.
+- **Por que não:** o domínio gira em torno da OS, que tem regras ricas e compartilhadas entre funcionalidades, e o problema que queremos resolver é testar essas regras sem banco. A organização por contexto dentro de cada camada já agrupa o código de cada assunto.
+
+### 6. Onion Architecture
+
+- **Prós:** tem o mesmo objetivo da hexagonal: dependências apontando para o domínio e contratos (ports) entre o núcleo e a infraestrutura, mas com anéis nomeados (domínio, serviços de domínio, serviços de aplicação e infraestrutura).
+- **Contras:** na prática, a diferença é de nomenclatura. A separação entre serviços de domínio e de aplicação acrescenta uma camada de que o projeto ainda não precisa.
+- **Por que não:** é muito próxima do que adotamos. Ficamos com o vocabulário de ports & adapters porque a estrutura base do repositório já foi montada nele (`port/in`, `port/out`).
+
+### 7. Comunicação assíncrona entre contextos (fila/eventos)
 
 - **Prós:** desacopla os contextos, por exemplo na reserva de estoque ou na notificação de mudança de status, e prepara o terreno para uma futura separação em serviços.
 - **Contras:** exige um broker, idempotência, retentativas e consistência eventual, além de deixar os testes e o debug mais difíceis.
@@ -130,6 +142,7 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 ### Negativas e trade-offs
 
 - Mais classes e mapeamentos por contexto (entidade JPA, modelo de domínio, DTOs e mappers).
+- Curva de aprendizado: ports, adapters e a regra de dependência são novos para parte da equipe. Num projeto do nosso tamanho, a quantidade de abstrações pesa mais do que pesaria num sistema grande.
 - A aplicação escala só como um todo. Um bug ou um deploy afeta todos os contextos.
 - Hoje, a regra de dependência depende de disciplina e de code review. A mitigação planejada é adicionar testes de arquitetura (ArchUnit) ao pipeline que já roda Sonar e JaCoCo em cada PR, para que uma violação de camada reprove o PR.
 - Observabilidade (métricas e padronização de logs) ficou para as próximas fases (decisão de 21/10). Quando entrar, ficará em `infrastructure`/config, sem acoplar o `core`.
