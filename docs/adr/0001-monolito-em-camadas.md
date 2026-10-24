@@ -2,6 +2,7 @@
 
 - **Status:** Proposto
 - **Data:** 2026-10-23
+- **Responsável:** Ana Albuquerque
 
 ## Contexto
 
@@ -17,6 +18,14 @@ Restrições do projeto:
 - O projeto é **incremental**: o mesmo código será reaproveitado e ampliado nas próximas fases do Tech Challenge. A estrutura precisa aguentar essa evolução sem reescrita.
 - Na mesma reunião, o André propôs a arquitetura hexagonal adaptada que ele já usa em outros projetos, "porque é bem fácil de se encontrar no fluxo". Ele montou a estrutura base do repositório nesse formato.
 - O Event Storming (16/10) separou o problema em três agrupamentos: **ordem de serviço** (criação e ciclo de vida da OS, o core), **acompanhamento da OS pelo cliente** e **gestão administrativa** (cadastros de cliente, veículo, serviço e peça/insumo). Na OS, esses cadastros são apenas *selecionados*, e não criados.
+
+Requisitos não funcionais que orientam esta decisão ([Miro](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)):
+
+- **RNF05:** arquitetura em camadas com núcleo independente de infraestrutura. Controllers adaptam HTTP, casos de uso concentram a aplicação, portas definem dependências e adaptadores implementam integrações e persistência.
+- **RNF06:** regras de negócio ficam no domínio e nos casos de uso. O núcleo não depende de controllers, frameworks web ou implementações de persistência.
+- **RNF09:** casos de uso testáveis isoladamente, sem iniciar servidor HTTP ou banco de dados.
+- **RNF10:** documentação OpenAPI gerada a partir dos contratos implementados.
+- **RNF20:** cobertura de pelo menos 80% com testes unitários.
 
 Precisamos decidir duas coisas: **como a aplicação é implantada** (um ou vários deployables) e **como o código é organizado internamente**, para que as regras de negócio não fiquem presas ao framework e à persistência.
 
@@ -96,7 +105,7 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 
 - **Prós:** é o padrão mais conhecido no Spring, tem menos classes e menos mapeamentos, e a curva de aprendizado é menor.
 - **Contras:** as entidades JPA viram o modelo de domínio, então regra de negócio e persistência ficam acopladas. Os services dependem direto dos repositórios, o que dificulta testar sem banco e trocar a persistência.
-- **Por que não:** perdemos o domínio testável e isolado. Parte do código atual (`servico`, `pecaInsumo`, `identity`, `user`) ainda segue esse formato e é listada abaixo como dívida.
+- **Por que não:** perdemos o domínio testável e isolado. Parte do código atual (`servico`, `pecaInsumo`, `identity`, `user`) ainda segue esse formato e está registrada como dívida técnica nas issues do repositório.
 
 ### 3. Monólito modular com módulos isolados (Spring Modulith ou módulos Maven)
 
@@ -110,7 +119,19 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 - **Contras:** exige configuração manual de beans, comandos e modelos de saída separados dos DTOs, e muito mais mapeamento.
 - **Por que não:** pouco ganho prático para o tamanho do projeto. Aceitamos as exceções listadas na Decisão.
 
-### 5. Comunicação assíncrona entre contextos (fila/eventos)
+### 5. Vertical Slice (organização por funcionalidade)
+
+- **Prós:** cada funcionalidade (ex.: abrir OS, aprovar orçamento) fica numa fatia própria, com entrada, caso de uso e persistência juntos. Tem menos abstrações, baixo acoplamento entre funcionalidades e combina bem com CQRS.
+- **Contras:** há risco de duplicação e de inconsistência entre as fatias. Várias funcionalidades da OS usam as mesmas regras (reserva de estoque, validação de CPF/CNPJ, placa), que teriam de ser compartilhadas de qualquer forma. O padrão também não isola o domínio do framework e da persistência.
+- **Por que não:** o domínio gira em torno da OS, que tem regras ricas e compartilhadas entre funcionalidades, e o problema que queremos resolver é testar essas regras sem banco. A organização por contexto dentro de cada camada já agrupa o código de cada assunto.
+
+### 6. Onion Architecture
+
+- **Prós:** tem o mesmo objetivo da hexagonal: dependências apontando para o domínio e contratos (ports) entre o núcleo e a infraestrutura, mas com anéis nomeados (domínio, serviços de domínio, serviços de aplicação e infraestrutura).
+- **Contras:** na prática, a diferença é de nomenclatura. A separação entre serviços de domínio e de aplicação acrescenta uma camada de que o projeto ainda não precisa.
+- **Por que não:** é muito próxima do que adotamos. Ficamos com o vocabulário de ports & adapters porque a estrutura base do repositório já foi montada nele (`port/in`, `port/out`).
+
+### 7. Comunicação assíncrona entre contextos (fila/eventos)
 
 - **Prós:** desacopla os contextos, por exemplo na reserva de estoque ou na notificação de mudança de status, e prepara o terreno para uma futura separação em serviços.
 - **Contras:** exige um broker, idempotência, retentativas e consistência eventual, além de deixar os testes e o debug mais difíceis.
@@ -130,32 +151,17 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 ### Negativas e trade-offs
 
 - Mais classes e mapeamentos por contexto (entidade JPA, modelo de domínio, DTOs e mappers).
+- Curva de aprendizado: ports, adapters e a regra de dependência são novos para parte da equipe. Num projeto do nosso tamanho, a quantidade de abstrações pesa mais do que pesaria num sistema grande.
 - A aplicação escala só como um todo. Um bug ou um deploy afeta todos os contextos.
 - Hoje, a regra de dependência depende de disciplina e de code review. A mitigação planejada é adicionar testes de arquitetura (ArchUnit) ao pipeline que já roda Sonar e JaCoCo em cada PR, para que uma violação de camada reprove o PR.
 - Observabilidade (métricas e padronização de logs) ficou para as próximas fases (decisão de 21/10). Quando entrar, ficará em `infrastructure`/config, sem acoplar o `core`.
-
-### Dívida técnica conhecida (código fora do padrão em 2026-10-23)
-
-1. Os casos de uso de `identity` e `user` usam repositórios JPA direto (`infrastructure.persistence.repository.*`), sem `PortOut`.
-2. Há entidades JPA dentro de `core/domain` (`identity`, `user`, `servico`, `pecaInsumo`). Elas devem ir para `infrastructure/persistence/<contexto>/`, com modelo de domínio próprio e `*PersistenceMapper`. O modelo de `identity`/`user` já está em revisão pelo grupo: `Identity` tem dados comuns a cliente e funcionário (19/10), e `User` tem campos demais (21/10). Os itens 1 e 2 devem ser feitos junto com essa revisão, que também precisa resolver a sobreposição entre `Cliente`/`Endereco` e `Identity`/`Address`.
-3. Alguns ports expõem entidades JPA: `ServicoPortOut`, `PecaInsumoPortOut` e os `PortIn` de `identity` e `user`.
-4. `shared/utils/helpers/IdentityPayload` e `UserPayload` dependem de `core` e de `infrastructure`.
-5. `JwtAuthenticationFilter` injeta a implementação `JwtTokenProviderUseCase` em vez de `JwtTokenUseCasePortIn`.
-6. Spring Security está no domínio e nos casos de uso: `Role` implementa `GrantedAuthority`, e `PasswordEncoder` é usado direto. Isso deve virar um adapter e um port de hash de senha.
-7. Os DTOs `*Request` e `*Response` estão em `core/domain/*/model`, misturados aos modelos de domínio. Devem ir para um pacote de contratos do port in.
-8. Há dois layouts de repositório: `persistence/repository/<contexto>` e `persistence/<contexto>/*JpaRepository`. Padronizar no segundo.
-9. O `@Transactional` fica nos adapters, mas `IdentityUseCase` o declara no use case. A regra será definida na ADR 003.
-10. O pacote `pecaInsumo` está em camelCase. A convenção Java pede `pecainsumo`.
-11. Ordem de serviço: `OrdemServicoUseCase` está em `usecase/catalogo` e `OrdemServicoUseCasePortIn` na raiz de `port/in`. Os dois devem ir para o contexto `ordemservico`, já que a OS é o core e não faz parte do catálogo. Os controllers de OS ainda são esqueletos, sem interface `*API`.
-12. Os contextos `identity`, `user` e `auth` ainda usam nomes em inglês (`registerIdentity`, `AddressEntity`...). Devem ser renomeados para português, conforme a convenção decidida em 21/10.
-13. Não existe teste automatizado das regras de camada. Proposta: adicionar ArchUnit com as regras da tabela acima e rodá-lo no pipeline de CI (Sonar/JaCoCo).
-
-Cada item deve virar uma issue e ser corrigido em PRs separados por contexto.
+- Parte do código atual ainda não segue esta decisão (`identity`, `user`, `servico`, `pecaInsumo` e `ordemservico`). As correções são acompanhadas como issues de dívida técnica no repositório, em PRs separados por contexto.
 
 ## Referências
 
 - [ADR 002 — Escolha do banco de dados](0002-escolha-do-banco-de-dados.md)
 - [ADR 003 — Estratégia de transações](0003-estrategia-de-transacoes.md): inclui a reserva de estoque na geração do orçamento e a liberação quando o orçamento é reprovado, discutidas no Event Storming.
 - Event Storming do grupo (Miro) e a reunião de 16/10/2026
+- [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
 - Decisões registradas no grupo do time entre 16/10 e 23/10/2026
 - Alistair Cockburn, *Hexagonal Architecture* (2005)

@@ -2,6 +2,7 @@
 
 - **Status:** Proposto
 - **Data:** 2026-10-23
+- **Responsável:** Ana Albuquerque
 
 ## Contexto
 
@@ -17,6 +18,11 @@ Algumas regras de negócio dependem de consistência e integridade dos dados:
 - **Unicidade.** CPF/CNPJ do cliente, placa do veículo e nome de serviços e peças não podem se repetir.
 - **Valores monetários.** Preços de serviços e peças e o valor do orçamento precisam de precisão decimal exata.
 - **Delete lógico.** Cadastros não são apagados, e uma OS só muda de status para *Cancelado* (decisão de 21/10).
+
+Requisitos não funcionais relacionados ([Miro](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)):
+
+- **RNF08:** operações transacionais de estoque e orçamento devem preservar a consistência mesmo em falhas ou requisições concorrentes. Não podem gerar saldo negativo, reservas parciais ou consumo/devolução duplicados.
+- **RNF04:** quando a API ou o banco estiver indisponível, as operações afetadas devem responder com status 503 e mensagem explícita, sem gravar alterações parciais.
 
 Restrições do projeto:
 
@@ -38,7 +44,7 @@ Escolher entre "SQL ou NoSQL" ou pelo formato dos dados é uma análise superfic
 
 Aplicando ao nosso caso:
 
-1. **Consistência é obrigatória.** A reserva de estoque é parecida com o exemplo do saldo bancário: se uma leitura vier de uma réplica desatualizada, duas OS podem reservar a mesma peça. É o mesmo problema do "Pix infinito". Diferente de um like numa rede social, aqui um dado desatualizado gera erro de negócio. Precisamos de um banco **CP/EC**, com transações ACID.
+1. **Consistência é obrigatória (RNF08).** A reserva de estoque é parecida com o exemplo do saldo bancário: se uma leitura vier de uma réplica desatualizada, duas OS podem reservar a mesma peça. É o mesmo problema do "Pix infinito". Diferente de um like numa rede social, aqui um dado desatualizado gera erro de negócio. Precisamos de um banco **CP/EC**, com transações ACID.
 2. **Não somos um sistema distribuído.** A ADR 001 define um monólito com um único banco, sem réplicas nem sharding. Não há partição entre nós do banco para tolerar, e não existe hoje requisito de alta disponibilidade 24x7, escala global ou escrita massiva. Os trade-offs de PACELC que justificam bancos distribuídos não se aplicam nesta fase.
 3. **O domínio é relacional e estruturado.** Cadastros referenciados pela OS, unicidade e valores monetários pedem integridade referencial e constraints.
 
@@ -141,16 +147,12 @@ As alternativas estão agrupadas pela classificação PACELC e pelo tipo de banc
 - Ainda não há dados iniciais (perfis, permissões, usuário administrador e credenciais de demonstração). Eles precisam ser definidos para a avaliação.
 - As credenciais do compose são de desenvolvimento e ficam em texto no repositório. Não devem ser usadas em outro ambiente.
 
-### Pendências (em 2026-10-23)
-
-1. A propriedade `spring.jpa.hibernate.ddl-auto` ainda não está no `application.yaml`. Ela precisa ser adicionada para que as tabelas sejam criadas na subida da aplicação.
-2. Definir a carga inicial de perfis, permissões e usuário de demonstração.
-
 ## Referências
 
 - [ADR 001 — Monólito em camadas (ports & adapters)](0001-monolito-em-camadas.md)
 - [ADR 003 — Estratégia de transações](0003-estrategia-de-transacoes.md): reserva de estoque na geração do orçamento e liberação quando o orçamento é reprovado.
 - Event Storming do grupo (Miro) e a reunião de 16/10/2026
+- [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
 - Decisões registradas no grupo do time entre 16/10 e 23/10/2026
 - [Documentação do PostgreSQL 18](https://www.postgresql.org/docs/18/)
 - Renato Augusto, vídeo sobre como escolher o banco de dados (teoremas CAP e PACELC) e a planilha de classificação de bancos que o acompanha

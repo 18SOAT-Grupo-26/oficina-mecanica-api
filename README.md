@@ -20,6 +20,8 @@ Arquitetura hexagonal (ports and adapters):
 - `controller` é o adapter de entrada (REST)
 - `infrastructure` é o adapter de saída (persistência com JPA) e as configurações de segurança e documentação
 
+A decisão, as camadas, a regra de dependência e as alternativas avaliadas estão na [ADR 001](docs/adr/0001-monolito-em-camadas.md). Todas as decisões de arquitetura estão no [índice de ADRs](docs/adr/README.md).
+
 ## Tecnologias utilizadas
 
 - Java 25
