@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.TipoDocumento;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.TipoDocumento;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

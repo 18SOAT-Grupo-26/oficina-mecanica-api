@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.cliente.model;
+package br.com.fiap.oficinamecanicaapi.core.domain.shared.model;
 
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.CnpjValidator;

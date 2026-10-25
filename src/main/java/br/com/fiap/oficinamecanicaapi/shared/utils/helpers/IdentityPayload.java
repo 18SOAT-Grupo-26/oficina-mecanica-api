@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.shared.utils.helpers;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Documento;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.identity.model.Identity;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.identity.ContactRepository;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.identity.IdentityRepository;

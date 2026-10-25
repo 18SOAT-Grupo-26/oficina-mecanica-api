@@ -3,7 +3,7 @@ package br.com.fiap.oficinamecanicaapi.controller.admin;
 import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.ClienteRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.ClienteResponse;
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.TipoDocumento;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.TipoDocumento;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.domain.user.model.Role;
 import br.com.fiap.oficinamecanicaapi.core.domain.user.model.User;

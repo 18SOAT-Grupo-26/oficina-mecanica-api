@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.cliente.model;
+package br.com.fiap.oficinamecanicaapi.core.domain.shared.model;
 
 public record Endereco(
         String logradouro,

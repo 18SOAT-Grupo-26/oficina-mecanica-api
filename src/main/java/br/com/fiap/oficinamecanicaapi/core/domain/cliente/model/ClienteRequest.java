@@ -1,5 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.cliente.model;
 
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Endereco;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

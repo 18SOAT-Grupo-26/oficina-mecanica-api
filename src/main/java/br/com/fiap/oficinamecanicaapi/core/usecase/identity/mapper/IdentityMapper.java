@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.identity.mapper;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Documento;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.identity.entity.AddressEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.identity.entity.ContactEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.identity.entity.IdentityEntity;
