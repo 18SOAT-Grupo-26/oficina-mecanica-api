@@ -24,27 +24,27 @@ public class IdentityPayload {
 
     public final void validateIdentityPayload(Identity identityRequest) throws ApplicationException {
         if (identityRequest.contact() == null || identityRequest.contact().email() == null) {
-            throw new ApplicationException(400, "Contact information is required");
+            throw new ApplicationException(400, "Os dados de contato são obrigatórios");
         }
         if (!isValidEmail(identityRequest.contact().email())) {
-            throw new ApplicationException(400, "Email is invalid — it must contain '@' and a valid domain");
+            throw new ApplicationException(400, "E-mail inválido — deve conter '@' e um domínio válido");
         }
         if (identityRequest.fullName() == null || identityRequest.fullName().isBlank()) {
-            throw new ApplicationException(400, "Full name is required");
+            throw new ApplicationException(400, "O nome completo é obrigatório");
         }
         if (identityRequest.givenName() == null || identityRequest.givenName().isBlank()) {
-            throw new ApplicationException(400, "Given name is required");
+            throw new ApplicationException(400, "O nome de exibição é obrigatório");
         }
         // Documento: CPF or CNPJ, with or without mask; Documento normalizes it
         // and verifies the check digits, throwing 400 when invalid.
         if (identityRequest.documento() == null || identityRequest.documento().isBlank()) {
-            throw new ApplicationException(400, "Document (CPF or CNPJ) is required");
+            throw new ApplicationException(400, "O documento (CPF ou CNPJ) é obrigatório");
         }
         new Documento(identityRequest.documento());
 
         if (identityRequest.contact().phoneNumber() == null
                 || identityRequest.contact().phoneNumber().isBlank()) {
-            throw new ApplicationException(400, "Phone number is required");
+            throw new ApplicationException(400, "O telefone é obrigatório");
         }
     }
 
@@ -55,11 +55,11 @@ public class IdentityPayload {
 
     public void validateIdentityUniqueness(Identity identityRequest) {
         if (contactRepository.findByContactEmail(identityRequest.contact().email()).isPresent()) {
-            throw new ApplicationException(409, "Email already in use");
+            throw new ApplicationException(409, "Já existe um usuário cadastrado com este e-mail");
         }
 
         if (identityRepository.existsByDocumento(new Documento(identityRequest.documento()).valor())) {
-            throw new ApplicationException(409, "Document already in use by another user");
+            throw new ApplicationException(409, "Já existe um usuário cadastrado com este documento");
         }
 
     }

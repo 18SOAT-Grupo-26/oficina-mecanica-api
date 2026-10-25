@@ -9,10 +9,10 @@ public class UserPayload {
 
     public void validateUserPayload(User userRequest) throws ApplicationException {
         if (userRequest.username() == null || userRequest.username().isBlank()) {
-            throw new ApplicationException(400, "Username is required");
+            throw new ApplicationException(400, "O nome de usuário é obrigatório");
         }
         if (userRequest.changeRequired()) {
-            throw new ApplicationException(400, "Change required is required");
+            throw new ApplicationException(400, "O campo changeRequired é obrigatório");
         }
     }
 

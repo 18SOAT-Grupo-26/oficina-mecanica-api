@@ -34,33 +34,33 @@ public class PasswordPolicy {
 
     public void validate(String raw) throws ApplicationException {
         if (raw == null) {
-            throw new ApplicationException(400, "Password is required");
+            throw new ApplicationException(400, "A senha é obrigatória");
         }
         if (raw.length() < MIN_LENGTH) {
             throw new ApplicationException(400,
-                    "Password must have at least " + MIN_LENGTH + " characters");
+                    "A senha deve ter no mínimo " + MIN_LENGTH + " caracteres");
         }
         if (raw.length() > MAX_LENGTH) {
             throw new ApplicationException(400,
-                    "Password must have at most " + MAX_LENGTH + " characters");
+                    "A senha deve ter no máximo " + MAX_LENGTH + " caracteres");
         }
         if (!ALLOWED_CHARS.matcher(raw).matches()) {
             throw new ApplicationException(400,
-                    "Password contains disallowed characters. Allowed specials: "
+                    "A senha contém caracteres não permitidos. Especiais permitidos: "
                             + ALLOWED_SPECIALS);
         }
         if (!HAS_UPPER.matcher(raw).find()) {
-            throw new ApplicationException(400, "Password must include an uppercase letter");
+            throw new ApplicationException(400, "A senha deve conter uma letra maiúscula");
         }
         if (!HAS_LOWER.matcher(raw).find()) {
-            throw new ApplicationException(400, "Password must include a lowercase letter");
+            throw new ApplicationException(400, "A senha deve conter uma letra minúscula");
         }
         if (!HAS_DIGIT.matcher(raw).find()) {
-            throw new ApplicationException(400, "Password must include a digit");
+            throw new ApplicationException(400, "A senha deve conter um número");
         }
         if (!HAS_SPECIAL.matcher(raw).find()) {
             throw new ApplicationException(400,
-                    "Password must include one of these specials: " + ALLOWED_SPECIALS);
+                    "A senha deve conter um destes caracteres especiais: " + ALLOWED_SPECIALS);
         }
     }
 

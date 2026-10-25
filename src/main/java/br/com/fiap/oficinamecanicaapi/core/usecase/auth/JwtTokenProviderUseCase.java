@@ -48,7 +48,7 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
 
         } catch (Exception e) {
             log.error("Error generating JWT token", e);
-            throw new ApplicationException(500, "Error generating token");
+            throw new ApplicationException(500, "Erro ao gerar o token");
         }
     }
 
@@ -62,10 +62,10 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
             return true;
         } catch (ExpiredJwtException ex) {
             log.warn("Token expired: {}", ex.getMessage());
-            throw new ApplicationException(401, "Token expired. Please log in again.");
+            throw new ApplicationException(401, "Token expirado. Faça login novamente.");
         } catch (Exception ex) {
             log.warn("Invalid token: {}", ex.getMessage());
-            throw new ApplicationException(401, "Invalid token");
+            throw new ApplicationException(401, "Token inválido");
         }
     }
 
@@ -80,7 +80,7 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
                     .get("username", String.class);
         } catch (Exception ex) {
             log.warn("Error extracting username from token: {}", ex.getMessage());
-            throw new ApplicationException(401, "Invalid token");
+            throw new ApplicationException(401, "Token inválido");
         }
     }
 

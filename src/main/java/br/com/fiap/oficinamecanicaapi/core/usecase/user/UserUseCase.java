@@ -52,7 +52,7 @@ public class UserUseCase implements UserUseCasePortIn {
 
             var roleEntity = roleRepository.findByName(userRequest.role().name())
                     .orElseThrow(() -> new ApplicationException(400,
-                            "Role not found: " + userRequest.role().name()));
+                            "Perfil não encontrado: " + userRequest.role().name()));
 
             var encodedUser = new User(
                     userRequest.username(),
@@ -78,16 +78,16 @@ public class UserUseCase implements UserUseCasePortIn {
         try {
             var entity = userPayload.isEmail(identifier)
                     ? userRepository.findByEmail(identifier)
-                    .orElseThrow(() -> new ApplicationException(404, "User not found"))
+                    .orElseThrow(() -> new ApplicationException(404, "Usuário não encontrado"))
                     : userRepository.findByUsername(identifier)
-                    .orElseThrow(() -> new ApplicationException(404, "User not found"));
+                    .orElseThrow(() -> new ApplicationException(404, "Usuário não encontrado"));
             log.info("action=user_retrieve_success identifier_type={}", identifierType);
             return userMapper.toUserDetails(entity);
         } catch (RuntimeException e) {
             if (e.getMessage() != null && e.getMessage().contains("User not found")) {
                 log.warn("action=user_retrieve_not_found identifier_type={}", identifierType);
             }
-            throw new ApplicationException(404, "User not found");
+            throw new ApplicationException(404, "Usuário não encontrado");
         }
     }
 

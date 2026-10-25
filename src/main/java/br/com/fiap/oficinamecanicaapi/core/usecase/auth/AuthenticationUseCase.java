@@ -48,7 +48,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
         } catch (ApplicationException e) {
             throw e;
         } catch (Exception e) {
-            throw new ApplicationException(500, "Error occurred while registering user");
+            throw new ApplicationException(500, "Erro ao cadastrar o usuário");
         }
     }
 
@@ -59,7 +59,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
 
         if (!passwordEncoder.matches(request.password(), userDetails.user().password())) {
             log.warn("action=signin_invalid_password identifier={}", request.identifier());
-            throw new ApplicationException(401, "Invalid credentials");
+            throw new ApplicationException(401, "Credenciais inválidas");
         }
 
         String token = BEARER_PREFIX + jwtTokenProvider.generateToken(userDetails);
@@ -91,7 +91,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             throw e;
         } catch (Exception e) {
             log.error("action=jwt_validate_error error={}", e.getMessage());
-            throw new ApplicationException(500, "Error occurred while validating JWT token");
+            throw new ApplicationException(500, "Erro ao validar o token JWT");
         }
     }
 
