@@ -1,7 +1,7 @@
 # ADR 002 — Escolha do banco de dados
 
 - **Status:** Proposto
-- **Data:** 2026-10-23
+- **Data:** 2026-10-24
 - **Responsável:** Ana Albuquerque
 
 ## Contexto
@@ -65,7 +65,8 @@ O PostgreSQL atende todos os critérios. Ele é um banco relacional single node 
 - **Execução:** container `postgres:18-alpine` no `docker-compose.yml`, com volume `pgdata` montado em `/var/lib/postgresql` (caminho esperado pela imagem a partir da versão 18) para persistir os dados e healthcheck `pg_isready`. A API só sobe depois que o banco estiver saudável.
 - **Acesso:** Spring Data JPA (Hibernate) com o driver `org.postgresql:postgresql`. Todo o acesso ao banco fica em `infrastructure/persistence/<contexto>/` (entidade JPA, `*JpaRepository`, `*PersistenceMapper` e `*PersistenceAdapter`), atrás dos `PortOut` do `core`, como define a ADR 001.
 - **Configuração:** URL, usuário e senha vêm de variáveis de ambiente (`DATASOURCE_HOST`, `DATASOURCE_USERNAME`, `DATASOURCE_PASSWORD`) no `application.yaml`. O compose define os valores de desenvolvimento.
-- **Schema:** nesta fase, as tabelas são geradas pelo Hibernate a partir das entidades JPA (`spring.jpa.hibernate.ddl-auto`), conforme combinado em 21/10.
+- **Schema e migrations:** o schema é versionado com **Flyway** (`spring-boot-starter-flyway` e `flyway-database-postgresql`). Cada mudança é um arquivo `V<n>__descricao.sql` em `src/main/resources/db/migration`, e a API aplica as migrations pendentes na subida. Hoje existem a `V1__schema_inicial.sql` (tabelas das entidades atuais) e a `V2__perfis_iniciais.sql` (perfis `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, exigidos pelo `/auth/register`). O Hibernate roda com `ddl-auto: validate`: ele não altera o banco, só confere na subida se as entidades batem com as tabelas, e a API não sobe se houver divergência. Uma migration já aplicada nunca é editada, porque o Flyway valida o checksum. Toda correção entra numa migration nova.
+  - Em 21/10, o time tinha combinado gerar as tabelas pelo Hibernate (`ddl-auto`) nesta fase. A troca para o Flyway veio junto com o primeiro schema completo (PR #83), antes de existirem dados que precisassem ser preservados.
 
 ### Como o banco atende às regras
 
@@ -77,6 +78,8 @@ O PostgreSQL atende todos os critérios. Ele é um banco relacional single node 
 | Valores monetários | Tipo `numeric` com precisão fixa | `preco` com `precision = 12, scale = 2` |
 | Delete lógico | Flag de ativo ou status, sem `DELETE` físico | `ativo` em `ClienteEntity` e `VeiculoEntity` |
 | Enums legíveis | Enum gravado como texto | `tipo_documento` com `@Enumerated(EnumType.STRING)` |
+| Schema igual em todos os ambientes | Migrations versionadas, conferidas pelo Hibernate na subida | `V1__schema_inicial.sql` e `ddl-auto: validate` |
+| Dados obrigatórios | Migration de dados | Perfis em `V2__perfis_iniciais.sql` |
 
 ## Alternativas consideradas
 
@@ -128,6 +131,27 @@ As alternativas estão agrupadas pela classificação PACELC e pelo tipo de banc
 - **Contras:** os dados se perdem a cada reinício, e o comportamento difere do PostgreSQL (tipos, SQL, constraints).
 - **Por que não:** a avaliação roda via Docker Compose, e subir um PostgreSQL ali é simples. Os testes do `core` já não dependem de banco, porque usam mocks dos ports.
 
+### 7. Como versionar o schema: `ddl-auto`, Flyway ou Liquibase
+
+| Opção | Situação |
+|---|---|
+| `ddl-auto` do Hibernate (`update` / `create`) | Usado no início. Substituído |
+| **Flyway** | **Escolhido** |
+| Liquibase | Viável, mais pesado do que precisamos |
+
+- **`ddl-auto`**
+  - **Prós:** nenhum arquivo para manter, porque as tabelas saem das entidades.
+  - **Contras:** não guarda histórico, não remove colunas nem renomeia tabelas, não cria dados iniciais (como os perfis) e pode deixar bancos diferentes entre as máquinas do time e a avaliação. O schema real depende da ordem em que cada um subiu a aplicação.
+  - **Por que não:** foi aceitável enquanto o banco era recriado a toda hora. Com o schema completo, os perfis obrigatórios e a avaliação via Docker Compose, precisamos de um banco reproduzível.
+- **Flyway**
+  - **Prós:** as migrations são SQL puro, que o time já sabe ler e escrever, e ficam no repositório junto com o código que as exige. A tabela `flyway_schema_history` registra o que foi aplicado, e o checksum impede alterar o histórico. O Spring Boot tem integração nativa: basta a dependência, sem configuração extra.
+  - **Contras:** o SQL é específico do PostgreSQL, e trocar de banco exigiria reescrever as migrations. Desfazer uma migration exige outra migration, porque não há *undo* na versão gratuita.
+  - **Por que sim:** é a opção mais simples que resolve o problema e a mais comum em projetos Spring.
+- **Liquibase**
+  - **Prós:** changesets em XML, YAML ou SQL, independência de banco e rollback declarado.
+  - **Contras:** mais conceitos (changelog, changeset, contexts) e mais configuração. Não precisamos ser independentes de banco (a escolha do PostgreSQL é esta ADR), e o rollback pode ser feito com uma migration nova.
+  - **Por que não:** a complexidade a mais não se paga num monólito com um único banco.
+
 ## Consequências
 
 ### Positivas
@@ -138,13 +162,16 @@ As alternativas estão agrupadas pela classificação PACELC e pelo tipo de banc
 - Tecnologia que o time já conhece, o que reduz o tempo de setup e de debug.
 - Bom suporte no ecossistema Spring (Spring Data JPA, `spring-boot-starter-data-jpa-test`) e em ferramentas de teste como Testcontainers.
 - Como o acesso fica atrás dos `PortOut`, trocar ou evoluir o banco afeta só `infrastructure`.
+- Schema versionado e reproduzível: qualquer máquina (ou a avaliação) recria o banco do zero com `docker compose up`, com as mesmas tabelas e perfis. Uma entidade que diverge do schema é detectada na subida, e não em produção.
 
 ### Negativas e trade-offs
 
 - O PostgreSQL é single node e não foi feito para ambientes distribuídos. Se for preciso escalar, o caminho natural são réplicas de leitura (replicação via WAL). Elas são assíncronas por padrão e trazem consistência eventual: leituras ligadas ao estoque e ao status da OS teriam que continuar indo para o nó principal. Sharding no PostgreSQL é manual e trabalhoso. Se a escala exigir distribuição de verdade, esta ADR deve ser revista, com um relacional distribuído como candidato.
 - Rodar a aplicação localmente exige subir também o container do banco (`docker compose up`).
-- O `ddl-auto` não versiona o schema. Mudanças nas entidades alteram o banco sem histórico, ele não remove colunas nem renomeia tabelas e pode deixar o schema diferente entre ambientes. Para a fase 1, com o banco sendo recriado em desenvolvimento, isso é aceitável.
-- Ainda não há dados iniciais (perfis, permissões, usuário administrador e credenciais de demonstração). Eles precisam ser definidos para a avaliação.
+- Toda mudança de entidade precisa vir com uma migration nova. Esquecer a migration faz a API não subir, por causa do `ddl-auto: validate`. O erro aparece cedo, mas exige disciplina no PR.
+- Volumes criados antes das migrations (pelo `ddl-auto`) já têm tabelas sem histórico do Flyway, e a API não sobe ("Found non-empty schema(s) ... without schema history table"). Em desenvolvimento, a saída é recriar o volume com `docker compose down -v`, o que apaga os dados locais.
+- As migrations usam SQL do PostgreSQL. Se esta ADR for revista para outro banco, elas precisam ser reescritas ou adaptadas (os relacionais distribuídos compatíveis com PostgreSQL reduzem esse custo).
+- Os perfis já são criados pela `V2__perfis_iniciais.sql`. Ainda faltam as permissões de cada perfil, o usuário administrador e as credenciais de demonstração, que precisam ser definidos para a avaliação. Credenciais não devem ir para uma migration versionada no repositório.
 - As credenciais do compose são de desenvolvimento e ficam em texto no repositório. Não devem ser usadas em outro ambiente.
 
 ## Referências
@@ -155,6 +182,8 @@ As alternativas estão agrupadas pela classificação PACELC e pelo tipo de banc
 - [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
 - Decisões registradas no grupo do time entre 16/10 e 23/10/2026
 - [Documentação do PostgreSQL 18](https://www.postgresql.org/docs/18/)
+- [Documentação do Flyway](https://documentation.red-gate.com/flyway) e [Spring Boot — Database initialization with Flyway](https://docs.spring.io/spring-boot/how-to/data-initialization.html#howto.data-initialization.migration-tool.flyway)
+- PR #83: adoção do Flyway com schema inicial e perfis
 - Renato Augusto, vídeo sobre como escolher o banco de dados (teoremas CAP e PACELC) e a planilha de classificação de bancos que o acompanha
 - Eric Brewer, *Towards Robust Distributed Systems* (PODC 2000): teorema CAP
 - Daniel Abadi, *Consistency Tradeoffs in Modern Distributed Database System Design* (IEEE Computer, 2012): PACELC
