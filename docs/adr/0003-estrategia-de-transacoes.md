@@ -115,7 +115,7 @@ O tratamento fica no `HandlerException` (`shared/handler`). O servidor **não te
 
 ### 6. Cadastro de usuário
 
-`AuthenticationUseCase.registerUser` passa a ser a fronteira da transação. Identidade, contato, endereço e usuário são gravados juntos ou nada é gravado. O `@Transactional` do método privado `IdentityUseCase.saveIdentity` sai, e o método público `registerIdentity` recebe a anotação.
+`AuthenticationUseCase.cadastrarUsuario` passa a ser a fronteira da transação. Identidade, contato, endereço e usuário são gravados juntos ou nada é gravado. O `@Transactional` do método privado `IdentityUseCase.saveIdentity` sai, e o método público `registerIdentity` recebe a anotação.
 
 ## Alternativas consideradas
 

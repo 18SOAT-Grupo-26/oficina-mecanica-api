@@ -9,7 +9,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePor
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecaInsumo.PecaInsumoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.port.in.user.UserUseCasePortIn;
+import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;
@@ -72,7 +72,7 @@ class OpenApiConfigTest {
     private JwtTokenProviderUseCase jwtTokenProvider;
 
     @MockitoBean
-    private UserUseCasePortIn userUseCase;
+    private UsuarioUseCasePortIn usuarioUseCase;
 
     private DocumentContext documentacao;
 

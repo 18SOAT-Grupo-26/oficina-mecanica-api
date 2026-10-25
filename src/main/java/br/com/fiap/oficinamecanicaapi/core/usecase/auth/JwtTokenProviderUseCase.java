@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.auth;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.user.model.UserDetails;
+import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -26,21 +26,21 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
     private static final long EXPIRATION_TIME = 60 * 60 * 1000;
 
     @Override
-    public String generateToken(UserDetails userDetails) throws ApplicationException {
+    public String gerarToken(DetalhesUsuario detalhesUsuario) throws ApplicationException {
         try {
             Date now = new Date();
             Date expirationDate = new Date(now.getTime() + EXPIRATION_TIME);
 
-            Set<String> permissions = userDetails.permissions() != null
-                    ? userDetails.permissions()
+            Set<String> permissoes = detalhesUsuario.permissoes() != null
+                    ? detalhesUsuario.permissoes()
                     : Set.of();
 
             return Jwts.builder()
-                    .claim("username", userDetails.user().username())
-                    .claim("given_name", userDetails.identity().givenName())
-                    .claim("email", userDetails.identity().contact().email())
-                    .claim("role", userDetails.user().role().name())
-                    .claim("permissions", permissions)
+                    .claim("username", detalhesUsuario.usuario().nomeUsuario())
+                    .claim("given_name", detalhesUsuario.identidade().primeiroNome())
+                    .claim("email", detalhesUsuario.identidade().contato().email())
+                    .claim("role", detalhesUsuario.usuario().perfil().name())
+                    .claim("permissions", permissoes)
                     .issuedAt(now)
                     .expiration(expirationDate)
                     .signWith(Keys.hmacShaKeyFor(getSigningKey()), SignatureAlgorithm.HS512)
@@ -53,7 +53,7 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
     }
 
     @Override
-    public Boolean validateToken(String token) throws ApplicationException {
+    public Boolean validarToken(String token) throws ApplicationException {
         try {
             Jwts.parser()
                     .verifyWith(Keys.hmacShaKeyFor(getSigningKey()))
@@ -70,7 +70,7 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
     }
 
     @Override
-    public String extractUsername(String token) throws ApplicationException {
+    public String extrairNomeUsuario(String token) throws ApplicationException {
         try {
             return Jwts.parser()
                     .verifyWith(Keys.hmacShaKeyFor(getSigningKey()))

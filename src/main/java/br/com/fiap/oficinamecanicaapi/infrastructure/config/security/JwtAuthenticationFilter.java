@@ -1,7 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.config.security;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SigninRequest;
-import br.com.fiap.oficinamecanicaapi.core.port.in.user.UserUseCasePortIn;
+import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,12 +26,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtTokenProviderUseCase jwtTokenProvider;
-    private final UserUseCasePortIn userPortOut;
+    private final UsuarioUseCasePortIn usuarioUseCase;
 
     public JwtAuthenticationFilter(JwtTokenProviderUseCase jwtTokenProvider,
-                                   UserUseCasePortIn userPortOut) {
+                                   UsuarioUseCasePortIn usuarioUseCase) {
         this.jwtTokenProvider = jwtTokenProvider;
-        this.userPortOut = userPortOut;
+        this.usuarioUseCase = usuarioUseCase;
     }
 
     @Override
@@ -47,24 +46,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = header.substring(BEARER_PREFIX.length());
         try {
-            if (Boolean.TRUE.equals(jwtTokenProvider.validateToken(token))) {
-                String username = jwtTokenProvider.extractUsername(token);
-                var userDetails = userPortOut.retrieveUser(
-                        SigninRequest.builder().identifier(username).build());
+            if (Boolean.TRUE.equals(jwtTokenProvider.validarToken(token))) {
+                String nomeUsuario = jwtTokenProvider.extrairNomeUsuario(token);
+                var detalhesUsuario = usuarioUseCase.buscarPorIdentificador(nomeUsuario);
 
                 List<GrantedAuthority> authorities = new ArrayList<>();
 
-                // Role como authority (ex: ROLE_ADMINISTRATOR)
-                authorities.add(userDetails.user().role());
+                // Perfil como authority (ex: ROLE_ADMINISTRATOR)
+                authorities.add(detalhesUsuario.usuario().perfil());
 
-                // Permissions como authorities individuais (ex: TUTOR_CREATE)
-                if (userDetails.permissions() != null) {
-                    userDetails.permissions().forEach(p ->
+                // Permissões como authorities individuais (ex: TUTOR_CREATE)
+                if (detalhesUsuario.permissoes() != null) {
+                    detalhesUsuario.permissoes().forEach(p ->
                             authorities.add(new SimpleGrantedAuthority(p)));
                 }
 
                 var auth = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, authorities);
+                        detalhesUsuario, null, authorities);
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }

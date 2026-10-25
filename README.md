@@ -158,11 +158,11 @@ Usamos o **PostgreSQL 18**, rodando em container via Docker Compose. Os dados da
 
 A autenticação usa JWT. O fluxo é:
 
-1. Cadastrar um usuário em `POST /api/v1/auth/register`
-2. Fazer login em `POST /api/v1/auth/login` informando `identifier` e `password`; a resposta traz o token
+1. Cadastrar um usuário em `POST /api/v1/auth/cadastro`
+2. Fazer login em `POST /api/v1/auth/login` informando `identificador` e `senha`; a resposta traz o token
 3. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`
 
-Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, criados pela migration `V2__perfis_iniciais.sql`. Nenhum usuário é criado automaticamente: o primeiro administrador é cadastrado pelo próprio `POST /api/v1/auth/register` com `"role": "ADMINISTRATOR"`.
+Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, criados pela migration `V2__perfis_iniciais.sql`. Nenhum usuário é criado automaticamente: o primeiro administrador é cadastrado pelo próprio `POST /api/v1/auth/cadastro` com `"perfil": "ADMINISTRATOR"`.
 
 Credenciais de demonstração: _a definir._
 
