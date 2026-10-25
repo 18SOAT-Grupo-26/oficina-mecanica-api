@@ -304,10 +304,11 @@ curl -X POST http://localhost:8081/api/v1/auth/login -H "Content-Type: applicati
   -d '{ "identifier": "admin", "password": "Admin@123" }'
 ```
 
-3. Enviar o token nas demais requisições: `Authorization: Bearer <token>`.
+1. Cadastrar um usuário em `POST /api/v1/auth/cadastro`
+2. Fazer login em `POST /api/v1/auth/login` informando `identificador` e `senha`; a resposta traz o token
+3. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`
 
-Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, criados pela migration `V2__perfis_iniciais.sql`. Nenhum
-usuário é criado automaticamente.
+Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, criados pela migration `V2__perfis_iniciais.sql`. Nenhum usuário é criado automaticamente: o primeiro administrador é cadastrado pelo próprio `POST /api/v1/auth/cadastro` com `"perfil": "ADMINISTRATOR"`.
 
 Credenciais de demonstração: `admin` / `Admin@123`, depois de rodar o cadastro acima.
 

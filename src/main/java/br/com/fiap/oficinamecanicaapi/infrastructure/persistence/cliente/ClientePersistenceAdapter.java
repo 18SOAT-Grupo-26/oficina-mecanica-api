@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Documento;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import org.springframework.data.domain.Page;

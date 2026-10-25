@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.controller.auth;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.AuthToken;
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.RegisterRequest;
+import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.CadastroRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
@@ -18,24 +18,22 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 public interface AuthAPI {
 
-    @Operation(summary = "Register User", tags = "Authentication")
-    @ApiResponse(responseCode = "201", description = "User registered successfully", content = @Content)
-    @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @PostMapping("/register")
-    ResponseEntity<Void> registerUser(@RequestBody @Valid RegisterRequest registerRequest) throws ApplicationException;
+    @Operation(summary = "Cadastrar usuário", tags = "Autenticação")
+    @ApiResponse(responseCode = "201", description = "Usuário cadastrado", content = @Content)
+    @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "E-mail ou documento já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @PostMapping("/cadastro")
+    ResponseEntity<Void> cadastrarUsuario(@RequestBody @Valid CadastroRequest request) throws ApplicationException;
 
-    @Operation(summary = "Generate Token", tags = "Authentication")
-    @ApiResponse(responseCode = "201", description = "Token generated successfully", content = @Content)
-    @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @Operation(summary = "Gerar token", tags = "Autenticação")
+    @ApiResponse(responseCode = "200", description = "Token gerado", content = @Content)
+    @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PostMapping("/login")
-    ResponseEntity<AuthToken> generateToken(@RequestBody @Valid SigninRequest request) throws ApplicationException;
+    ResponseEntity<AuthToken> gerarToken(@RequestBody @Valid SigninRequest request) throws ApplicationException;
 
-    @Operation(summary = "Validate Token", tags = "Authentication")
-    @ApiResponse(responseCode = "200", description = "Token is valid", content = @Content)
-    @ApiResponse(responseCode = "404", description = "Token not found", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @Operation(summary = "Validar token", tags = "Autenticação")
+    @ApiResponse(responseCode = "200", description = "Token válido", content = @Content)
     @GetMapping("/validate")
-    ResponseEntity<Boolean> validateToken(@RequestHeader(value = "Authorization") String token) throws ApplicationException;
+    ResponseEntity<Boolean> validarToken(@RequestHeader(value = "Authorization") String token) throws ApplicationException;
 
 }

@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.veiculo;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Documento;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Placa;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Veiculo;

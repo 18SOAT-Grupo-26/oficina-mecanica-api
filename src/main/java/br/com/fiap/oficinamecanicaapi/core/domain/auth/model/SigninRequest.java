@@ -5,7 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record SigninRequest(
-        @NotBlank String identifier,
-        @NotBlank String password
+        @NotBlank String identificador,
+        @NotBlank String senha
 ) {
 }

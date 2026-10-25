@@ -99,7 +99,7 @@ public class HandlerException {
 
         ErrorTemplate errorBody = ErrorTemplate.builder()
                 .errorCode(500)
-                .message("Unexpected internal error")
+                .message("Erro interno inesperado")
                 .timestamp(java.time.LocalDateTime.now())
                 .traceId(java.util.UUID.randomUUID().toString())
                 .build();

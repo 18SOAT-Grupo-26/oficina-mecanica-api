@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.controller.auth;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.AuthToken;
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.RegisterRequest;
+import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.CadastroRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
@@ -28,23 +28,22 @@ public class AuthController implements AuthAPI {
     }
 
     @Override
-    public ResponseEntity<Void> registerUser(@RequestBody @Valid RegisterRequest registerRequest) throws ApplicationException {
-        log.info("Registering user: {}", registerRequest.identity().fullName());
-        authService.registerUser(registerRequest);
+    public ResponseEntity<Void> cadastrarUsuario(@RequestBody @Valid CadastroRequest request) throws ApplicationException {
+        log.info("Registering user: {}", request.usuario().nomeUsuario());
+        authService.cadastrarUsuario(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override
-    public ResponseEntity<AuthToken> generateToken(@RequestBody @Valid SigninRequest request)
+    public ResponseEntity<AuthToken> gerarToken(@RequestBody @Valid SigninRequest request)
             throws ApplicationException {
-        log.info("Generating token for: {}", request.identifier());
-        return ResponseEntity.ok(authService.authenticate(request));
+        log.info("Generating token for: {}", request.identificador());
+        return ResponseEntity.ok(authService.autenticar(request));
     }
 
     @Override
-    public ResponseEntity<Boolean> validateToken(@RequestHeader(value = "Authorization") String token) throws ApplicationException {
-        log.info("Validating token: {}", token);
-        return ResponseEntity.ok(authService.validateJwtToken(token));
+    public ResponseEntity<Boolean> validarToken(@RequestHeader(value = "Authorization") String token) throws ApplicationException {
+        log.info("Validating token");
+        return ResponseEntity.ok(authService.validarToken(token));
     }
-
 }
