@@ -265,7 +265,7 @@ A autenticação usa JWT:
 
 | Método | Rota                    | Acesso                     |
 |--------|-------------------------|----------------------------|
-| `POST` | `/api/v1/auth/register` | público                    |
+| `POST` | `/api/v1/auth/cadastro` | público                    |
 | `POST` | `/api/v1/auth/login`    | público                    |
 | `GET`  | `/api/v1/auth/validate` | header `Authorization`     |
 | `*`    | `/api/v1/clientes`      | `ADMINISTRATOR`            |
@@ -273,40 +273,38 @@ A autenticação usa JWT:
 | `*`    | `/api/v1/servico`       | `ADMINISTRATOR`            |
 | `*`    | `/api/v1/insumos`       | `MANAGER`, `ADMINISTRATOR` |
 
-> **Limitação conhecida:** `POST /auth/register` é público e aceita qualquer `role`, inclusive `ADMINISTRATOR`. Use
+> **Limitação conhecida:** `POST /auth/cadastro` é público e aceita qualquer `perfil`, inclusive `ADMINISTRATOR`. Use
 > apenas em ambiente local até a regra de criação de administradores ser restringida.
 
-1. Cadastrar um usuário:
+1. Cadastrar um usuário (o `documento` aceita CPF ou CNPJ, com ou sem máscara):
 
 ```bash
-curl -X POST http://localhost:8081/api/v1/auth/register -H "Content-Type: application/json" -d '{
-  "identity": {
-    "fullName": "Ana Administradora",
-    "givenName": "Ana",
-    "cpf": "52998224725",
+curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -d '{
+  "identidade": {
+    "nomeCompleto": "Ana Administradora",
+    "primeiroNome": "Ana",
+    "documento": "52998224725",
     "rg": "123456789",
-    "dateOfBirth": "1990-05-10",
-    "contact": { "phoneNumber": "11999999999", "email": "ana@oficina.com.br" },
-    "address": { "street": "Av. Paulista", "number": "1000", "district": "Bela Vista",
-                 "city": "São Paulo", "state": "SP", "zipCode": "01310100", "complement": "" }
+    "dataNascimento": "1990-05-10",
+    "contato": { "telefone": "11999999999", "email": "ana@oficina.com.br" },
+    "endereco": { "logradouro": "Av. Paulista", "numero": "1000", "bairro": "Bela Vista",
+                  "cidade": "São Paulo", "estado": "SP", "cep": "01310100", "complemento": "" }
   },
-  "user": { "username": "admin", "password": "Admin@123", "changeRequired": false, "role": "ADMINISTRATOR" }
+  "usuario": { "nomeUsuario": "admin", "senha": "Admin@123", "trocaSenhaObrigatoria": false, "perfil": "ADMINISTRATOR" }
 }'
 ```
 
 A senha precisa ter de 8 a 64 caracteres, com maiúscula, minúscula, dígito e um destes especiais:
 `!@#$%^&*()-_=+[]{}<>?/,.:|~`.
 
-2. Fazer login (o `identifier` aceita username ou e-mail):
+2. Fazer login (o `identificador` aceita nome de usuário ou e-mail); a resposta traz o token:
 
 ```bash
 curl -X POST http://localhost:8081/api/v1/auth/login -H "Content-Type: application/json" \
-  -d '{ "identifier": "admin", "password": "Admin@123" }'
+  -d '{ "identificador": "admin", "senha": "Admin@123" }'
 ```
 
-1. Cadastrar um usuário em `POST /api/v1/auth/cadastro`
-2. Fazer login em `POST /api/v1/auth/login` informando `identificador` e `senha`; a resposta traz o token
-3. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`
+3. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`.
 
 Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, criados pela migration `V2__perfis_iniciais.sql`. Nenhum usuário é criado automaticamente: o primeiro administrador é cadastrado pelo próprio `POST /api/v1/auth/cadastro` com `"perfil": "ADMINISTRATOR"`.
 

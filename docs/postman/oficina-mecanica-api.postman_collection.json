@@ -115,7 +115,7 @@
                 "cadastro"
               ]
             },
-            "description": "Cadastra identidade, contato, endereço e usuário numa transação só. O perfil (`role`) deve existir: `ADMINISTRATOR`, `MANAGER` ou `OPERATOR`. O script gera username, e-mail e CPF únicos e guarda as credenciais para o login.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.",
+            "description": "Cadastra identidade, contato, endereço e usuário numa transação só. O perfil (`perfil`) deve existir: `ADMINISTRATOR`, `MANAGER` ou `OPERATOR`. O script gera username, e-mail e CPF únicos e guarda as credenciais para o login.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"identidade\": {\n    \"nomeCompleto\": \"Administrador da Oficina\",\n    \"primeiroNome\": \"Admin\",\n    \"documento\": \"{{cpfGerado}}\",\n    \"rg\": \"123456789\",\n    \"dataNascimento\": \"1990-05-20\",\n    \"contato\": {\n      \"telefone\": \"11987654321\",\n      \"email\": \"{{username}}@oficina.com\"\n    },\n    \"endereco\": {\n      \"logradouro\": \"Rua das Oficinas\",\n      \"numero\": \"100\",\n      \"bairro\": \"Centro\",\n      \"cidade\": \"São Paulo\",\n      \"estado\": \"SP\",\n      \"cep\": \"01001000\",\n      \"complemento\": \"Galpão 2\"\n    }\n  },\n  \"usuario\": {\n    \"nomeUsuario\": \"{{username}}\",\n    \"senha\": \"{{password}}\",\n    \"trocaSenhaObrigatoria\": false,\n    \"perfil\": \"ADMINISTRATOR\"\n  }\n}",
@@ -169,7 +169,7 @@
                 "login"
               ]
             },
-            "description": "Gera o token JWT. `identifier` aceita username ou e-mail. O script guarda o token em `{{token}}`, usado pelas demais pastas.",
+            "description": "Gera o token JWT. `identificador` aceita nome de usuário ou e-mail. O script guarda o token em `{{token}}`, usado pelas demais pastas.",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"identificador\": \"{{username}}\",\n  \"senha\": \"{{password}}\"\n}",
