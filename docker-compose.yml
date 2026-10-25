@@ -2,6 +2,7 @@ services:
   db:
     image: postgres:18-alpine
     container_name: oficina-mecanica-db
+    restart: unless-stopped
     environment:
       POSTGRES_DB: oficina
       POSTGRES_USER: postgres
@@ -11,7 +12,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d oficina"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d oficina" ]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -28,7 +29,55 @@ services:
       DATASOURCE_HOST: jdbc:postgresql://db:5432/oficina
       DATASOURCE_USERNAME: postgres
       DATASOURCE_PASSWORD: postgres
-      API_SECRET: 7hWsr9pC7/PMXCiBpB9inV316HGatXwIF5R8rt/1b/9XKjrUxTbGhs9ABJZwRvM03ye44zgLP7lUumCXuhgj0g==
+      API_SECRET: ${API_SECRET}
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://localhost:8081/api/v1/actuator/health || exit 1" ]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 40s
+
+  sonarqube:
+    image: sonarqube:26.9.0.129388-community
+    container_name: oficina-mecanica-sonarqube
+    ports:
+      - "9000:9000"
+    environment:
+      # ambiente local: dispensa o ajuste de vm.max_map_count exigido pelo Elasticsearch embutido
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    container_name: oficina-mecanica-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:13.2.4
+    container_name: oficina-mecanica-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
 
 volumes:
   pgdata:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  prometheus_data:
+  grafana_data:
