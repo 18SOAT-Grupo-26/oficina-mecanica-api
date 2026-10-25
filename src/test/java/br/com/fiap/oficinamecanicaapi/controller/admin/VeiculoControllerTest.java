@@ -1,13 +1,12 @@
 package br.com.fiap.oficinamecanicaapi.controller.admin;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
-import br.com.fiap.oficinamecanicaapi.core.domain.user.model.Role;
-import br.com.fiap.oficinamecanicaapi.core.domain.user.model.User;
-import br.com.fiap.oficinamecanicaapi.core.domain.user.model.UserDetails;
+import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
+import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
+import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.VeiculoRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.VeiculoResponse;
-import br.com.fiap.oficinamecanicaapi.core.port.in.user.UserUseCasePortIn;
+import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;
@@ -69,12 +68,12 @@ class VeiculoControllerTest {
     private JwtTokenProviderUseCase jwtTokenProvider;
 
     @MockitoBean
-    private UserUseCasePortIn userUseCase;
+    private UsuarioUseCasePortIn usuarioUseCase;
 
     @Test
     @DisplayName("Deve cadastrar veículo e responder 201 para administrador")
     void deveCadastrarVeiculo() throws Exception {
-        autenticarComo(Role.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMINISTRATOR);
         when(useCase.criar(REQUEST)).thenReturn(RESPONSE);
 
         mockMvc.perform(post("/veiculos").header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -87,7 +86,7 @@ class VeiculoControllerTest {
     @Test
     @DisplayName("Deve responder 400 listando os campos inválidos sem chamar o caso de uso")
     void deveRejeitarCorpoInvalido() throws Exception {
-        autenticarComo(Role.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMINISTRATOR);
         String corpoInvalido = """
                 {"placa":"","marca":"%s","modelo":"%s"}
                 """.formatted(MARCA, MODELO);
@@ -103,7 +102,7 @@ class VeiculoControllerTest {
     @Test
     @DisplayName("Deve responder 404 ao cadastrar veículo para cliente inexistente")
     void deveResponderClienteNaoEncontrado() throws Exception {
-        autenticarComo(Role.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMINISTRATOR);
         when(useCase.criar(REQUEST)).thenThrow(new ApplicationException(404, "Cliente não encontrado"));
 
         mockMvc.perform(post("/veiculos").header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -115,7 +114,7 @@ class VeiculoControllerTest {
     @Test
     @DisplayName("Deve responder 409 quando a placa já estiver cadastrada")
     void deveResponderConflito() throws Exception {
-        autenticarComo(Role.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMINISTRATOR);
         when(useCase.criar(REQUEST)).thenThrow(
                 new ApplicationException(409, "Já existe um veículo cadastrado com esta placa"));
 
@@ -127,7 +126,7 @@ class VeiculoControllerTest {
     @Test
     @DisplayName("Deve listar veículos filtrando por cliente e repassando a paginação")
     void deveListarVeiculosDoCliente() throws Exception {
-        autenticarComo(Role.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMINISTRATOR);
         when(useCase.listar(CLIENTE_ID, 0, 10)).thenReturn(new Pagina<>(List.of(RESPONSE), 0, 10, 1));
 
         mockMvc.perform(get("/veiculos").param("clienteId", "1").param("page", "0").param("size", "10")
@@ -140,7 +139,7 @@ class VeiculoControllerTest {
     @Test
     @DisplayName("Deve buscar veículo por id")
     void deveBuscarPorId() throws Exception {
-        autenticarComo(Role.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMINISTRATOR);
         when(useCase.buscarPorId(ID)).thenReturn(RESPONSE);
 
         mockMvc.perform(get("/veiculos/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -151,7 +150,7 @@ class VeiculoControllerTest {
     @Test
     @DisplayName("Deve buscar veículo por placa")
     void deveBuscarPorPlaca() throws Exception {
-        autenticarComo(Role.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMINISTRATOR);
         when(useCase.buscarPorPlaca(PLACA)).thenReturn(RESPONSE);
 
         mockMvc.perform(get("/veiculos/placa/{placa}", PLACA).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -162,7 +161,7 @@ class VeiculoControllerTest {
     @Test
     @DisplayName("Deve atualizar veículo e responder 200")
     void deveAtualizarVeiculo() throws Exception {
-        autenticarComo(Role.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMINISTRATOR);
         when(useCase.atualizar(ID, REQUEST)).thenReturn(RESPONSE);
 
         mockMvc.perform(put("/veiculos/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -174,7 +173,7 @@ class VeiculoControllerTest {
     @Test
     @DisplayName("Deve desativar veículo e responder 204")
     void deveDesativarVeiculo() throws Exception {
-        autenticarComo(Role.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMINISTRATOR);
 
         mockMvc.perform(delete("/veiculos/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isNoContent());
@@ -194,7 +193,7 @@ class VeiculoControllerTest {
     @Test
     @DisplayName("Deve responder 403 quando o usuário não tiver o perfil ADMINISTRATOR")
     void deveResponderAcessoNegado() throws Exception {
-        autenticarComo(Role.MANAGER);
+        autenticarComo(Perfil.MANAGER);
 
         mockMvc.perform(delete("/veiculos/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isForbidden());
@@ -202,10 +201,10 @@ class VeiculoControllerTest {
         verifyNoInteractions(useCase);
     }
 
-    private void autenticarComo(Role role) {
-        when(jwtTokenProvider.validateToken(TOKEN)).thenReturn(true);
-        when(jwtTokenProvider.extractUsername(TOKEN)).thenReturn(USERNAME);
-        when(userUseCase.retrieveUser(SigninRequest.builder().identifier(USERNAME).build()))
-                .thenReturn(new UserDetails(null, new User(USERNAME, null, false, role), Set.of()));
+    private void autenticarComo(Perfil perfil) {
+        when(jwtTokenProvider.validarToken(TOKEN)).thenReturn(true);
+        when(jwtTokenProvider.extrairNomeUsuario(TOKEN)).thenReturn(USERNAME);
+        when(usuarioUseCase.buscarPorIdentificador(USERNAME))
+                .thenReturn(new DetalhesUsuario(null, new Usuario(USERNAME, null, false, perfil), Set.of()));
     }
 }

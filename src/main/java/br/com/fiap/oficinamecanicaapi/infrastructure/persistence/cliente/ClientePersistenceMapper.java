@@ -1,8 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Documento;
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Endereco;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Endereco;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

@@ -1,5 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.cliente.model;
 
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Endereco;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import lombok.Getter;
 
