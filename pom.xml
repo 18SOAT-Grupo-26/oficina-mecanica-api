@@ -206,6 +206,7 @@
 										<include>br.com.fiap.oficinamecanicaapi.core.usecase.cliente*</include>
 										<include>br.com.fiap.oficinamecanicaapi.core.domain.veiculo*</include>
 										<include>br.com.fiap.oficinamecanicaapi.core.usecase.veiculo*</include>
+										<include>br.com.fiap.oficinamecanicaapi.core.domain.ordemservico*</include>
 									</includes>
 									<limits>
 										<limit>
