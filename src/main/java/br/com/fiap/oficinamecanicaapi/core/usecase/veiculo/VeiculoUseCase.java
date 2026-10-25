@@ -13,6 +13,7 @@ import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
@@ -32,6 +33,7 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
     }
 
     @Override
+    @Transactional
     public VeiculoResponse criar(VeiculoRequest request) throws ApplicationException {
         Placa placa = new Placa(request.placa());
         validarClienteAtivo(request.clienteId());
@@ -45,11 +47,13 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public VeiculoResponse buscarPorId(Long id) throws ApplicationException {
         return veiculoMapper.toResponse(buscarVeiculoAtivo(id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public VeiculoResponse buscarPorPlaca(String placa) throws ApplicationException {
         return veiculoPortOut.buscarAtivoPorPlaca(new Placa(placa))
                 .map(veiculoMapper::toResponse)
@@ -57,12 +61,14 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Pagina<VeiculoResponse> listar(Long clienteId, Integer pagina, Integer tamanho) {
         return veiculoPortOut.listarAtivos(clienteId, Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho))
                 .map(veiculoMapper::toResponse);
     }
 
     @Override
+    @Transactional
     public VeiculoResponse atualizar(Long id, VeiculoRequest request) throws ApplicationException {
         Veiculo veiculo = buscarVeiculoAtivo(id);
 
@@ -82,6 +88,7 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
     }
 
     @Override
+    @Transactional
     public void desativar(Long id) throws ApplicationException {
         Veiculo veiculo = buscarVeiculoAtivo(id);
         veiculo.desativar();

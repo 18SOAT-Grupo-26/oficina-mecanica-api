@@ -11,6 +11,8 @@ spring:
       # o schema vem só das migrations do Flyway (src/main/resources/db/migration);
       # o Hibernate apenas confere na subida se as entidades batem com as tabelas
       ddl-auto: validate
+    # sessão do Hibernate fecha junto com a transação do caso de uso (ADR 003)
+    open-in-view: false
 
 server:
   port: ${CLINIC_MANAGEMENT_PORT:8081}

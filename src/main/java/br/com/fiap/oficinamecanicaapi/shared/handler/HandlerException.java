@@ -3,10 +3,13 @@ package br.com.fiap.oficinamecanicaapi.shared.handler;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.QueryTimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -77,6 +80,16 @@ public class HandlerException {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorTemplate> handleAccessDenied(AccessDeniedException e) {
         return buildError(HttpStatus.FORBIDDEN, "Acesso negado");
+    }
+
+    /** Banco fora do ar ou lento demais: 503 explícito, sem detalhes da falha (RNF04, ADR 003). */
+    @ExceptionHandler({DataAccessResourceFailureException.class,
+            CannotCreateTransactionException.class,
+            QueryTimeoutException.class})
+    public ResponseEntity<ErrorTemplate> handleDatabaseUnavailable(Exception e) {
+        log.error("Database unavailable", e);
+        return buildError(HttpStatus.SERVICE_UNAVAILABLE,
+                "Serviço temporariamente indisponível. Tente novamente.");
     }
 
     @ExceptionHandler(Exception.class)

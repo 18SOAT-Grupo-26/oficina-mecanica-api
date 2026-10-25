@@ -12,6 +12,7 @@ import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ClienteUseCase implements ClienteUseCasePortIn {
@@ -27,6 +28,7 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
     }
 
     @Override
+    @Transactional
     public ClienteResponse criar(ClienteRequest request) throws ApplicationException {
         Documento documento = new Documento(request.documento());
         validarDocumentoDisponivel(documento);
@@ -40,11 +42,13 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClienteResponse buscarPorId(Long id) throws ApplicationException {
         return clienteMapper.toResponse(buscarClienteAtivo(id));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClienteResponse buscarPorDocumento(String documento) throws ApplicationException {
         return clientePortOut.buscarAtivoPorDocumento(new Documento(documento))
                 .map(clienteMapper::toResponse)
@@ -52,12 +56,14 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Pagina<ClienteResponse> listar(Integer pagina, Integer tamanho) {
         return clientePortOut.listarAtivos(Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho))
                 .map(clienteMapper::toResponse);
     }
 
     @Override
+    @Transactional
     public ClienteResponse atualizar(Long id, ClienteRequest request) throws ApplicationException {
         Cliente cliente = buscarClienteAtivo(id);
 
@@ -74,6 +80,7 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
     }
 
     @Override
+    @Transactional
     public void desativar(Long id) throws ApplicationException {
         Cliente cliente = buscarClienteAtivo(id);
         cliente.desativar();
