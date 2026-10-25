@@ -8,8 +8,8 @@ import java.util.Optional;
 public interface IdentityRepository
         extends JpaRepository<IdentityEntity, Long> {
 
-    Optional<IdentityEntity> findByCpf(String cpf);
+    Optional<IdentityEntity> findByDocumento(String documento);
 
-    boolean existsByCpf(String cpf);
+    boolean existsByDocumento(String documento);
 
 }

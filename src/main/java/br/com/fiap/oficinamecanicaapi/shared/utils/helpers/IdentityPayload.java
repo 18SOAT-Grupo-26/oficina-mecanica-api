@@ -1,10 +1,10 @@
 package br.com.fiap.oficinamecanicaapi.shared.utils.helpers;
 
+import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.identity.model.Identity;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.identity.ContactRepository;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.identity.IdentityRepository;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
-import br.com.fiap.oficinamecanicaapi.shared.utils.CpfValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -35,15 +35,12 @@ public class IdentityPayload {
         if (identityRequest.givenName() == null || identityRequest.givenName().isBlank()) {
             throw new ApplicationException(400, "Given name is required");
         }
-        // CPF: accept the user's typed value (possibly with mask), normalize
-        // to digits, and verify with the official check-digit algorithm.
-        String docDigits = CpfValidator.digits(identityRequest.cpf());
-        if (docDigits == null || docDigits.isBlank()) {
-            throw new ApplicationException(400, "CPF is required");
+        // Documento: CPF or CNPJ, with or without mask; Documento normalizes it
+        // and verifies the check digits, throwing 400 when invalid.
+        if (identityRequest.documento() == null || identityRequest.documento().isBlank()) {
+            throw new ApplicationException(400, "Document (CPF or CNPJ) is required");
         }
-        if (!CpfValidator.isValid(docDigits)) {
-            throw new ApplicationException(400, "Invalid CPF — please double-check the digits");
-        }
+        new Documento(identityRequest.documento());
 
         if (identityRequest.contact().phoneNumber() == null
                 || identityRequest.contact().phoneNumber().isBlank()) {
@@ -61,9 +58,7 @@ public class IdentityPayload {
             throw new ApplicationException(409, "Email already in use");
         }
 
-        String docDigits = CpfValidator.digits(identityRequest.cpf());
-        if (docDigits != null && !docDigits.isBlank()
-                && identityRepository.existsByCpf(docDigits)) {
+        if (identityRepository.existsByDocumento(new Documento(identityRequest.documento()).valor())) {
             throw new ApplicationException(409, "Document already in use by another user");
         }
 

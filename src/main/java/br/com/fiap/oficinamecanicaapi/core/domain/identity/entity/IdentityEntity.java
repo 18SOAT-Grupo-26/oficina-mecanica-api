@@ -1,5 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.identity.entity;
 
+import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.TipoDocumento;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,7 +24,12 @@ public class IdentityEntity {
     @Column(name = "given_name")
     private String givenName;
 
-    private String cpf;
+    @Column(nullable = false, unique = true, length = 14)
+    private String documento;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_documento", nullable = false, length = 4)
+    private TipoDocumento tipoDocumento;
 
     private String rg;
 

@@ -10,7 +10,7 @@ import java.time.LocalDate;
 public record Identity(
         @NotBlank String fullName,
         String givenName,
-        @NotBlank String cpf,
+        @NotBlank String documento,
         String rg,
         @NotNull @Past LocalDate dateOfBirth,
         @NotNull @Valid Contact contact,
