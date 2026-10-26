@@ -38,6 +38,15 @@ services:
       retries: 10
       start_period: 40s
 
+#  migrations:
+#    image: flyway/flyway:11-alpine
+#    command: -url=jdbc:postgresql://db:5432/oficina -user=postgres -password=postgres migrate
+#    volumes:
+#      - ./src/main/resources/db/migration:/flyway/sql:ro
+#    depends_on:
+#      db:
+#        condition: service_healthy
+
   sonarqube:
     image: sonarqube:26.9.0.129388-community
     container_name: oficina-mecanica-sonarqube

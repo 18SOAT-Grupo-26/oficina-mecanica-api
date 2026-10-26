@@ -1,6 +1,9 @@
 spring:
   application:
     name: "${APPLICATION_NAME:oficina-mecanica-api}"
+  config:
+    # fora do Docker: lê as variáveis do .env na raiz; no container o arquivo não existe e é ignorado
+    import: optional:file:.env[.properties]
   datasource:
     url: ${DATASOURCE_HOST:jdbc:postgresql://localhost:5432/oficina}
     username: ${DATASOURCE_USERNAME:}
@@ -48,3 +51,4 @@ springdoc:
     path: /documentation
   api-docs:
     path: /api-docs-personalized
+

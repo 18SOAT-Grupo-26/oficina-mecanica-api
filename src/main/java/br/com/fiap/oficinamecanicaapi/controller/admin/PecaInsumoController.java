@@ -23,32 +23,31 @@ public class PecaInsumoController implements PecaInsumoAPI {
 
     @Override
     @PostMapping
-    public ResponseEntity<PecaInsumoResponse> criar(@RequestBody PecaInsumoRequest request) throws ApplicationException {
+    public ResponseEntity<PecaInsumoResponse> criar(String token, PecaInsumoRequest request) throws ApplicationException {
         return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
     }
 
     @Override
     @GetMapping
-    public ResponseEntity<Pagina<PecaInsumoResponse>> listar(@RequestParam(required = false) Integer page,
-                                                             @RequestParam(required = false) Integer size) {
+    public ResponseEntity<Pagina<PecaInsumoResponse>> listar(String token, Integer page, Integer size) {
         return ResponseEntity.ok(useCase.listar(page, size));
     }
 
     @Override
     @GetMapping("/{id}")
-    public ResponseEntity<PecaInsumoResponse> buscarPorId(@PathVariable Long id) throws ApplicationException {
+    public ResponseEntity<PecaInsumoResponse> buscarPorId(String token, Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.buscarPorId(id));
     }
 
     @Override
     @PutMapping("/{id}")
-    public ResponseEntity<PecaInsumoResponse> atualizar(@PathVariable Long id, @RequestBody PecaInsumoRequest request) throws ApplicationException {
+    public ResponseEntity<PecaInsumoResponse> atualizar(String token, Long id, PecaInsumoRequest request) throws ApplicationException {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) throws ApplicationException {
+    public ResponseEntity<Void> excluir(String token, Long id) throws ApplicationException {
         useCase.excluir(id);
         return ResponseEntity.noContent().build();
     }

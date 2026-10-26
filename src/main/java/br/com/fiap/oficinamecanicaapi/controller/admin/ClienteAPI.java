@@ -11,13 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 public interface ClienteAPI {
 
@@ -26,26 +20,26 @@ public interface ClienteAPI {
     @ApiResponse(responseCode = "400", description = "Dados inválidos (inclui CPF/CNPJ inválido)", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Documento já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PostMapping
-    ResponseEntity<ClienteResponse> criar(@Valid @RequestBody ClienteRequest request) throws ApplicationException;
+    ResponseEntity<ClienteResponse> criar(@RequestHeader(value = "Authorization") String token, @Valid @RequestBody ClienteRequest request) throws ApplicationException;
 
     @Operation(summary = "Listar clientes ativos", tags = "Cliente")
     @ApiResponse(responseCode = "200", description = "Página de clientes ativos")
     @GetMapping
-    ResponseEntity<Pagina<ClienteResponse>> listar(@RequestParam(required = false) Integer page,
+    ResponseEntity<Pagina<ClienteResponse>> listar(@RequestHeader(value = "Authorization") String token, @RequestParam(required = false) Integer page,
                                                   @RequestParam(required = false) Integer size);
 
     @Operation(summary = "Buscar cliente por id", tags = "Cliente")
     @ApiResponse(responseCode = "200", description = "Cliente encontrado", content = @Content(schema = @Schema(implementation = ClienteResponse.class)))
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/{id}")
-    ResponseEntity<ClienteResponse> buscarPorId(@PathVariable Long id) throws ApplicationException;
+    ResponseEntity<ClienteResponse> buscarPorId(@RequestHeader(value = "Authorization") String token, @PathVariable Long id) throws ApplicationException;
 
     @Operation(summary = "Buscar cliente por CPF ou CNPJ", tags = "Cliente")
     @ApiResponse(responseCode = "200", description = "Cliente encontrado", content = @Content(schema = @Schema(implementation = ClienteResponse.class)))
     @ApiResponse(responseCode = "400", description = "Documento inválido", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/documento/{documento}")
-    ResponseEntity<ClienteResponse> buscarPorDocumento(@PathVariable String documento) throws ApplicationException;
+    ResponseEntity<ClienteResponse> buscarPorDocumento(@RequestHeader(value = "Authorization") String token, @PathVariable String documento) throws ApplicationException;
 
     @Operation(summary = "Atualizar cliente", tags = "Cliente")
     @ApiResponse(responseCode = "200", description = "Cliente atualizado", content = @Content(schema = @Schema(implementation = ClienteResponse.class)))
@@ -53,11 +47,11 @@ public interface ClienteAPI {
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Documento já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PutMapping("/{id}")
-    ResponseEntity<ClienteResponse> atualizar(@PathVariable Long id, @Valid @RequestBody ClienteRequest request) throws ApplicationException;
+    ResponseEntity<ClienteResponse> atualizar(@RequestHeader(value = "Authorization") String token, @PathVariable Long id, @Valid @RequestBody ClienteRequest request) throws ApplicationException;
 
     @Operation(summary = "Remover cliente (soft delete)", tags = "Cliente")
     @ApiResponse(responseCode = "204", description = "Cliente desativado")
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @DeleteMapping("/{id}")
-    ResponseEntity<Void> desativar(@PathVariable Long id) throws ApplicationException;
+    ResponseEntity<Void> desativar(@RequestHeader(value = "Authorization") String token, @PathVariable Long id) throws ApplicationException;
 }

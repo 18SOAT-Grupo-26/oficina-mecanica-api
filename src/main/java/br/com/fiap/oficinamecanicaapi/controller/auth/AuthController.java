@@ -28,21 +28,21 @@ public class AuthController implements AuthAPI {
     }
 
     @Override
-    public ResponseEntity<Void> cadastrarUsuario(@RequestBody @Valid CadastroRequest request) throws ApplicationException {
+    public ResponseEntity<Void> cadastrarUsuario(String token, CadastroRequest request) throws ApplicationException {
         log.info("Registering user: {}", request.usuario().nomeUsuario());
         authService.cadastrarUsuario(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override
-    public ResponseEntity<AuthToken> gerarToken(@RequestBody @Valid SigninRequest request)
+    public ResponseEntity<AuthToken> gerarToken(SigninRequest request)
             throws ApplicationException {
         log.info("Generating token for: {}", request.identificador());
         return ResponseEntity.ok(authService.autenticar(request));
     }
 
     @Override
-    public ResponseEntity<Boolean> validarToken(@RequestHeader(value = "Authorization") String token) throws ApplicationException {
+    public ResponseEntity<Boolean> validarToken(String token) throws ApplicationException {
         log.info("Validating token");
         return ResponseEntity.ok(authService.validarToken(token));
     }
