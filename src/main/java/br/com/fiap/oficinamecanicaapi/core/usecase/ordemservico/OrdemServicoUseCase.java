@@ -148,10 +148,11 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
     @Transactional(readOnly = true)
     public TempoMedioExecucaoResponse consultarTempoMedioExecucao() {
         List<Duration> tempos = ordemServicoPortOut.listarTemposExecucao();
+        int quantidadeOrdens = tempos.size();
         Long mediaMinutos = CalculadoraTempoMedioExecucao.calcular(tempos)
                 .map(Duration::toMinutes)
                 .orElse(null);
-        return new TempoMedioExecucaoResponse(mediaMinutos, tempos.size());
+        return new TempoMedioExecucaoResponse(mediaMinutos, quantidadeOrdens);
     }
 
     // ---- dados -----------------------------------------------------------------------------------
