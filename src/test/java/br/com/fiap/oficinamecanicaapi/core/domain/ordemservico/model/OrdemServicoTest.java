@@ -12,6 +12,7 @@ import java.util.List;
 
 import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class OrdemServicoTest {
@@ -286,7 +287,7 @@ class OrdemServicoTest {
         @DisplayName("Deve aceitar edição antes de EM_EXECUCAO")
         void deveAceitarEdicaoAntesDeEmExecucao() {
             for (OrdemServico os : List.of(osRecebidaReconstituida(), osEmDiagnostico(), osAguardandoAprovacao())) {
-                os.exigirEditavel();
+                assertThatCode(os::exigirEditavel).doesNotThrowAnyException();
             }
         }
 
