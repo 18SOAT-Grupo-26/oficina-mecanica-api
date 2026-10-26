@@ -49,6 +49,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
         try {
             validarPayloads(usuario);
             politicaSenha.validar(usuario.senha());
+            validarNomeUsuarioDisponivel(usuario.nomeUsuario());
 
             var perfilEntity = perfilRepository.findByNome(usuario.perfil().name())
                     .orElseThrow(() -> new ApplicationException(400,
@@ -93,5 +94,11 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     private void validarPayloads(Usuario usuario) {
         log.info("Validating user payload: {}", usuario.nomeUsuario());
         usuarioPayload.validarUsuario(usuario);
+    }
+
+    private void validarNomeUsuarioDisponivel(String nomeUsuario) {
+        if (usuarioRepository.existsByNomeUsuario(nomeUsuario)) {
+            throw new ApplicationException(409, "Já existe um usuário cadastrado com este nome de usuário");
+        }
     }
 }
