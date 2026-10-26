@@ -23,7 +23,7 @@ public interface AuthAPI {
     @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "E-mail ou documento já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PostMapping("/cadastro")
-    ResponseEntity<Void> cadastrarUsuario(@RequestBody @Valid CadastroRequest request) throws ApplicationException;
+    ResponseEntity<Void> cadastrarUsuario(@RequestHeader(value = "Authorization") String token, @RequestBody @Valid CadastroRequest request) throws ApplicationException;
 
     @Operation(summary = "Gerar token", tags = "Autenticação")
     @ApiResponse(responseCode = "200", description = "Token gerado", content = @Content)

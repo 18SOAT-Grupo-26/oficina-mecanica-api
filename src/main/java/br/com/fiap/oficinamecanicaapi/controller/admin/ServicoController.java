@@ -23,32 +23,31 @@ public class ServicoController implements ServicoAPI {
 
     @Override
     @PostMapping
-    public ResponseEntity<ServicoResponse> criar(@RequestBody ServicoRequest request) throws ApplicationException {
+    public ResponseEntity<ServicoResponse> criar(String token, ServicoRequest request) throws ApplicationException {
         return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
     }
 
     @Override
     @GetMapping
-    public ResponseEntity<Pagina<ServicoResponse>> listar(@RequestParam(required = false) Integer page,
-                                                          @RequestParam(required = false) Integer size) {
+    public ResponseEntity<Pagina<ServicoResponse>> listar(String token, Integer page, Integer size) {
         return ResponseEntity.ok(useCase.listar(page, size));
     }
 
     @Override
     @GetMapping("/{id}")
-    public ResponseEntity<ServicoResponse> buscarPorId(@PathVariable Long id) throws ApplicationException {
+    public ResponseEntity<ServicoResponse> buscarPorId(String token, Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.buscarPorId(id));
     }
 
     @Override
     @PutMapping("/{id}")
-    public ResponseEntity<ServicoResponse> atualizar(@PathVariable Long id, @RequestBody ServicoRequest request) throws ApplicationException {
+    public ResponseEntity<ServicoResponse> atualizar(String token, Long id, ServicoRequest request) throws ApplicationException {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluir(@PathVariable Long id) throws ApplicationException {
+    public ResponseEntity<Void> excluir(String token, Long id) throws ApplicationException {
         useCase.excluir(id);
         return ResponseEntity.noContent().build();
     }
