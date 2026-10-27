@@ -145,6 +145,7 @@ Possíveis problemas:
 | `DATASOURCE_USERNAME`    | vazio                                      | sim         | usuário do banco                                                  |
 | `DATASOURCE_PASSWORD`    | —                                          | sim         | senha do banco                                                    |
 | `API_SECRET`             | —                                          | sim         | chave de assinatura do JWT, em Base64 (`openssl rand -base64 64`) |
+| `CORS_ALLOWED_ORIGINS`   | vazio                                      | não         | origens do front que podem chamar a API pelo navegador, separadas por vírgula (ex.: `http://localhost:3000`); vazio = nenhuma |
 | `SERVER_PORT`            | `8081`                                     | não         | porta HTTP da API                                                 |
 | `APPLICATION_PREFIX`     | `api/v1`                                   | não         | prefixo (context-path) das rotas                                  |
 | `APPLICATION_NAME`       | `oficina-mecanica-api`                     | não         | nome da aplicação                                                 |
