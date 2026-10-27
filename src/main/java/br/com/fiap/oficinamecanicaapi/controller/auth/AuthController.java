@@ -28,7 +28,7 @@ public class AuthController implements AuthAPI {
     }
 
     @Override
-    public ResponseEntity<Void> cadastrarUsuario(String token, CadastroRequest request) throws ApplicationException {
+    public ResponseEntity<Void> cadastrarUsuario(CadastroRequest request) throws ApplicationException {
         log.info("Registering user: {}", request.usuario().nomeUsuario());
         authService.cadastrarUsuario(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
