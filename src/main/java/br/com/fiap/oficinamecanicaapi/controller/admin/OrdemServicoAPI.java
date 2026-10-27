@@ -13,6 +13,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /** Ordem de Serviço: abertura, consulta, itens e status. Toda resposta traz a OS com itens e histórico de status. */
 public interface OrdemServicoAPI {
 
@@ -32,6 +34,12 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/{id}")
     ResponseEntity<OrdemServicoResponse> consultar(@PathVariable Long id) throws ApplicationException;
+
+    @Operation(summary = "Listar OS", description = "Status, itens e histórico.", tags = "Ordem de Serviço")
+    @ApiResponse(responseCode = "200", description = "OS encontradas", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Nenhuma OS encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @GetMapping("/listar/{idCliente}")
+    ResponseEntity<List<OrdemServicoResponse>> listar(@PathVariable Long idCliente) throws ApplicationException;
 
     @Operation(summary = "Atualizar dados da OS",
             description = """

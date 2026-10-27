@@ -6,6 +6,7 @@ import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ValorMoneta
 import org.mapstruct.Mapper;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface OrdemServicoMapper {
@@ -15,4 +16,6 @@ public interface OrdemServicoMapper {
     default BigDecimal toBigDecimal(ValorMonetario valor) {
         return valor == null ? null : valor.valor();
     }
+
+    List<OrdemServicoResponse> toResponseList(List<OrdemServico> ordemServicos);
 }

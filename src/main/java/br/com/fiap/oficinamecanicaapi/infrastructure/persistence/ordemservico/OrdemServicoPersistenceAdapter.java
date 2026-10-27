@@ -45,6 +45,13 @@ public class OrdemServicoPersistenceAdapter implements OrdemServicoPortOut {
                 .toList();
     }
 
+    @Override
+    public List<OrdemServico> listarOrdens(Long idCliente) {
+        return repository.listarOrdensByClientId(idCliente).stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
     private OrdemServicoEntity carregarParaAtualizar(OrdemServico ordemServico) {
         OrdemServicoEntity entity = repository.findById(ordemServico.getId())
                 .orElseThrow(() -> new ApplicationException(404, "Ordem de serviço não encontrada"));

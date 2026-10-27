@@ -18,4 +18,6 @@ public interface OrdemServicoPortOut {
      * já entregues. OS canceladas ou ainda em andamento ficam de fora.
      */
     List<Duration> listarTemposExecucao();
+
+    List<OrdemServico> listarOrdens(Long idCliente);
 }

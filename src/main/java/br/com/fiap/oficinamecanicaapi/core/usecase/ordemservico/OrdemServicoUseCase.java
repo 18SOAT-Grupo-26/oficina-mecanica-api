@@ -99,6 +99,15 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
     }
 
     @Override
+    public List<OrdemServicoResponse> listar(Long idCliente) throws ApplicationException {
+        return mapper.toResponseList(listarOrdens(idCliente));
+    }
+
+    private List<OrdemServico> listarOrdens(Long idCliente) {
+        return ordemServicoPortOut.listarOrdens(idCliente);
+    }
+
+    @Override
     public OrdemServicoResponse atualizar(Long id, OrdemServicoRequest request) {
         exigirCamposObrigatorios(request);
         OrdemServico os = buscar(id);

@@ -5,6 +5,8 @@ import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServic
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.TempoMedioExecucaoResponse;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 
+import java.util.List;
+
 /**
  * Casos de uso da OS. Cliente, veículo, serviço e peça já existem nos próprios cadastros; a OS só os
  * referencia. Os dados (itens) mudam pelo {@link #atualizar} e o status manual, pelo
@@ -18,9 +20,11 @@ public interface OrdemServicoUseCasePortIn {
 
     OrdemServicoResponse consultar(Long id) throws ApplicationException;
 
+    List<OrdemServicoResponse> listar(Long idCliente) throws ApplicationException;
+
     /**
      * Atualização completa dos dados (cliente, veículo, itens): todos os campos são obrigatórios, e
-     * lista vazia remove os itens daquele tipo. Campo igual ao atual não conta como alteração.
+     * lista vazia remove os itens daquele type. Campo igual ao atual não conta como alteração.
      */
     OrdemServicoResponse atualizar(Long id, OrdemServicoRequest request) throws ApplicationException;
 
