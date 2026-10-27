@@ -55,21 +55,32 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
     public AuthToken autenticar(SigninRequest request) throws ApplicationException {
         log.info("action=signin_start identifier={}", request.identificador());
 
-        var detalhesUsuario = usuarioService.buscarPorIdentificador(request.identificador());
+        try {
+            var detalhesUsuario = usuarioService.buscarPorIdentificador(request.identificador());
 
-        if (!passwordEncoder.matches(request.senha(), detalhesUsuario.usuario().senha())) {
-            log.warn("action=signin_invalid_password identifier={}", request.identificador());
+            if (!passwordEncoder.matches(request.senha(), detalhesUsuario.usuario().senha())) {
+                log.warn("action=signin_invalid_password identifier={}", request.identificador());
+                throw new ApplicationException(401, "Credenciais inválidas");
+            }
+
+            String token = BEARER_PREFIX + jwtTokenProvider.gerarToken(detalhesUsuario);
+            log.info("action=signin_success identifier={} changeRequired={}",
+                    request.identificador(), detalhesUsuario.usuario().trocaSenhaObrigatoria());
+
+            return AuthToken.builder()
+                    .token(token)
+                    .trocaSenhaObrigatoria(detalhesUsuario.usuario().trocaSenhaObrigatoria())
+                    .build();
+        } catch (ApplicationException e) {
+            if (e.getErrorCode() != 404) {
+                throw e;
+            }
+            // Usuário inexistente: mesma resposta e mesmo custo de bcrypt da senha errada,
+            // para nem o status nem o tempo revelarem quais logins existem.
+            passwordEncoder.encode(request.senha());
+            log.warn("action=signin_user_not_found identifier={}", request.identificador());
             throw new ApplicationException(401, "Credenciais inválidas");
         }
-
-        String token = BEARER_PREFIX + jwtTokenProvider.gerarToken(detalhesUsuario);
-        log.info("action=signin_success identifier={} changeRequired={}",
-                request.identificador(), detalhesUsuario.usuario().trocaSenhaObrigatoria());
-
-        return AuthToken.builder()
-                .token(token)
-                .trocaSenhaObrigatoria(detalhesUsuario.usuario().trocaSenhaObrigatoria())
-                .build();
     }
 
     @Override
