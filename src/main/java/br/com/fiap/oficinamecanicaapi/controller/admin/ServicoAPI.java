@@ -16,32 +16,32 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 public interface ServicoAPI {
 
-    @Operation(summary = "Create service", tags = "Service")
-    @ApiResponse(responseCode = "201", description = "Service created successfully", content = @Content(schema = @Schema(implementation = ServicoResponse.class)))
-    @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "409", description = "Service with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @Operation(summary = "Criar serviço", tags = "Serviço")
+    @ApiResponse(responseCode = "201", description = "Serviço criado com sucesso", content = @Content(schema = @Schema(implementation = ServicoResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "Serviço com o mesmo nome já existe", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "422", description = "Dados da requisição inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<ServicoResponse> criar(@RequestBody ServicoRequest request) throws ApplicationException;
 
-    @Operation(summary = "Listar services", tags = "Service")
-    @ApiResponse(responseCode = "200", description = "Página de services")
-    @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @Operation(summary = "Listar serviços", tags = "Serviço")
+    @ApiResponse(responseCode = "200", description = "Página de serviços")
+    @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<Pagina<ServicoResponse>> listar(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) throws ApplicationException;
 
-    @Operation(summary = "Buscar service por id", tags = "Service")
-    @ApiResponse(responseCode = "200", description = "Service encontrado", content = @Content(schema = @Schema(implementation = ServicoResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Service não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @Operation(summary = "Buscar serviço por id", tags = "Serviço")
+    @ApiResponse(responseCode = "200", description = "Serviço encontrado", content = @Content(schema = @Schema(implementation = ServicoResponse.class)))
+    @ApiResponse(responseCode = "404", description = "Serviço não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<ServicoResponse> buscarPorId(@PathVariable Long id) throws ApplicationException;
 
-    @Operation(summary = "Atualizar service", tags = "Service")
+    @Operation(summary = "Atualizar serviço", tags = "Serviço")
     @ApiResponse(responseCode = "200", description = "Service atualizado", content = @Content(schema = @Schema(implementation = ServicoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Service não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Nome de service já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<ServicoResponse> atualizar(@PathVariable Long id, @RequestBody ServicoRequest request) throws ApplicationException;
 
-    @Operation(summary = "Excluir service", tags = "Service")
-    @ApiResponse(responseCode = "204", description = "Service excluído")
-    @ApiResponse(responseCode = "404", description = "Service não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @Operation(summary = "Excluir serviço", tags = "Serviço")
+    @ApiResponse(responseCode = "204", description = "Serviço excluído")
+    @ApiResponse(responseCode = "404", description = "Serviço não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     ResponseEntity<Void> excluir(@PathVariable Long id) throws ApplicationException;
 }
