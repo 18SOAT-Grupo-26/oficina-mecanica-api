@@ -1,5 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.config.docs;
 
+import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.RotasPublicas;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.core.converter.ModelConverters;
 import io.swagger.v3.oas.models.Components;
@@ -27,7 +28,6 @@ import java.util.TreeMap;
 public class OpenApiConfig {
 
     static final String BEARER_AUTH = "bearerAuth";
-    private static final String ROTAS_PUBLICAS = "/auth/";
     private static final String ERROR_TEMPLATE_REF = "#/components/schemas/" + ErrorTemplate.class.getSimpleName();
 
     @Bean
@@ -51,7 +51,7 @@ public class OpenApiConfig {
             registrarErrorTemplate(openApi);
             openApi.getPaths().forEach((path, item) -> item.readOperations().forEach(operacao -> {
                 ApiResponses respostas = operacao.getResponses();
-                if (!path.startsWith(ROTAS_PUBLICAS)) {
+                if (!RotasPublicas.isPublica(path)) {
                     operacao.addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH));
                     respostas.putIfAbsent("401", new ApiResponse().description("Token ausente ou inválido"));
                     respostas.putIfAbsent("403", respostaDeErro("Usuário sem perfil autorizado para esta operação"));
