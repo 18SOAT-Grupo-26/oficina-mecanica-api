@@ -34,12 +34,16 @@ public class Veiculo {
         aplicarDados(placa, marca, modelo, ano, clienteId);
     }
 
-    /** Cria um veículo novo, ainda não persistido e ativo. */
+    /**
+     * Cria um veículo novo, ainda não persistido e ativo.
+     */
     public static Veiculo novo(Placa placa, String marca, String modelo, Integer ano, Long clienteId) {
         return new Veiculo(null, placa, marca, modelo, ano, clienteId, true, null, null);
     }
 
-    /** Reconstrói um veículo já persistido (uso exclusivo dos adapters de saída). */
+    /**
+     * Reconstrói um veículo já persistido (uso exclusivo dos adapters de saída).
+     */
     public static Veiculo reconstituir(Long id, Placa placa, String marca, String modelo, Integer ano,
                                        Long clienteId, boolean ativo,
                                        OffsetDateTime criadoEm, OffsetDateTime atualizadoEm) {
@@ -54,7 +58,9 @@ public class Veiculo {
         this.ativo = false;
     }
 
-    /** Aceita até o ano seguinte ao atual, pois modelos do próximo ano já são vendidos. */
+    /**
+     * Aceita até o ano seguinte ao atual, pois modelos do próximo ano já são vendidos.
+     */
     static int anoMaximo() {
         return Year.now().getValue() + 1;
     }

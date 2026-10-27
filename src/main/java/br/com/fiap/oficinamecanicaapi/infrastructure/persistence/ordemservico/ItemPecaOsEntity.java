@@ -6,7 +6,9 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
-/** Peça ou insumo na OS. Descrição e preço são cópias do cadastro no momento da inclusão. */
+/**
+ * Peça ou insumo na OS. Descrição e preço são cópias do cadastro no momento da inclusão.
+ */
 @Entity
 @Table(name = "item_peca_os")
 @Getter

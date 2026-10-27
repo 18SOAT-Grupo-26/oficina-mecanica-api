@@ -23,7 +23,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** CORS: só as origens de api.cors.allowed-origins (CORS_ALLOWED_ORIGINS) chamam a API pelo navegador. */
+/**
+ * CORS: só as origens de api.cors.allowed-origins (CORS_ALLOWED_ORIGINS) chamam a API pelo navegador.
+ */
 @WebMvcTest(ClienteController.class)
 @Import(SecurityConfig.class)
 @TestPropertySource(properties = "api.cors.allowed-origins=" + CorsConfigTest.FRONT_LOCAL + ", " + CorsConfigTest.FRONT_PRODUCAO)

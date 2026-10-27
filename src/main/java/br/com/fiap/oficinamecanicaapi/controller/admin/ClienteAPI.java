@@ -26,7 +26,7 @@ public interface ClienteAPI {
     @ApiResponse(responseCode = "200", description = "Página de clientes ativos")
     @GetMapping
     ResponseEntity<Pagina<ClienteResponse>> listar(@RequestParam(required = false) Integer page,
-                                                  @RequestParam(required = false) Integer size);
+                                                   @RequestParam(required = false) Integer size);
 
     @Operation(summary = "Buscar cliente por id", tags = "Cliente")
     @ApiResponse(responseCode = "200", description = "Cliente encontrado", content = @Content(schema = @Schema(implementation = ClienteResponse.class)))

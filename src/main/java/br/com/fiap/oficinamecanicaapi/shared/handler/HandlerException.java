@@ -2,7 +2,9 @@ package br.com.fiap.oficinamecanicaapi.shared.handler;
 
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
-import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.instrument.Metrics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.http.HttpStatus;
@@ -15,25 +17,36 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Slf4j
+/**
+ * Toda resposta de erro passa por aqui e é logada uma única vez, com o mesmo traceId do corpo:
+ * 4xx em WARN (sem stack trace), 5xx em ERROR (com stack trace).
+ */
 @RestControllerAdvice
 public class HandlerException {
 
+    private static final Logger log = LoggerFactory.getLogger(HandlerException.class);
+
     @ExceptionHandler(ApplicationException.class)
     public ResponseEntity<ErrorTemplate> handleApplicationException(ApplicationException e) {
-
-        log.error("ApplicationException: {}", e.getMessage(), e);
-
         HttpStatus status = HttpStatus.resolve(e.getErrorCode());
-
         if (status == null) {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+
+        if (status.is5xxServerError()) {
+            log.error("action=erro_aplicacao status={} rota={} traceId={} mensagem={}",
+                    status.value(), rota(), e.getTraceId(), e.getMessage(), e);
+        } else {
+            log.warn("action=erro_negocio status={} rota={} traceId={} mensagem={}",
+                    status.value(), rota(), e.getTraceId(), e.getMessage());
         }
 
         ErrorTemplate errorBody = ErrorTemplate.builder()
@@ -42,26 +55,18 @@ public class HandlerException {
                 .timestamp(e.getTimestamp())
                 .traceId(e.getTraceId())
                 .build();
-
-        log.info("Returning error body: {}", errorBody);
-
         return ResponseEntity.status(status).body(errorBody);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorTemplate> handleUnreadableBody(HttpMessageNotReadableException e) {
-
-        ErrorTemplate errorBody = ErrorTemplate.builder()
-                .errorCode(422)
-                .message("Requisição inválida: verifique o formato e o tipo dos campos")
-                .timestamp(java.time.LocalDateTime.now())
-                .traceId(java.util.UUID.randomUUID().toString())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errorBody);
+        return buildError(HttpStatus.UNPROCESSABLE_ENTITY,
+                "Requisição inválida: verifique o formato e o tipo dos campos");
     }
 
-    /** Bean Validation (@Valid) — informa só o nome do campo, nunca o valor recebido. */
+    /**
+     * Bean Validation (@Valid) — informa só o nome do campo, nunca o valor recebido.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorTemplate> handleInvalidArgument(MethodArgumentNotValidException e) {
         String campos = e.getBindingResult().getFieldErrors().stream()
@@ -72,7 +77,9 @@ public class HandlerException {
         return buildError(HttpStatus.BAD_REQUEST, "Campos inválidos: " + campos);
     }
 
-    /** Header obrigatório ausente (ex.: Authorization no /auth/validate); sem este handler cairia no 500. */
+    /**
+     * Header obrigatório ausente (ex.: Authorization no /auth/validate); sem este handler cairia no 500.
+     */
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<ErrorTemplate> handleMissingHeader(MissingRequestHeaderException e) {
         return buildError(HttpStatus.BAD_REQUEST, "Header obrigatório ausente: " + e.getHeaderName());
@@ -83,45 +90,65 @@ public class HandlerException {
         return buildError(HttpStatus.BAD_REQUEST, "Parâmetro inválido: " + e.getName());
     }
 
-    /** @PreAuthorize negado; sem este handler o genérico abaixo devolveria 500. */
+    /**
+     * @PreAuthorize negado; sem este handler o genérico abaixo devolveria 500.
+     */
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorTemplate> handleAccessDenied(AccessDeniedException e) {
+        Metrics.counter("oficina.seguranca.acesso.negado", "status", "403").increment();
         return buildError(HttpStatus.FORBIDDEN, "Acesso negado");
     }
 
-    /** Banco fora do ar ou lento demais: 503 explícito, sem detalhes da falha (RNF04, ADR 003). */
+    /**
+     * Banco fora do ar ou lento demais: 503 explícito, sem detalhes da falha (RNF04, ADR 003).
+     */
     @ExceptionHandler({DataAccessResourceFailureException.class,
             CannotCreateTransactionException.class,
             QueryTimeoutException.class})
     public ResponseEntity<ErrorTemplate> handleDatabaseUnavailable(Exception e) {
-        log.error("Database unavailable", e);
+        Metrics.counter("oficina.banco.indisponivel").increment();
         return buildError(HttpStatus.SERVICE_UNAVAILABLE,
-                "Serviço temporariamente indisponível. Tente novamente.");
+                "Serviço temporariamente indisponível. Tente novamente.", e);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorTemplate> handleGenericException(Exception e) {
-
-        log.error("Unexpected error", e);
-
-        ErrorTemplate errorBody = ErrorTemplate.builder()
-                .errorCode(500)
-                .message("Erro interno inesperado")
-                .timestamp(java.time.LocalDateTime.now())
-                .traceId(java.util.UUID.randomUUID().toString())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorBody);
+        return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno inesperado", e);
     }
 
     private static ResponseEntity<ErrorTemplate> buildError(HttpStatus status, String message) {
+        return buildError(status, message, null);
+    }
+
+    /**
+     * Com causa: ERROR com stack trace (5xx). Sem causa: WARN (4xx). O traceId do log é o mesmo do corpo.
+     */
+    private static ResponseEntity<ErrorTemplate> buildError(HttpStatus status, String message, Exception causa) {
+        String traceId = UUID.randomUUID().toString();
+        if (causa != null) {
+            log.error("action=erro_servidor status={} rota={} traceId={} mensagem={}",
+                    status.value(), rota(), traceId, message, causa);
+        } else {
+            log.warn("action=erro_requisicao status={} rota={} traceId={} mensagem={}",
+                    status.value(), rota(), traceId, message);
+        }
+
         ErrorTemplate errorBody = ErrorTemplate.builder()
                 .errorCode(status.value())
                 .message(message)
                 .timestamp(LocalDateTime.now())
-                .traceId(UUID.randomUUID().toString())
+                .traceId(traceId)
                 .build();
-
         return ResponseEntity.status(status).body(errorBody);
+    }
+
+    /**
+     * "GET /api/v1/clientes/9"; "-" fora de uma requisição (ex.: teste unitário).
+     */
+    private static String rota() {
+        if (RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes atributos) {
+            return atributos.getRequest().getMethod() + " " + atributos.getRequest().getRequestURI();
+        }
+        return "-";
     }
 }

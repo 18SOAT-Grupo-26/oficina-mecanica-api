@@ -1,14 +1,30 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+  external_labels:
+    ambiente: local
+
+rule_files:
+  - /etc/prometheus/alertas.yaml
 
 scrape_configs:
   - job_name: prometheus
     static_configs:
       - targets: [ "localhost:9090" ]
 
+  # API rodando no Docker (docker compose up)
   - job_name: oficina-mecanica-api
     # o context-path /api/v1 (application.yaml) entra no caminho do actuator
     metrics_path: /api/v1/actuator/prometheus
     static_configs:
       - targets: [ "api:8081" ]
+        labels:
+          origem: docker
+
+  # API rodando na máquina (IDE ou mvn spring-boot:run); só um dos dois jobs fica UP por vez
+  - job_name: oficina-mecanica-api-local
+    metrics_path: /api/v1/actuator/prometheus
+    static_configs:
+      - targets: [ "host.docker.internal:8081" ]
+        labels:
+          origem: local

@@ -1,14 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ItemPeca;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ItemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoResponse;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.TempoMedioExecucaoResponse;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ValorMonetario;
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.*;
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.service.CalculadoraTempoMedioExecucao;
 import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.entity.ServicoEntity;
@@ -22,6 +15,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.veiculo.VeiculoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico.mapper.OrdemServicoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
@@ -29,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -38,6 +33,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
+import java.util.stream.Stream;
 
 /**
  * Casos de uso da OS. As regras de status e de itens ficam no agregado; aqui ficam as consultas aos
@@ -59,6 +55,9 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
     private final OrdemServicoMapper mapper;
     private final Clock clock;
     private final Timer tempoExecucao;
+    private final Timer tempoTotal;
+    private final DistributionSummary valorOrcamento;
+    private final MeterRegistry meterRegistry;
 
     public OrdemServicoUseCase(OrdemServicoPortOut ordemServicoPortOut, ClientePortOut clientePortOut,
                                VeiculoPortOut veiculoPortOut, ServicoPortOut servicoPortOut,
@@ -75,6 +74,14 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
         this.tempoExecucao = Timer.builder("oficina.os.tempo.execucao")
                 .description("Tempo de execução da OS, de EM_EXECUCAO até FINALIZADA")
                 .register(meterRegistry);
+        this.tempoTotal = Timer.builder("oficina.os.tempo.total")
+                .description("Tempo total da OS, da abertura (RECEBIDA) até ENTREGUE")
+                .register(meterRegistry);
+        this.valorOrcamento = DistributionSummary.builder("oficina.os.orcamento.valor")
+                .description("Valor do orçamento enviado ao cliente")
+                .baseUnit("reais")
+                .register(meterRegistry);
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -88,7 +95,9 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
         sincronizarPecas(os, request.pecas());
         OrdemServico salva = ordemServicoPortOut.salvar(os);
 
-        log.info("action=os_criada id={}", salva.getId());
+        meterRegistry.counter("oficina.os.criadas").increment();
+        log.info("action=os_criada id={} clienteId={} veiculoId={} servicos={} pecas={}", salva.getId(),
+                salva.getIdCliente(), salva.getIdVeiculo(), salva.getItensServico().size(), salva.getItensPeca().size());
         return mapper.toResponse(salva);
     }
 
@@ -99,6 +108,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OrdemServicoResponse> listar(Long idCliente) throws ApplicationException {
         return mapper.toResponseList(listarOrdens(idCliente));
     }
@@ -134,6 +144,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
         aplicarStatus(os, request.status());
         OrdemServicoResponse response = mapper.toResponse(ordemServicoPortOut.salvar(os));
 
+        contarTransicao(statusAnterior, response.status());
         log.info("action=os_status_alterado id={} statusAnterior={} status={}", id, statusAnterior, response.status());
         return response;
     }
@@ -175,7 +186,9 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
      * atual não chama o agregado.
      */
 
-    /** A validação do controller cobre o mesmo, mas o caso de uso não depende dela. */
+    /**
+     * A validação do controller cobre o mesmo, mas o caso de uso não depende dela.
+     */
     private static void exigirCamposObrigatorios(OrdemServicoRequest request) {
         if (request == null) {
             throw new ApplicationException(400, "Os dados da OS são obrigatórios");
@@ -194,7 +207,9 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
         }
     }
 
-    /** O documento chega no PUT, mas a OS guarda o id: busca o cliente só para comparar. */
+    /**
+     * O documento chega no PUT, mas a OS guarda o id: busca o cliente só para comparar.
+     */
     private void exigirMesmoCliente(OrdemServico os, String documentoCliente) {
         if (!buscarCliente(documentoCliente).getId().equals(os.getIdCliente())) {
             throw new ApplicationException(409, "O cliente da OS não pode ser alterado; cancele a OS e abra outra");
@@ -222,7 +237,9 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
         return veiculo;
     }
 
-    /** Item novo vem do cadastro; item que só mudou de quantidade mantém o preço já congelado. */
+    /**
+     * Item novo vem do cadastro; item que só mudou de quantidade mantém o preço já congelado.
+     */
     private void sincronizarServicos(OrdemServico os, List<OrdemServicoRequest.Servico> servicos) {
         Map<Long, Integer> desejado = porId(servicos, OrdemServicoRequest.Servico::idServico,
                 OrdemServicoRequest.Servico::quantidade, "Serviço repetido na requisição: ");
@@ -243,7 +260,9 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
         });
     }
 
-    /** Como os serviços, mas conferindo o saldo; a reserva fica com o orçamento, no envio. */
+    /**
+     * Como os serviços, mas conferindo o saldo; a reserva fica com o orçamento, no envio.
+     */
     private void sincronizarPecas(OrdemServico os, List<OrdemServicoRequest.Peca> pecas) {
         Map<Long, Integer> desejado = porId(pecas, OrdemServicoRequest.Peca::idPeca,
                 OrdemServicoRequest.Peca::quantidade, "Peça repetida na requisição: ");
@@ -270,7 +289,9 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
                 .orElseThrow(() -> new ApplicationException(404, "Peça não encontrada no catálogo"));
     }
 
-    /** Saldo disponível = quantidade em estoque menos a já reservada para orçamentos enviados. */
+    /**
+     * Saldo disponível = quantidade em estoque menos a já reservada para orçamentos enviados.
+     */
     private static void exigirSaldo(PecaInsumoEntity peca, int quantidade) {
         int saldo = valorOuZero(peca.getQuantidade()) - valorOuZero(peca.getReservado());
         if (quantidade > saldo) {
@@ -307,7 +328,12 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
                 os.finalizar(agora());
                 os.getTempoExecucao().ifPresent(tempoExecucao::record);
             }
-            case ENTREGUE -> os.entregar(agora());
+            case ENTREGUE -> {
+                os.entregar(agora());
+                os.getHistorico().stream().findFirst()
+                        .map(abertura -> Duration.between(abertura.dataHora(), agora()))
+                        .ifPresent(tempoTotal::record);
+            }
             case CANCELADA -> {
                 boolean temReserva = os.getStatus() == StatusOrdemServico.AGUARDANDO_APROVACAO;
                 os.cancelar(agora());
@@ -315,20 +341,29 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
                     atualizarEstoqueOrcamento(os, AcaoEstoque.LIBERAR);
                 }
             }
-            case EM_DIAGNOSTICO -> throw new ApplicationException(409, "EM_DIAGNOSTICO é automático: a OS entra nele ao ser aberta");
-            case AGUARDANDO_APROVACAO -> throw new ApplicationException(409, "AGUARDANDO_APROVACAO é automático: vem do envio do orçamento");
-            case EM_EXECUCAO -> throw new ApplicationException(409, "EM_EXECUCAO é automático: vem da aprovação do orçamento");
-            case RECEBIDA -> throw new ApplicationException(409, "Transição inválida: " + os.getStatus() + " → RECEBIDA");
+            case EM_DIAGNOSTICO ->
+                    throw new ApplicationException(409, "EM_DIAGNOSTICO é automático: a OS entra nele ao ser aberta");
+            case AGUARDANDO_APROVACAO ->
+                    throw new ApplicationException(409, "AGUARDANDO_APROVACAO é automático: vem do envio do orçamento");
+            case EM_EXECUCAO ->
+                    throw new ApplicationException(409, "EM_EXECUCAO é automático: vem da aprovação do orçamento");
+            case RECEBIDA ->
+                    throw new ApplicationException(409, "Transição inválida: " + os.getStatus() + " → RECEBIDA");
         }
     }
 
     private OrdemServicoResponse registrarOrcamento(Long id, BiConsumer<OrdemServico, OffsetDateTime> comando,
                                                     AcaoEstoque acaoEstoque, String acao) {
         OrdemServico os = buscar(id);
+        StatusOrdemServico statusAnterior = os.getStatus();
         comando.accept(os, agora());
         atualizarEstoqueOrcamento(os, acaoEstoque);
 
         OrdemServicoResponse response = mapper.toResponse(ordemServicoPortOut.salvar(os));
+        contarTransicao(statusAnterior, response.status());
+        if (acaoEstoque == AcaoEstoque.RESERVAR) {
+            valorOrcamento.record(valorTotal(os).doubleValue());
+        }
 
         log.info("action={} id={} status={}", acao, id, response.status());
         return response;
@@ -353,12 +388,20 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
                 case CONSUMIR -> pecaInsumoPortOut.baixar(movimentacao.id(), movimentacao.quantidade());
                 case LIBERAR -> pecaInsumoPortOut.liberar(movimentacao.id(), movimentacao.quantidade());
             };
+            String tipo = acao.name().toLowerCase();
             if (!atualizado) {
+                log.warn("action=estoque_recusado tipo={} pecaId={} quantidade={}",
+                        tipo, movimentacao.id(), movimentacao.quantidade());
+                meterRegistry.counter("oficina.estoque.movimentacao.recusada", "tipo", tipo).increment();
                 String motivo = acao == AcaoEstoque.RESERVAR
                         ? "Saldo insuficiente para reservar a peça "
                         : "Não há reserva suficiente para atualizar o estoque da peça ";
                 throw new ApplicationException(409, motivo + movimentacao.descricao());
             }
+            log.debug("action=estoque_movimentado tipo={} pecaId={} quantidade={}",
+                    tipo, movimentacao.id(), movimentacao.quantidade());
+            meterRegistry.counter("oficina.estoque.movimentacao.unidades", "tipo", tipo)
+                    .increment(movimentacao.quantidade());
         }
     }
 
@@ -369,6 +412,16 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
     }
 
     private record MovimentacaoEstoque(Long id, String descricao, int quantidade) {
+    }
+
+    private void contarTransicao(StatusOrdemServico de, StatusOrdemServico para) {
+        meterRegistry.counter("oficina.os.transicoes", "de", de.name(), "para", para.name()).increment();
+    }
+
+    private static BigDecimal valorTotal(OrdemServico os) {
+        return Stream.concat(os.getItensServico().stream(), os.getItensPeca().stream())
+                .map(item -> item.getSubtotal().valor())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private OrdemServico buscar(Long id) {

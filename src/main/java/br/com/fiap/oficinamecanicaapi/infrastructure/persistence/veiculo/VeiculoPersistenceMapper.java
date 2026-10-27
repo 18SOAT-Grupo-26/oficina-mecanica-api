@@ -8,14 +8,18 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface VeiculoPersistenceMapper {
 
-    /** O {@code cliente} é uma referência JPA resolvida pelo adapter a partir do {@code clienteId}. */
+    /**
+     * O {@code cliente} é uma referência JPA resolvida pelo adapter a partir do {@code clienteId}.
+     */
     @Mapping(target = "placa", source = "placa.valor")
     @Mapping(target = "cliente", ignore = true)
     @Mapping(target = "createdAt", source = "criadoEm")
     @Mapping(target = "updatedAt", source = "atualizadoEm")
     VeiculoEntity toEntity(Veiculo veiculo);
 
-    /** O agregado não tem setters; a reconstrução passa pela fábrica do domínio. */
+    /**
+     * O agregado não tem setters; a reconstrução passa pela fábrica do domínio.
+     */
     default Veiculo toDomain(VeiculoEntity entity) {
         return Veiculo.reconstituir(
                 entity.getId(),

@@ -1,10 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ItemPeca;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ItemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.RegistroHistorico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ValorMonetario;
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.*;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

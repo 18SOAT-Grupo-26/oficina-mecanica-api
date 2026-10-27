@@ -5,11 +5,13 @@ import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.ClienteRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.ClienteResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Endereco;
-import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.TipoDocumento;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.TipoDocumento;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.cliente.mapper.ClienteMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.OffsetDateTime;
@@ -27,9 +30,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ClienteUseCaseTest {
@@ -55,9 +56,12 @@ class ClienteUseCaseTest {
 
     private ClienteUseCase useCase;
 
+    @Spy
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     @BeforeEach
     void setUp() {
-        useCase = new ClienteUseCase(clientePortOut, Mappers.getMapper(ClienteMapper.class));
+        useCase = new ClienteUseCase(clientePortOut, Mappers.getMapper(ClienteMapper.class), meterRegistry);
     }
 
     @Test

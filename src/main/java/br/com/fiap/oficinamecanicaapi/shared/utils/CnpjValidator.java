@@ -17,7 +17,9 @@ public final class CnpjValidator {
     private CnpjValidator() {
     }
 
-    /** Returns an uppercase copy with only letters and digits. NULL stays NULL. */
+    /**
+     * Returns an uppercase copy with only letters and digits. NULL stays NULL.
+     */
     public static String normalize(String raw) {
         if (raw == null) return null;
         return raw.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
@@ -39,7 +41,9 @@ public final class CnpjValidator {
         return secondCheck == (c.charAt(13) - '0');
     }
 
-    /** Formats for display: 12ABC34501DE35 → 12.ABC.345/01DE-35. */
+    /**
+     * Formats for display: 12ABC34501DE35 → 12.ABC.345/01DE-35.
+     */
     public static String format(String raw) {
         String c = normalize(raw);
         if (c == null || c.length() != LENGTH) return raw;

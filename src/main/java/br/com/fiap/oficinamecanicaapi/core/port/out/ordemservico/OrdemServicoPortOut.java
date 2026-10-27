@@ -8,7 +8,9 @@ import java.util.Optional;
 
 public interface OrdemServicoPortOut {
 
-    /** Grava a OS com itens e histórico e devolve a versão persistida, com os ids preenchidos. */
+    /**
+     * Grava a OS com itens e histórico e devolve a versão persistida, com os ids preenchidos.
+     */
     OrdemServico salvar(OrdemServico ordemServico);
 
     Optional<OrdemServico> buscarPorId(Long id);

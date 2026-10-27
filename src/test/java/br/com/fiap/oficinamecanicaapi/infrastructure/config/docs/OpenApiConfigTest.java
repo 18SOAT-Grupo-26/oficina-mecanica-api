@@ -47,7 +47,9 @@ class OpenApiConfigTest {
 
     private static final String API_DOCS = "/api-docs-personalized";
     private static final String OPERACOES = "$.paths.*.*";
-    /** CRUDs de cliente, veículo, insumo e serviço (5 operações cada) na data do teste. */
+    /**
+     * CRUDs de cliente, veículo, insumo e serviço (5 operações cada) na data do teste.
+     */
     private static final int OPERACOES_PROTEGIDAS_MINIMO = 20;
 
     @Autowired

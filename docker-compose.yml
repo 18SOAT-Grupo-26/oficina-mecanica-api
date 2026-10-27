@@ -39,15 +39,6 @@ services:
       retries: 10
       start_period: 40s
 
-#  migrations:
-#    image: flyway/flyway:11-alpine
-#    command: -url=jdbc:postgresql://db:5432/oficina -user=postgres -password=postgres migrate
-#    volumes:
-#      - ./src/main/resources/db/migration:/flyway/sql:ro
-#    depends_on:
-#      db:
-#        condition: service_healthy
-
   sonarqube:
     image: sonarqube:26.9.0.129388-community
     container_name: oficina-mecanica-sonarqube
@@ -68,7 +59,11 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alertas.yaml:/etc/prometheus/alertas.yaml:ro
       - prometheus_data:/prometheus
+    extra_hosts:
+      # no Linux, faz host.docker.internal apontar para a máquina (no Docker Desktop já funciona)
+      - "host.docker.internal:host-gateway"
 
   grafana:
     image: grafana/grafana:13.2.4
@@ -78,6 +73,8 @@ services:
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      # abre direto no dashboard da API
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/json/oficina-mecanica-api.json
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - grafana_data:/var/lib/grafana

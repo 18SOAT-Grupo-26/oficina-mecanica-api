@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.usuario;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
+import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.usecase.usuario.mapper.UsuarioMapper;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.PerfilRepository;
@@ -66,9 +66,12 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
 
             usuarioRepository.save(usuarioMapper.toEntityCadastro(usuarioComSenhaCifrada, perfilEntity));
             log.info("action=user_register_success username={}", usuario.nomeUsuario());
+        } catch (ApplicationException e) {
+            log.warn("action=user_register_rejected username={} status={} motivo={}",
+                    usuario.nomeUsuario(), e.getErrorCode(), e.getMessage());
+            throw e;
         } catch (RuntimeException e) {
-            log.error("action=user_register_failure username={} error={}",
-                    usuario.nomeUsuario(), e.getMessage());
+            log.error("action=user_register_failure username={}", usuario.nomeUsuario(), e);
             throw e;
         }
     }
@@ -83,7 +86,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
                     .orElseThrow(() -> new ApplicationException(404, MENSAGEM_NAO_ENCONTRADO))
                     : usuarioRepository.findByNomeUsuario(identificador)
                     .orElseThrow(() -> new ApplicationException(404, MENSAGEM_NAO_ENCONTRADO));
-            log.info("action=user_retrieve_success identifier_type={}", tipoIdentificador);
+            log.debug("action=user_retrieve_success identifier_type={}", tipoIdentificador);
             return usuarioMapper.toDetalhesUsuario(entity);
         } catch (RuntimeException e) {
             if (e instanceof ApplicationException ex && ex.getErrorCode() == 404) {
@@ -94,7 +97,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     }
 
     private void validarPayloads(Usuario usuario) {
-        log.info("Validating user payload: {}", usuario.nomeUsuario());
+        log.debug("Validating user payload: {}", usuario.nomeUsuario());
         usuarioPayload.validarUsuario(usuario);
     }
 

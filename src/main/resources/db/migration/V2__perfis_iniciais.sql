@@ -4,5 +4,4 @@
 insert into roles (name, description, created_at, updated_at)
 values ('ADMINISTRATOR', 'Administrador: acesso total às APIs administrativas', now(), now()),
        ('MANAGER', 'Gerente da oficina', now(), now()),
-       ('OPERATOR', 'Operador/atendente da oficina', now(), now())
-on conflict (name) do nothing;
+       ('OPERATOR', 'Operador/atendente da oficina', now(), now()) on conflict (name) do nothing;

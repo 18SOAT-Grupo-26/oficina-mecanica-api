@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** Ordem de Serviço: abertura, consulta, itens e status. Toda resposta traz a OS com itens e histórico de status. */
+/**
+ * Ordem de Serviço: abertura, consulta, itens e status. Toda resposta traz a OS com itens e histórico de status.
+ */
 public interface OrdemServicoAPI {
 
     @Operation(summary = "Criar OS",

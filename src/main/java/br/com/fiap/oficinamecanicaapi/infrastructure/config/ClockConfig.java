@@ -5,7 +5,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.time.Clock;
 
-/** Relógio único da aplicação: os casos de uso leem a hora daqui, e os testes usam um fixo. */
+/**
+ * Relógio único da aplicação: os casos de uso leem a hora daqui, e os testes usam um fixo.
+ */
 @Configuration
 public class ClockConfig {
 

@@ -3,7 +3,9 @@ package br.com.fiap.oficinamecanicaapi.core.domain.shared.model;
 import java.util.List;
 import java.util.function.Function;
 
-/** Resultado paginado do domínio, sem depender do Spring Data. */
+/**
+ * Resultado paginado do domínio, sem depender do Spring Data.
+ */
 public record Pagina<T>(
         List<T> itens,
         int pagina,
@@ -19,12 +21,16 @@ public record Pagina<T>(
         return new Pagina<>(itens.stream().map(conversor).toList(), pagina, tamanho, total);
     }
 
-    /** Página ausente ou negativa vira a primeira. */
+    /**
+     * Página ausente ou negativa vira a primeira.
+     */
     public static int paginaValida(Integer pagina) {
         return pagina == null || pagina < 0 ? PAGINA_PADRAO : pagina;
     }
 
-    /** Tamanho ausente ou menor que 1 usa o padrão; acima do máximo é limitado. */
+    /**
+     * Tamanho ausente ou menor que 1 usa o padrão; acima do máximo é limitado.
+     */
     public static int tamanhoValido(Integer tamanho) {
         return tamanho == null || tamanho < 1 ? TAMANHO_PADRAO : Math.min(tamanho, TAMANHO_MAXIMO);
     }

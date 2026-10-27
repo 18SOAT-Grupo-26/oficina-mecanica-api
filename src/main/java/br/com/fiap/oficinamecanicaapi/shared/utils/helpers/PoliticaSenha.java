@@ -13,7 +13,7 @@ public class PoliticaSenha {
 
     /**
      * Specials we deliberately allow. We exclude the high-risk ones:
-     *   '  "  `  \  ;
+     * '  "  `  \  ;
      * That keeps the password safe even if some downstream layer accidentally
      * builds an unparametrized query.
      */

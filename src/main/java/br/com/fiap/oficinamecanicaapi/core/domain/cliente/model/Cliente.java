@@ -35,12 +35,16 @@ public class Cliente {
         aplicarDados(nome, documento, email, telefone, endereco);
     }
 
-    /** Cria um cliente novo, ainda não persistido e ativo. */
+    /**
+     * Cria um cliente novo, ainda não persistido e ativo.
+     */
     public static Cliente novo(String nome, Documento documento, String email, String telefone, Endereco endereco) {
         return new Cliente(null, nome, documento, email, telefone, endereco, true, null, null);
     }
 
-    /** Reconstrói um cliente já persistido (uso exclusivo dos adapters de saída). */
+    /**
+     * Reconstrói um cliente já persistido (uso exclusivo dos adapters de saída).
+     */
     public static Cliente reconstituir(Long id, String nome, Documento documento, String email, String telefone,
                                        Endereco endereco, boolean ativo,
                                        OffsetDateTime criadoEm, OffsetDateTime atualizadoEm) {

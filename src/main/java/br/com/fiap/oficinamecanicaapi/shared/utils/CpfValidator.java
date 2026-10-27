@@ -12,7 +12,9 @@ public final class CpfValidator {
     private CpfValidator() {
     }
 
-    /** Returns a digits-only copy of the input. NULL stays NULL. */
+    /**
+     * Returns a digits-only copy of the input. NULL stays NULL.
+     */
     public static String digits(String raw) {
         if (raw == null) return null;
         return raw.replaceAll("\\D", "");
@@ -51,7 +53,9 @@ public final class CpfValidator {
         }
     }
 
-    /** Formats for display: 12345678901 → 123.456.789-01. */
+    /**
+     * Formats for display: 12345678901 → 123.456.789-01.
+     */
     public static String format(String raw) {
         String d = digits(raw);
         if (d == null || d.length() != 11) return raw;

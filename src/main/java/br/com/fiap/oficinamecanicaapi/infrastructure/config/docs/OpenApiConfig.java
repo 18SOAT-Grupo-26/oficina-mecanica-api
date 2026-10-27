@@ -62,7 +62,9 @@ public class OpenApiConfig {
         };
     }
 
-    /** Garante o schema do corpo de erro mesmo que nenhuma {@code *API} o referencie diretamente. */
+    /**
+     * Garante o schema do corpo de erro mesmo que nenhuma {@code *API} o referencie diretamente.
+     */
     private static void registrarErrorTemplate(OpenAPI openApi) {
         Components components = openApi.getComponents();
         ModelConverters.getInstance().readAll(ErrorTemplate.class)
@@ -80,7 +82,9 @@ public class OpenApiConfig {
                         new MediaType().schema(new Schema<>().$ref(ERROR_TEMPLATE_REF))));
     }
 
-    /** Ordena por código para o Swagger exibir 2xx, 4xx e 5xx em sequência. */
+    /**
+     * Ordena por código para o Swagger exibir 2xx, 4xx e 5xx em sequência.
+     */
     private static ApiResponses ordenadas(ApiResponses respostas) {
         ApiResponses ordenadas = new ApiResponses();
         new TreeMap<String, ApiResponse>(respostas).forEach(ordenadas::addApiResponse);

@@ -14,9 +14,13 @@ public interface VeiculoPortOut {
 
     Optional<Veiculo> buscarAtivoPorPlaca(Placa placa);
 
-    /** Considera também veículos inativos, pois a placa é única na tabela. */
+    /**
+     * Considera também veículos inativos, pois a placa é única na tabela.
+     */
     boolean existePorPlaca(Placa placa);
 
-    /** {@code clienteId} nulo lista todos os veículos ativos. */
+    /**
+     * {@code clienteId} nulo lista todos os veículos ativos.
+     */
     Pagina<Veiculo> listarAtivos(Long clienteId, int pagina, int tamanho);
 }

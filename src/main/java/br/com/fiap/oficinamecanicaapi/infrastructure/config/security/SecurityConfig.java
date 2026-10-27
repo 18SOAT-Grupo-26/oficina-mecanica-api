@@ -1,5 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.config.security;
 
+import io.micrometer.core.instrument.Metrics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -13,7 +16,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -24,8 +26,11 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)   // @PreAuthorize nos controllers; proxy por classe preserva o @RestController de quem implementa *API
+@EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
+// @PreAuthorize nos controllers; proxy por classe preserva o @RestController de quem implementa *API
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final List<String> origensPermitidas;
@@ -60,7 +65,12 @@ public class SecurityConfig {
 
                 // sem httpBasic/formLogin o padrão seria 403; requisição sem token deve receber 401
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                        .authenticationEntryPoint((request, response, ex) -> {
+                            log.warn("action=acesso_nao_autenticado method={} uri={}",
+                                    request.getMethod(), request.getRequestURI());
+                            Metrics.counter("oficina.seguranca.acesso.negado", "status", "401").increment();
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                        }))
 
                 .addFilterBefore(jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class);

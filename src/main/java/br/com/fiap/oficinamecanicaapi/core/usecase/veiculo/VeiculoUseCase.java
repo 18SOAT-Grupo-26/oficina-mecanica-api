@@ -10,6 +10,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.veiculo.VeiculoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.veiculo.mapper.VeiculoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,11 +26,16 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
     private final VeiculoPortOut veiculoPortOut;
     private final ClientePortOut clientePortOut;
     private final VeiculoMapper veiculoMapper;
+    private final MeterRegistry meterRegistry;
 
-    public VeiculoUseCase(VeiculoPortOut veiculoPortOut, ClientePortOut clientePortOut, VeiculoMapper veiculoMapper) {
+    public VeiculoUseCase(VeiculoPortOut veiculoPortOut,
+                          ClientePortOut clientePortOut,
+                          VeiculoMapper veiculoMapper,
+                          MeterRegistry meterRegistry) {
         this.veiculoPortOut = veiculoPortOut;
         this.clientePortOut = clientePortOut;
         this.veiculoMapper = veiculoMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -42,6 +48,7 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
         Veiculo veiculo = Veiculo.novo(placa, request.marca(), request.modelo(), request.ano(), request.clienteId());
         Veiculo salvo = veiculoPortOut.salvar(veiculo);
 
+        contar("criado");
         log.info("action=veiculo_criado id={} clienteId={}", salvo.getId(), salvo.getClienteId());
         return veiculoMapper.toResponse(salvo);
     }
@@ -75,6 +82,7 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
         Placa placa = new Placa(request.placa());
         if (!Objects.equals(request.clienteId(), veiculo.getClienteId())) {
             validarClienteAtivo(request.clienteId());
+            log.info("action=veiculo_transferido id={} clienteAnterior={} clienteNovo={}", id, veiculo.getClienteId(), request.clienteId());
         }
         if (!placa.equals(veiculo.getPlaca())) {
             validarPlacaDisponivel(placa);
@@ -83,6 +91,7 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
         veiculo.atualizar(placa, request.marca(), request.modelo(), request.ano(), request.clienteId());
         Veiculo salvo = veiculoPortOut.salvar(veiculo);
 
+        contar("atualizado");
         log.info("action=veiculo_atualizado id={} clienteId={}", salvo.getId(), salvo.getClienteId());
         return veiculoMapper.toResponse(salvo);
     }
@@ -94,6 +103,7 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
         veiculo.desativar();
         veiculoPortOut.salvar(veiculo);
 
+        contar("desativado");
         log.info("action=veiculo_desativado id={}", id);
     }
 
@@ -115,5 +125,9 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
 
     private static ApplicationException veiculoNaoEncontrado() {
         return new ApplicationException(404, "Veículo não encontrado");
+    }
+
+    private void contar(String operacao) {
+        meterRegistry.counter("oficina.cadastro.operacoes", "entidade", "veiculo", "operacao", operacao).increment();
     }
 }

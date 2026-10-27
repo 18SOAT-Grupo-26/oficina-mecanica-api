@@ -7,12 +7,15 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.out.pecaInsumo.PecaInsumoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.pecaInsumo.mapper.PecaInsumoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -22,9 +25,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PecaInsumoUseCaseTest {
@@ -38,9 +39,12 @@ class PecaInsumoUseCaseTest {
 
     private PecaInsumoUseCase useCase;
 
+    @Spy
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     @BeforeEach
     void setUp() {
-        useCase = new PecaInsumoUseCase(pecaInsumoPortOut, Mappers.getMapper(PecaInsumoMapper.class));
+        useCase = new PecaInsumoUseCase(pecaInsumoPortOut, Mappers.getMapper(PecaInsumoMapper.class), meterRegistry);
     }
 
     @Test

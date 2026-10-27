@@ -1,0 +1,51 @@
+groups:
+  - name: oficina-mecanica-api
+    rules:
+      - alert: ApiFora
+        expr: max(up{job=~"oficina-mecanica-api.*"}) == 0
+        for: 1m
+        labels:
+          severidade: critica
+        annotations:
+          resumo: "A API não responde ao Prometheus há mais de 1 minuto"
+
+      - alert: TaxaDeErros5xxAlta
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api", status=~"5.."}[5m]))
+            / sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api"}[5m])) > 0.05
+        for: 5m
+        labels:
+          severidade: alta
+        annotations:
+          resumo: "Mais de 5% das requisições terminando em 5xx"
+
+      - alert: LatenciaP95Alta
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m]))) > 1
+        for: 5m
+        labels:
+          severidade: media
+        annotations:
+          resumo: "p95 das requisições acima de 1 segundo"
+
+      - alert: BancoIndisponivel
+        expr: sum(increase(oficina_banco_indisponivel_total[5m])) > 0
+        labels:
+          severidade: critica
+        annotations:
+          resumo: "A API respondeu 503 por falha de banco nos últimos 5 minutos"
+
+      - alert: FalhasDeLoginEmExcesso
+        expr: sum(increase(oficina_auth_login_total{resultado!="sucesso"}[5m])) > 20
+        labels:
+          severidade: media
+        annotations:
+          resumo: "Mais de 20 logins recusados em 5 minutos (possível tentativa de força bruta)"
+
+      - alert: PecasSemSaldo
+        expr: max(oficina_estoque_pecas_sem_saldo) > 0
+        for: 10m
+        labels:
+          severidade: baixa
+        annotations:
+          resumo: "Há peças sem saldo disponível em estoque"

@@ -17,7 +17,9 @@ public interface ClientePersistenceMapper {
 
     Endereco toEndereco(EnderecoEmbeddable endereco);
 
-    /** O agregado não tem setters; a reconstrução passa pela fábrica do domínio. */
+    /**
+     * O agregado não tem setters; a reconstrução passa pela fábrica do domínio.
+     */
     default Cliente toDomain(ClienteEntity entity) {
         return Cliente.reconstituir(
                 entity.getId(),

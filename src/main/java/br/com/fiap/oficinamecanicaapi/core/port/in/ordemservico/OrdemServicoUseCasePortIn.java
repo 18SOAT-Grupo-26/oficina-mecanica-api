@@ -15,7 +15,9 @@ import java.util.List;
  */
 public interface OrdemServicoUseCasePortIn {
 
-    /** Abre a OS para o cliente e o veículo, já com os itens que vierem; ela vai sozinha de RECEBIDA para EM_DIAGNOSTICO. */
+    /**
+     * Abre a OS para o cliente e o veículo, já com os itens que vierem; ela vai sozinha de RECEBIDA para EM_DIAGNOSTICO.
+     */
     OrdemServicoResponse criar(OrdemServicoRequest request) throws ApplicationException;
 
     OrdemServicoResponse consultar(Long id) throws ApplicationException;
@@ -28,16 +30,24 @@ public interface OrdemServicoUseCasePortIn {
      */
     OrdemServicoResponse atualizar(Long id, OrdemServicoRequest request) throws ApplicationException;
 
-    /** Leva a OS ao status pedido, que precisa ser o próximo da sequência (não volta, não pula, não repete). */
+    /**
+     * Leva a OS ao status pedido, que precisa ser o próximo da sequência (não volta, não pula, não repete).
+     */
     OrdemServicoResponse alterarStatus(Long id, OrdemServicoRequest.Status request) throws ApplicationException;
 
-    /** O orçamento foi enviado ao cliente: a OS vai para AGUARDANDO_APROVACAO. */
+    /**
+     * O orçamento foi enviado ao cliente: a OS vai para AGUARDANDO_APROVACAO.
+     */
     OrdemServicoResponse registrarOrcamentoEnviado(Long id) throws ApplicationException;
 
-    /** O cliente aprovou o orçamento: a OS vai para EM_EXECUCAO. */
+    /**
+     * O cliente aprovou o orçamento: a OS vai para EM_EXECUCAO.
+     */
     OrdemServicoResponse registrarOrcamentoAprovado(Long id) throws ApplicationException;
 
-    /** O cliente rejeitou o orçamento: a OS vai para CANCELADA. */
+    /**
+     * O cliente rejeitou o orçamento: a OS vai para CANCELADA.
+     */
     OrdemServicoResponse registrarOrcamentoRejeitado(Long id) throws ApplicationException;
 
     TempoMedioExecucaoResponse consultarTempoMedioExecucao();

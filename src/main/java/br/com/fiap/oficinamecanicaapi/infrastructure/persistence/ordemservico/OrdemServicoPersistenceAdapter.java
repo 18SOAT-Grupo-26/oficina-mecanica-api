@@ -21,7 +21,9 @@ public class OrdemServicoPersistenceAdapter implements OrdemServicoPortOut {
         this.mapper = mapper;
     }
 
-    /** O flush grava já os itens e registros novos, para o agregado devolvido vir com os ids. */
+    /**
+     * O flush grava já os itens e registros novos, para o agregado devolvido vir com os ids.
+     */
     @Override
     @Transactional
     public OrdemServico salvar(OrdemServico ordemServico) {

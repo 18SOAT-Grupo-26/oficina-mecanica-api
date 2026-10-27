@@ -26,7 +26,9 @@ public enum StatusOrdemServico {
         return destinosPermitidos().isEmpty();
     }
 
-    /** A partir de EM_EXECUCAO a OS só avança de status; cancelada, não muda mais. */
+    /**
+     * A partir de EM_EXECUCAO a OS só avança de status; cancelada, não muda mais.
+     */
     public boolean isEditavel() {
         return this == RECEBIDA || this == EM_DIAGNOSTICO || this == AGUARDANDO_APROVACAO;
     }
