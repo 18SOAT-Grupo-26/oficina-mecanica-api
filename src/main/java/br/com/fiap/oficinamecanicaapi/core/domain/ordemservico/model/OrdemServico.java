@@ -26,7 +26,9 @@ public class OrdemServico {
 
     @Getter
     private final Long id;
-    /** Cliente e veículo são definidos na abertura e não mudam: se estiverem errados, cancela-se a OS. */
+    /**
+     * Cliente e veículo são definidos na abertura e não mudam: se estiverem errados, cancela-se a OS.
+     */
     @Getter
     private final Long idCliente;
     @Getter
@@ -64,7 +66,9 @@ public class OrdemServico {
         return os;
     }
 
-    /** Reconstrói uma OS já persistida (uso exclusivo dos adapters de saída). */
+    /**
+     * Reconstrói uma OS já persistida (uso exclusivo dos adapters de saída).
+     */
     public static OrdemServico reconstituir(Long id, Long idCliente, Long idVeiculo, StatusOrdemServico status,
                                             List<ItemServico> itensServico, List<ItemPeca> itensPeca,
                                             List<RegistroHistorico> historico) {
@@ -117,7 +121,9 @@ public class OrdemServico {
 
     // ---- status ----------------------------------------------------------------------------------
 
-    /** O orçamento foi enviado ao cliente: a OS aguarda a decisão dele. Sem itens, não há o que orçar. */
+    /**
+     * O orçamento foi enviado ao cliente: a OS aguarda a decisão dele. Sem itens, não há o que orçar.
+     */
     public void aguardarAprovacao(OffsetDateTime momento) {
         exigirTransicaoPara(AGUARDANDO_APROVACAO, momento);
         if (itensServico.isEmpty() && itensPeca.isEmpty()) {
@@ -126,13 +132,17 @@ public class OrdemServico {
         registrarTransicao(AGUARDANDO_APROVACAO, momento);
     }
 
-    /** O cliente aprovou o orçamento: isso já libera o mecânico, e a OS vai para EM_EXECUCAO. */
+    /**
+     * O cliente aprovou o orçamento: isso já libera o mecânico, e a OS vai para EM_EXECUCAO.
+     */
     public void iniciarExecucao(OffsetDateTime momento) {
         exigirTransicaoPara(EM_EXECUCAO, momento);
         registrarTransicao(EM_EXECUCAO, momento);
     }
 
-    /** O cliente rejeitou o orçamento: só existe orçamento a rejeitar em AGUARDANDO_APROVACAO. */
+    /**
+     * O cliente rejeitou o orçamento: só existe orçamento a rejeitar em AGUARDANDO_APROVACAO.
+     */
     public void rejeitarOrcamento(OffsetDateTime momento) {
         exigirMomento(momento);
         if (status != AGUARDANDO_APROVACAO) {
@@ -174,7 +184,9 @@ public class OrdemServico {
         return Collections.unmodifiableList(historico);
     }
 
-    /** Tempo de EM_EXECUCAO até FINALIZADA; vazio enquanto a OS não passou pelos dois status. */
+    /**
+     * Tempo de EM_EXECUCAO até FINALIZADA; vazio enquanto a OS não passou pelos dois status.
+     */
     public Optional<Duration> getTempoExecucao() {
         Optional<OffsetDateTime> inicio = momentoDoStatus(EM_EXECUCAO);
         Optional<OffsetDateTime> fim = momentoDoStatus(FINALIZADA);
@@ -198,7 +210,9 @@ public class OrdemServico {
         this.status = destino;
     }
 
-    /** Depois do envio do orçamento as peças já estão reservadas, então os itens ficam fixos. */
+    /**
+     * Depois do envio do orçamento as peças já estão reservadas, então os itens ficam fixos.
+     */
     private void exigirItensEditaveis() {
         if (status != RECEBIDA && status != EM_DIAGNOSTICO) {
             throw new ApplicationException(409, "Itens só podem ser alterados com a OS em RECEBIDA ou EM_DIAGNOSTICO");

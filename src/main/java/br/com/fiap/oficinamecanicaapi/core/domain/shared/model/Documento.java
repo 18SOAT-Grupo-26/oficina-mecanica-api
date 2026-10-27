@@ -31,7 +31,8 @@ public record Documento(String valor) {
     private static boolean isValido(String normalizado) {
         if (normalizado == null) return false;
         return switch (normalizado.length()) {
-            case TAMANHO_CPF -> CpfValidator.isValid(normalizado) && normalizado.equals(CpfValidator.digits(normalizado));
+            case TAMANHO_CPF ->
+                    CpfValidator.isValid(normalizado) && normalizado.equals(CpfValidator.digits(normalizado));
             case TAMANHO_CNPJ -> CnpjValidator.isValid(normalizado);
             default -> false;
         };

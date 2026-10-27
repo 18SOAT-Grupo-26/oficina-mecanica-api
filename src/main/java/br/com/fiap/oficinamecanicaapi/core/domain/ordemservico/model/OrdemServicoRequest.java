@@ -21,11 +21,15 @@ public record OrdemServicoRequest(
         @NotNull List<@Valid Peca> pecas
 ) {
 
-    /** Serviço já cadastrado, pelo id, e a quantidade na OS. */
+    /**
+     * Serviço já cadastrado, pelo id, e a quantidade na OS.
+     */
     public record Servico(@NotNull Long idServico, @NotNull @Positive Integer quantidade) {
     }
 
-    /** Peça ou insumo já cadastrado, pelo id, e a quantidade na OS. */
+    /**
+     * Peça ou insumo já cadastrado, pelo id, e a quantidade na OS.
+     */
     public record Peca(@NotNull Long idPeca, @NotNull @Positive Integer quantidade) {
     }
 

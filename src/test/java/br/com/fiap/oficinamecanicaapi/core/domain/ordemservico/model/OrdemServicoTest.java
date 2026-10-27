@@ -397,7 +397,9 @@ class OrdemServicoTest {
 
     // ---- montagem de cenários --------------------------------------------------------------------
 
-    /** A abertura já leva a OS para EM_DIAGNOSTICO. */
+    /**
+     * A abertura já leva a OS para EM_DIAGNOSTICO.
+     */
     private static OrdemServico osEmDiagnostico() {
         return OrdemServico.abrir(ID_CLIENTE, ID_VEICULO, T0);
     }
@@ -409,7 +411,9 @@ class OrdemServicoTest {
         return os;
     }
 
-    /** Nenhuma OS nova para em RECEBIDA; esta simula uma gravada assim, para as regras que ainda a aceitam. */
+    /**
+     * Nenhuma OS nova para em RECEBIDA; esta simula uma gravada assim, para as regras que ainda a aceitam.
+     */
     private static OrdemServico osRecebidaReconstituida() {
         return OrdemServico.reconstituir(99L, ID_CLIENTE, ID_VEICULO, RECEBIDA, List.of(), List.of(),
                 List.of(new RegistroHistorico(null, RECEBIDA, T0)));

@@ -1,8 +1,17 @@
 apiVersion: 1
 
+# remove a fonte criada antes do uid fixo; o Grafana recria logo abaixo com uid "prometheus"
+deleteDatasources:
+  - name: Prometheus
+    orgId: 1
+
 datasources:
   - name: Prometheus
+    uid: prometheus
     type: prometheus
     access: proxy
     url: http://prometheus:9090
     isDefault: true
+    jsonData:
+      # igual ao scrape_interval: o $__rate_interval dos painéis fica correto
+      timeInterval: 15s

@@ -2,11 +2,11 @@ package br.com.fiap.oficinamecanicaapi.controller.admin;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.ClienteRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.ClienteResponse;
-import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.TipoDocumento;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.TipoDocumento;
+import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
-import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
@@ -27,14 +27,8 @@ import java.util.List;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 

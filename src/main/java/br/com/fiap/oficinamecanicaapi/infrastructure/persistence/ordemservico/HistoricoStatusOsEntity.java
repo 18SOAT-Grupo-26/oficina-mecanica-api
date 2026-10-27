@@ -26,7 +26,9 @@ public class HistoricoStatusOsEntity {
     @JoinColumn(name = "id_os", nullable = false)
     private OrdemServicoEntity ordemServico;
 
-    /** Vazio só no registro da abertura (RECEBIDA). */
+    /**
+     * Vazio só no registro da abertura (RECEBIDA).
+     */
     @Enumerated(EnumType.STRING)
     @Column(name = "status_antigo", length = 30)
     private StatusOrdemServico statusAntigo;

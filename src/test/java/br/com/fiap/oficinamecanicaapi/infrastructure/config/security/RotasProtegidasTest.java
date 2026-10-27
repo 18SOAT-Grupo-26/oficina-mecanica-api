@@ -9,11 +9,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -34,9 +30,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,7 +45,9 @@ class RotasProtegidasTest {
 
     private static final String PACOTE_DA_APLICACAO = "br.com.fiap.oficinamecanicaapi";
     private static final String TOKEN_INVALIDO = "token-invalido";
-    /** CRUDs de cliente, veículo, insumo e serviço e operações da OS na data do teste. */
+    /**
+     * CRUDs de cliente, veículo, insumo e serviço e operações da OS na data do teste.
+     */
     private static final int ROTAS_PROTEGIDAS_MINIMO = 26;
 
     @Autowired
@@ -152,7 +148,9 @@ class RotasProtegidasTest {
 
     private record Rota(HttpMethod metodo, String padrao) {
 
-        /** Variáveis de caminho viram 1 só para montar uma URL válida; a segurança barra antes do controller. */
+        /**
+         * Variáveis de caminho viram 1 só para montar uma URL válida; a segurança barra antes do controller.
+         */
         String caminho() {
             return padrao.replaceAll("\\{[^}]+}", "1");
         }

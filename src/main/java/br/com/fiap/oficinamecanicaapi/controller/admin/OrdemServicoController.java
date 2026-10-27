@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** Papéis provisórios: todos os perfis até o grupo definir quem pode cada mudança. */
+/**
+ * Papéis provisórios: todos os perfis até o grupo definir quem pode cada mudança.
+ */
 @RestController
 @RequestMapping("/ordens-servico")
 @PreAuthorize("hasAnyRole('OPERATOR', 'MANAGER', 'ADMINISTRATOR')")

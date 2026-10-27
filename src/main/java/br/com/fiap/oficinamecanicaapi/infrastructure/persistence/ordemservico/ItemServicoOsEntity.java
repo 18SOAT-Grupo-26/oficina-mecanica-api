@@ -6,7 +6,9 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 
-/** Serviço na OS. Descrição e preço são cópias do cadastro no momento da inclusão. */
+/**
+ * Serviço na OS. Descrição e preço são cópias do cadastro no momento da inclusão.
+ */
 @Entity
 @Table(name = "item_servico_os")
 @Getter

@@ -14,7 +14,9 @@ public interface ClientePortOut {
 
     Optional<Cliente> buscarAtivoPorDocumento(Documento documento);
 
-    /** Considera também clientes inativos, pois o documento é único na tabela. */
+    /**
+     * Considera também clientes inativos, pois o documento é único na tabela.
+     */
     boolean existePorDocumento(Documento documento);
 
     Pagina<Cliente> listarAtivos(int pagina, int tamanho);

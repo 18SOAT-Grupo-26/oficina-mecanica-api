@@ -1,10 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ItemPeca;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ItemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.RegistroHistorico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ValorMonetario;
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -12,11 +8,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.AGUARDANDO_APROVACAO;
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.EM_DIAGNOSTICO;
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.EM_EXECUCAO;
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.FINALIZADA;
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.RECEBIDA;
+import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 

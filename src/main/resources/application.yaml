@@ -32,16 +32,19 @@ management:
     web:
       exposure:
         include: health, prometheus
-  endpoint:
-    prometheus:
-      enabled: true
   metrics:
     tags:
       application: oficina-mecanica-api
+    distribution:
+      # gera os buckets de histograma: permite p95/p99 no Grafana
+      percentiles-histogram:
+        http.server.requests: true
+        oficina.os.tempo.execucao: true
+        oficina.os.tempo.total: true
 
 logging:
   level:
-    feign.client: DEBUG
+    br.com.fiap.oficinamecanicaapi: ${LOG_LEVEL:INFO}
 
 api:
   secret: "${API_SECRET}"

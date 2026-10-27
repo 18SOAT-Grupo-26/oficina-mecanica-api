@@ -13,7 +13,9 @@ public interface VeiculoUseCasePortIn {
 
     VeiculoResponse buscarPorPlaca(String placa) throws ApplicationException;
 
-    /** {@code clienteId} opcional: quando informado, lista só os veículos desse cliente. */
+    /**
+     * {@code clienteId} opcional: quando informado, lista só os veículos desse cliente.
+     */
     Pagina<VeiculoResponse> listar(Long clienteId, Integer pagina, Integer tamanho);
 
     VeiculoResponse atualizar(Long id, VeiculoRequest request) throws ApplicationException;

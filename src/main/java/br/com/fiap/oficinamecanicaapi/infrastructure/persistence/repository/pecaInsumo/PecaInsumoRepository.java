@@ -3,8 +3,8 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pec
 import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -38,4 +38,8 @@ public interface PecaInsumoRepository
     boolean existsByNomeNormalizado(String nomeNormalizado);
 
     Page<PecaInsumoEntity> findAll(Pageable pageable);
+
+
+    @Query("select count(p) from PecaInsumoEntity p where p.quantidade - p.reservado <= 0")
+    long contarSemSaldo();
 }

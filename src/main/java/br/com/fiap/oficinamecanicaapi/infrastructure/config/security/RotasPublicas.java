@@ -15,7 +15,9 @@ import java.util.stream.Stream;
  */
 public final class RotasPublicas {
 
-    /** Cadastro, login e validação do token. */
+    /**
+     * Cadastro, login e validação do token.
+     */
     public static final String[] AUTENTICACAO = {"/auth/**"};
 
     public static final String[] DOCUMENTACAO = {
@@ -25,7 +27,9 @@ public final class RotasPublicas {
             "/documentation/**"
     };
 
-    /** Expostos só health e prometheus (management.endpoints.web.exposure). */
+    /**
+     * Expostos só health e prometheus (management.endpoints.web.exposure).
+     */
     public static final String[] MONITORAMENTO = {"/actuator/**"};
 
     private static final List<PathPattern> PADROES = Arrays.stream(todas())
@@ -41,7 +45,9 @@ public final class RotasPublicas {
                 .toArray(String[]::new);
     }
 
-    /** Recebe o caminho sem o context-path (ex.: {@code /auth/login}). */
+    /**
+     * Recebe o caminho sem o context-path (ex.: {@code /auth/login}).
+     */
     public static boolean isPublica(String path) {
         PathContainer caminho = PathContainer.parsePath(path);
         return PADROES.stream().anyMatch(padrao -> padrao.matches(caminho));

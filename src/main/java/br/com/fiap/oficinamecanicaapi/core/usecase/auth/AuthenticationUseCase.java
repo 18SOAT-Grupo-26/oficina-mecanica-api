@@ -23,6 +23,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
     private final UsuarioUseCasePortIn usuarioService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProviderUseCase jwtTokenProvider;
+    private final MeterRegistry meterRegistry;
 
     public AuthenticationUseCase(UsuarioUseCasePortIn usuarioService,
                                  PasswordEncoder passwordEncoder,
@@ -31,9 +32,12 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
         this.usuarioService = usuarioService;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.meterRegistry = meterRegistry;
     }
 
-    /** Usuário gravado numa transação (ADR 003). */
+    /**
+     * Usuário gravado numa transação (ADR 003).
+     */
     @Override
     @Transactional
     public void cadastrarUsuario(CadastroRequest request) throws ApplicationException {
@@ -42,11 +46,13 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
 
             usuarioService.cadastrar(new Usuario(request.nome(), request.email(), request.nomeUsuario(),
                     request.senha(), request.trocaSenhaObrigatoria(), request.perfil()));
+            meterRegistry.counter("oficina.auth.cadastro", "perfil", request.perfil().name()).increment();
 
             log.info("action=register_success username={}", request.nomeUsuario());
         } catch (ApplicationException e) {
             throw e;
         } catch (Exception e) {
+            log.error("action=register_error username={}", request.nomeUsuario(), e);
             throw new ApplicationException(500, "Erro ao cadastrar o usuário");
         }
     }
@@ -59,11 +65,13 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             var detalhesUsuario = usuarioService.buscarPorIdentificador(request.identificador());
 
             if (!passwordEncoder.matches(request.senha(), detalhesUsuario.usuario().senha())) {
+                contarLogin("senha_invalida");
                 log.warn("action=signin_invalid_password identifier={}", request.identificador());
                 throw new ApplicationException(401, "Credenciais inválidas");
             }
 
             String token = BEARER_PREFIX + jwtTokenProvider.gerarToken(detalhesUsuario);
+            contarLogin("sucesso");
             log.info("action=signin_success identifier={} changeRequired={}",
                     request.identificador(), detalhesUsuario.usuario().trocaSenhaObrigatoria());
 
@@ -79,6 +87,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             // para nem o status nem o tempo revelarem quais logins existem.
             passwordEncoder.encode(request.senha());
             log.warn("action=signin_user_not_found identifier={}", request.identificador());
+            contarLogin("usuario_inexistente");
             throw new ApplicationException(401, "Credenciais inválidas");
         }
     }
@@ -106,5 +115,9 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             log.error("action=jwt_validate_error error={}", e.getMessage());
             throw new ApplicationException(500, "Erro ao validar o token JWT");
         }
+    }
+
+    private void contarLogin(String resultado) {
+        meterRegistry.counter("oficina.auth.login", "resultado", resultado).increment();
     }
 }

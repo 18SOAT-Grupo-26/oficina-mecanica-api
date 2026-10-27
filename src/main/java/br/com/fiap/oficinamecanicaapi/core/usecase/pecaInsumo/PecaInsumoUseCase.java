@@ -9,11 +9,13 @@ import br.com.fiap.oficinamecanicaapi.core.port.out.pecaInsumo.PecaInsumoPortOut
 import br.com.fiap.oficinamecanicaapi.core.usecase.pecaInsumo.mapper.PecaInsumoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.NormalizadorNome;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 
 @Service
 public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
@@ -30,10 +32,14 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
 
     private final PecaInsumoPortOut pecaInsumoPortOut;
     private final PecaInsumoMapper pecaInsumoMapper;
+    private final MeterRegistry meterRegistry;
 
-    public PecaInsumoUseCase(PecaInsumoPortOut pecaInsumoPortOut, PecaInsumoMapper pecaInsumoMapper) {
+    public PecaInsumoUseCase(PecaInsumoPortOut pecaInsumoPortOut,
+                             PecaInsumoMapper pecaInsumoMapper,
+                             MeterRegistry meterRegistry) {
         this.pecaInsumoPortOut = pecaInsumoPortOut;
         this.pecaInsumoMapper = pecaInsumoMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -45,6 +51,8 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
 
         PecaInsumoEntity entity = new PecaInsumoEntity();
         preencher(entity, request, nomeNormalizado);
+
+        contar("criado");
         PecaInsumoEntity salvo = pecaInsumoPortOut.salvar(entity);
 
         log.info("action=insumo_criado id={}", salvo.getId());
@@ -76,9 +84,18 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
             validarNomeDisponivel(nomeNormalizado);
         }
 
+        if (!Objects.equals(entity.getQuantidade(), request.quantidade())) {
+            log.info("action=insumo_estoque_ajustado id={} quantidadeAnterior={} quantidadeNova={}",
+                    id, entity.getQuantidade(), request.quantidade());
+        }
+        if (entity.getPreco().compareTo(request.preco()) != 0) {
+            log.info("action=insumo_preco_alterado id={} precoAnterior={} precoNovo={}",
+                    id, entity.getPreco(), request.preco());
+        }
         preencher(entity, request, nomeNormalizado);
         PecaInsumoEntity salvo = pecaInsumoPortOut.salvar(entity);
 
+        contar("atualizado");
         log.info("action=insumo_atualizado id={}", salvo.getId());
         return pecaInsumoMapper.toResponse(salvo);
     }
@@ -89,6 +106,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
         PecaInsumoEntity entity = buscarInsumo(id);
         pecaInsumoPortOut.excluir(entity);
 
+        contar("excluido");
         log.info("action=insumo_excluido id={}", id);
     }
 
@@ -145,5 +163,9 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
         entity.setQuantidade(request.quantidade());
         entity.setReservado(request.reservado() == null ? 0 : request.reservado());
         entity.setPreco(request.preco().setScale(PRECO_MAX_CASAS_DECIMAIS));
+    }
+
+    private void contar(String operacao) {
+        meterRegistry.counter("oficina.cadastro.operacoes", "entidade", "peca_insumo", "operacao", operacao).increment();
     }
 }

@@ -9,6 +9,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.servico.mapper.ServicoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.NormalizadorNome;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -29,10 +30,14 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
 
     private final ServicoPortOut servicoPortOut;
     private final ServicoMapper servicoMapper;
+    private final MeterRegistry meterRegistry;
 
-    public ServicoUseCase(ServicoPortOut servicoPortOut, ServicoMapper servicoMapper) {
+    public ServicoUseCase(ServicoPortOut servicoPortOut,
+                          ServicoMapper servicoMapper,
+                          MeterRegistry meterRegistry) {
         this.servicoPortOut = servicoPortOut;
         this.servicoMapper = servicoMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -46,6 +51,7 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
         preencher(entity, request, nomeNormalizado);
         ServicoEntity salvo = servicoPortOut.salvar(entity);
 
+        contar("criado");
         log.info("action=servico_criado id={}", salvo.getId());
         return servicoMapper.toResponse(salvo);
     }
@@ -75,9 +81,14 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
             validarNomeDisponivel(nomeNormalizado);
         }
 
+        if (entity.getPreco().compareTo(request.preco()) != 0) {
+            log.info("action=servico_preco_alterado id={} precoAnterior={} precoNovo={}",
+                    id, entity.getPreco(), request.preco());
+        }
         preencher(entity, request, nomeNormalizado);
         ServicoEntity salvo = servicoPortOut.salvar(entity);
 
+        contar("atualizado");
         log.info("action=servico_atualizado id={}", salvo.getId());
         return servicoMapper.toResponse(salvo);
     }
@@ -88,6 +99,7 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
         ServicoEntity entity = buscarServico(id);
         servicoPortOut.excluir(entity);
 
+        contar("excluido");
         log.info("action=servico_excluido id={}", id);
     }
 
@@ -129,5 +141,9 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
         entity.setNomeNormalizado(nomeNormalizado);
         entity.setDescricao(request.descricao());
         entity.setPreco(request.preco().setScale(PRECO_MAX_CASAS_DECIMAIS));
+    }
+
+    private void contar(String operacao) {
+        meterRegistry.counter("oficina.cadastro.operacoes", "entidade", "servico", "operacao", operacao).increment();
     }
 }

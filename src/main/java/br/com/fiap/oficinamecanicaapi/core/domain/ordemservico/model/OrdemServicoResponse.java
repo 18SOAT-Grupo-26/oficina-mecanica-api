@@ -22,7 +22,9 @@ public record OrdemServicoResponse(
                            Integer quantidade, BigDecimal subtotal) {
     }
 
-    /** {@code statusAntigo} vem vazio só no registro da abertura. */
+    /**
+     * {@code statusAntigo} vem vazio só no registro da abertura.
+     */
     public record RegistroHistorico(StatusOrdemServico statusAntigo, StatusOrdemServico statusAtualizado,
                                     OffsetDateTime dataHora) {
     }

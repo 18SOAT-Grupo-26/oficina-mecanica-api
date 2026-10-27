@@ -9,6 +9,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.cliente.mapper.ClienteMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -21,10 +22,14 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
 
     private final ClientePortOut clientePortOut;
     private final ClienteMapper clienteMapper;
+    private final MeterRegistry meterRegistry;
 
-    public ClienteUseCase(ClientePortOut clientePortOut, ClienteMapper clienteMapper) {
+    public ClienteUseCase(ClientePortOut clientePortOut,
+                          ClienteMapper clienteMapper,
+                          MeterRegistry meterRegistry) {
         this.clientePortOut = clientePortOut;
         this.clienteMapper = clienteMapper;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
@@ -37,6 +42,7 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
                 request.endereco());
         Cliente salvo = clientePortOut.salvar(cliente);
 
+        contar("criado");
         log.info("action=cliente_criado id={}", salvo.getId());
         return clienteMapper.toResponse(salvo);
     }
@@ -66,15 +72,16 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
     @Transactional
     public ClienteResponse atualizar(Long id, ClienteRequest request) throws ApplicationException {
         Cliente cliente = buscarClienteAtivo(id);
-
         Documento documento = new Documento(request.documento());
         if (!documento.equals(cliente.getDocumento())) {
             validarDocumentoDisponivel(documento);
+            log.info("action=cliente_documento_alterado id={}", id);
         }
 
         cliente.atualizar(request.nome(), documento, request.email(), request.telefone(), request.endereco());
         Cliente salvo = clientePortOut.salvar(cliente);
 
+        contar("atualizado");
         log.info("action=cliente_atualizado id={}", salvo.getId());
         return clienteMapper.toResponse(salvo);
     }
@@ -86,6 +93,7 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
         cliente.desativar();
         clientePortOut.salvar(cliente);
 
+        contar("desativado");
         log.info("action=cliente_desativado id={}", id);
     }
 
@@ -101,5 +109,9 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
 
     private static ApplicationException clienteNaoEncontrado() {
         return new ApplicationException(404, "Cliente não encontrado");
+    }
+
+    private void contar(String operacao) {
+        meterRegistry.counter("oficina.cadastro.operacoes", "entidade", "cliente", "operacao", operacao).increment();
     }
 }

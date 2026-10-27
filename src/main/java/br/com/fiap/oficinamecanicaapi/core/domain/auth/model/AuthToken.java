@@ -7,4 +7,5 @@ import lombok.Builder;
 public record AuthToken(
         @NotBlank String token,
         boolean trocaSenhaObrigatoria
-) {}
+) {
+}

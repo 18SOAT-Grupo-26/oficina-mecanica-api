@@ -7,7 +7,11 @@ public enum ErrorCode {
 
     private final int code;
 
-    ErrorCode(int code) { this.code = code; }
+    ErrorCode(int code) {
+        this.code = code;
+    }
 
-    public int getCode() { return code; }
+    public int getCode() {
+        return code;
+    }
 }

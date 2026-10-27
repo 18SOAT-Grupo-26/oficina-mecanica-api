@@ -2,9 +2,9 @@ package br.com.fiap.oficinamecanicaapi.core.usecase.usuario.mapper;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity.PerfilEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity.UsuarioEntity;
+import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
-import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

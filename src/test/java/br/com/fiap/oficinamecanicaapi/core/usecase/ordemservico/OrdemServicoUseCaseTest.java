@@ -1,15 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ItemPeca;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ItemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoResponse;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.RegistroHistorico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.TempoMedioExecucaoResponse;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ValorMonetario;
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.*;
 import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.entity.ServicoEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
@@ -38,29 +30,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.AGUARDANDO_APROVACAO;
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.CANCELADA;
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.EM_DIAGNOSTICO;
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.EM_EXECUCAO;
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.ENTREGUE;
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.FINALIZADA;
-import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.RECEBIDA;
+import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrdemServicoUseCaseTest {
@@ -735,13 +714,17 @@ class OrdemServicoUseCaseTest {
                 List.of(new RegistroHistorico(null, RECEBIDA, ABERTURA)));
     }
 
-    /** PUT completo com o veículo e os mesmos itens de {@link #osNoStatus}: só o documento do cliente varia. */
+    /**
+     * PUT completo com o veículo e os mesmos itens de {@link #osNoStatus}: só o documento do cliente varia.
+     */
     private static OrdemServicoRequest putComItensAtuais(String documento) {
         return new OrdemServicoRequest(documento, ID_VEICULO, List.of(new OrdemServicoRequest.Servico(ID_SERVICO, 1)),
                 List.of(new OrdemServicoRequest.Peca(ID_PECA, 2), new OrdemServicoRequest.Peca(ID_VELA, 4)));
     }
 
-    /** OS em execução com o histórico completo até EM_EXECUCAO, para medir o tempo de execução. */
+    /**
+     * OS em execução com o histórico completo até EM_EXECUCAO, para medir o tempo de execução.
+     */
     private static OrdemServico osEmExecucaoDesde(OffsetDateTime inicioExecucao) {
         return OrdemServico.reconstituir(ID_OS, ID_CLIENTE, ID_VEICULO, EM_EXECUCAO, List.of(), List.of(), List.of(
                 new RegistroHistorico(null, RECEBIDA, ABERTURA.minusHours(2)),
@@ -759,7 +742,9 @@ class OrdemServicoUseCaseTest {
         when(veiculoPortOut.buscarAtivoPorId(ID_VEICULO)).thenReturn(Optional.of(veiculoDoCliente(ID_CLIENTE)));
     }
 
-    /** O PUT só confere o cliente pelo documento; o veículo é comparado pelo id, sem consultar o cadastro. */
+    /**
+     * O PUT só confere o cliente pelo documento; o veículo é comparado pelo id, sem consultar o cadastro.
+     */
     private void clienteCadastrado() {
         when(clientePortOut.buscarAtivoPorDocumento(new Documento(DOCUMENTO))).thenReturn(Optional.of(CLIENTE));
     }
@@ -772,7 +757,9 @@ class OrdemServicoUseCaseTest {
         return servico;
     }
 
-    /** Filtro de óleo a R$30, com 3 unidades já reservadas por outras OS além do saldo pedido. */
+    /**
+     * Filtro de óleo a R$30, com 3 unidades já reservadas por outras OS além do saldo pedido.
+     */
     private static PecaInsumoEntity filtroComSaldo(int saldo) {
         PecaInsumoEntity peca = new PecaInsumoEntity();
         peca.setId(ID_PECA);

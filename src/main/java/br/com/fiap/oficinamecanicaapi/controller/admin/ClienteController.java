@@ -5,12 +5,11 @@ import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.ClienteResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/clientes")

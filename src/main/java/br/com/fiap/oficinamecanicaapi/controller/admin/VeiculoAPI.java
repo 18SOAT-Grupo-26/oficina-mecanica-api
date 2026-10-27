@@ -27,8 +27,8 @@ public interface VeiculoAPI {
     @ApiResponse(responseCode = "200", description = "Página de veículos ativos")
     @GetMapping
     ResponseEntity<Pagina<VeiculoResponse>> listar(@RequestParam(required = false) Long clienteId,
-                                                  @RequestParam(required = false) Integer page,
-                                                  @RequestParam(required = false) Integer size);
+                                                   @RequestParam(required = false) Integer page,
+                                                   @RequestParam(required = false) Integer size);
 
     @Operation(summary = "Buscar veículo por id", tags = "Veículo")
     @ApiResponse(responseCode = "200", description = "Veículo encontrado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))
