@@ -1,12 +1,10 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.servico;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.entity.ServicoEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.port.out.pecaInsumo.PecaInsumoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.servico.mapper.ServicoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
@@ -15,9 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class ServicoUseCase implements ServicoUseCasePortIn {
@@ -33,14 +28,10 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     private static final int PRECO_MAX_CASAS_DECIMAIS = 2;
 
     private final ServicoPortOut servicoPortOut;
-    private final PecaInsumoPortOut pecaInsumoPortOut;
     private final ServicoMapper servicoMapper;
 
-    public ServicoUseCase(ServicoPortOut servicoPortOut,
-                          PecaInsumoPortOut pecaInsumoPortOut,
-                          ServicoMapper servicoMapper) {
+    public ServicoUseCase(ServicoPortOut servicoPortOut, ServicoMapper servicoMapper) {
         this.servicoPortOut = servicoPortOut;
-        this.pecaInsumoPortOut = pecaInsumoPortOut;
         this.servicoMapper = servicoMapper;
     }
 
@@ -138,19 +129,5 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
         entity.setNomeNormalizado(nomeNormalizado);
         entity.setDescricao(request.descricao());
         entity.setPreco(request.preco().setScale(PRECO_MAX_CASAS_DECIMAIS));
-        entity.setPecasInsumo(resolverPecasInsumo(request.pecasInsumoIds()));
-    }
-
-    private List<PecaInsumoEntity> resolverPecasInsumo(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        List<Long> idsUnicos = ids.stream().distinct().toList();
-        List<PecaInsumoEntity> pecas = pecaInsumoPortOut.buscarPorIds(idsUnicos);
-        if (pecas.size() != idsUnicos.size()) {
-            throw new ApplicationException(422, "Um ou mais insumos informados não existem");
-        }
-        return new ArrayList<>(pecas);
     }
 }

@@ -345,6 +345,22 @@ class OrdemServicoTest {
         void deveExigirDataHoraParaCancelar() {
             assertErro(400, "A data/hora da operação é obrigatória", () -> osEmDiagnostico().cancelar(null));
         }
+
+        @Test
+        @DisplayName("Deve cancelar pela rejeição do orçamento só em AGUARDANDO_APROVACAO")
+        void deveRejeitarOrcamentoSoEmAguardandoAprovacao() {
+            OrdemServico aguardando = osAguardandoAprovacao();
+            aguardando.rejeitarOrcamento(T3);
+
+            assertThat(aguardando.getStatus()).isEqualTo(CANCELADA);
+            assertThat(aguardando.getHistorico()).last()
+                    .isEqualTo(new RegistroHistorico(StatusOrdemServico.AGUARDANDO_APROVACAO, CANCELADA, T3));
+            for (OrdemServico os : List.of(osRecebidaReconstituida(), osEmDiagnostico(), osFinalizada())) {
+                assertErro(409, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO",
+                        () -> os.rejeitarOrcamento(T4));
+            }
+            assertErro(400, "A data/hora da operação é obrigatória", () -> osAguardandoAprovacao().rejeitarOrcamento(null));
+        }
     }
 
     @Nested

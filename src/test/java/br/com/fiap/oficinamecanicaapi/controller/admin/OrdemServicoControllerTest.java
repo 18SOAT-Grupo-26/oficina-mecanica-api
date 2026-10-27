@@ -207,6 +207,39 @@ class OrdemServicoControllerTest {
     }
 
     @Test
+    @DisplayName("Deve gerar o orçamento pelo PATCH")
+    void deveGerarOrcamento() throws Exception {
+        autenticarComo(Perfil.ADMINISTRATOR);
+        when(useCase.registrarOrcamentoEnviado(ID)).thenReturn(response(AGUARDANDO_APROVACAO));
+
+        mockMvc.perform(patch("/ordens-servico/{id}/gerar-orcamento", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("AGUARDANDO_APROVACAO"));
+    }
+
+    @Test
+    @DisplayName("Deve aprovar o orçamento pelo PATCH")
+    void deveAprovarOrcamento() throws Exception {
+        autenticarComo(Perfil.ADMINISTRATOR);
+        when(useCase.registrarOrcamentoAprovado(ID)).thenReturn(response(EM_EXECUCAO));
+
+        mockMvc.perform(patch("/ordens-servico/{id}/aprovar-orcamento", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("EM_EXECUCAO"));
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar o orçamento pelo PATCH")
+    void deveRejeitarOrcamento() throws Exception {
+        autenticarComo(Perfil.ADMINISTRATOR);
+        when(useCase.registrarOrcamentoRejeitado(ID)).thenReturn(response(CANCELADA));
+
+        mockMvc.perform(patch("/ordens-servico/{id}/rejeitar-orcamento", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELADA"));
+    }
+
+    @Test
     @DisplayName("Deve responder 409 com a mensagem da transição inválida")
     void deveResponderTransicaoInvalida() throws Exception {
         autenticarComo(Perfil.ADMINISTRATOR);

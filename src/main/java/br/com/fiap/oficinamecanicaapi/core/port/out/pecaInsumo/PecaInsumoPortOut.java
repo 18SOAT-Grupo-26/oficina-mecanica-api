@@ -11,6 +11,12 @@ public interface PecaInsumoPortOut {
 
     PecaInsumoEntity salvar(PecaInsumoEntity pecaInsumo);
 
+    boolean reservar(Long id, int quantidade);
+
+    boolean liberar(Long id, int quantidade);
+
+    boolean baixar(Long id, int quantidade);
+
     Optional<PecaInsumoEntity> buscarPorId(Long id);
 
     List<PecaInsumoEntity> buscarPorIds(Collection<Long> ids);
