@@ -6,11 +6,14 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -40,6 +43,9 @@ class AuthenticationUseCaseTest {
 
     @Mock
     private JwtTokenProviderUseCase jwtTokenProvider;
+
+    @Spy
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     @InjectMocks
     private AuthenticationUseCase useCase;
@@ -84,6 +90,11 @@ class AuthenticationUseCaseTest {
         // custo de bcrypt equivalente ao da senha errada: o tempo de resposta também não denuncia
         verify(passwordEncoder).encode(SENHA);
         verifyNoInteractions(jwtTokenProvider);
+    }
+
+    private double logins(String resultado) {
+        var contador = meterRegistry.find("oficina.auth.login").tag("resultado", resultado).counter();
+        return contador == null ? 0 : contador.count();
     }
 
     @Test

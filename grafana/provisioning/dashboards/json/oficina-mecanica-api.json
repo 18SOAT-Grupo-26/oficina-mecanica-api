@@ -31,7 +31,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "up{job=\"oficina-mecanica-api\"}"
+          "expr": "max(up{job=~\"oficina-mecanica-api.*\"})"
         }
       ],
       "fieldConfig": {
