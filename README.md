@@ -276,21 +276,12 @@ A autenticação usa JWT:
 > **Limitação conhecida:** `POST /auth/cadastro` é público e aceita qualquer `perfil`, inclusive `ADMINISTRATOR`. Use
 > apenas em ambiente local até a regra de criação de administradores ser restringida.
 
-1. Cadastrar um usuário (o `documento` aceita CPF ou CNPJ, com ou sem máscara):
+1. Cadastrar um usuário (o e-mail também serve para o login):
 
 ```bash
 curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -d '{
-  "identidade": {
-    "nomeCompleto": "Ana Administradora",
-    "primeiroNome": "Ana",
-    "documento": "52998224725",
-    "rg": "123456789",
-    "dataNascimento": "1990-05-10",
-    "contato": { "telefone": "11999999999", "email": "ana@oficina.com.br" },
-    "endereco": { "logradouro": "Av. Paulista", "numero": "1000", "bairro": "Bela Vista",
-                  "cidade": "São Paulo", "estado": "SP", "cep": "01310100", "complemento": "" }
-  },
-  "usuario": { "nomeUsuario": "admin", "senha": "Admin@123", "trocaSenhaObrigatoria": false, "perfil": "ADMINISTRATOR" }
+  "nome": "Ana Administradora", "email": "ana@oficina.com.br",
+  "nomeUsuario": "admin", "senha": "Admin@123", "trocaSenhaObrigatoria": false, "perfil": "ADMINISTRATOR"
 }'
 ```
 
