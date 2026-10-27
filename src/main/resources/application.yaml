@@ -55,6 +55,9 @@ api:
     email: "${ADMIN_EMAIL:}"
     usuario: "${ADMIN_USUARIO:}"
     senha: "${ADMIN_SENHA:}"
+  login:
+    max-tentativas: ${LOGIN_MAX_TENTATIVAS:5}
+    janela-minutos: ${LOGIN_JANELA_MINUTOS:15}
 
 springdoc:
   swagger-ui:

@@ -25,15 +25,18 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProviderUseCase jwtTokenProvider;
     private final MeterRegistry meterRegistry;
+    private final LimiteTentativasLogin limiteTentativas;
 
     public AuthenticationUseCase(UsuarioUseCasePortIn usuarioService,
                                  PasswordEncoder passwordEncoder,
                                  JwtTokenProviderUseCase jwtTokenProvider,
+                                 LimiteTentativasLogin limiteTentativas,
                                  MeterRegistry meterRegistry) {
         this.usuarioService = usuarioService;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.meterRegistry = meterRegistry;
+        this.limiteTentativas = limiteTentativas;
     }
 
     /**
@@ -61,6 +64,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
     @Override
     public AuthToken autenticar(SigninRequest request) throws ApplicationException {
         log.info("action=signin_start identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
+        limiteTentativas.verificarBloqueio(request.identificador());
 
         try {
             var detalhesUsuario = usuarioService.buscarPorIdentificador(request.identificador());
@@ -68,11 +72,13 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             if (!passwordEncoder.matches(request.senha(), detalhesUsuario.usuario().senha())) {
                 contarLogin("senha_invalida");
                 log.warn("action=signin_invalid_password identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
+                limiteTentativas.registrarFalha(request.identificador());
                 throw new ApplicationException(401, "Credenciais inválidas");
             }
 
             String token = BEARER_PREFIX + jwtTokenProvider.gerarToken(detalhesUsuario);
             contarLogin("sucesso");
+            limiteTentativas.registrarSucesso(request.identificador());
             log.info("action=signin_success identifier={} changeRequired={}",
                     MascaraDados.mascararIdentificador(request.identificador()), detalhesUsuario.usuario().trocaSenhaObrigatoria());
 
@@ -89,6 +95,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             passwordEncoder.encode(request.senha());
             log.warn("action=signin_user_not_found identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
             contarLogin("usuario_inexistente");
+            limiteTentativas.registrarFalha(request.identificador());
             throw new ApplicationException(401, "Credenciais inválidas");
         }
     }

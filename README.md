@@ -152,6 +152,8 @@ Possíveis problemas:
 | `ADMIN_USUARIO`          | —                                          | para criar o admin | nome de usuário (login) do administrador inicial |
 | `ADMIN_SENHA`            | —                                          | para criar o admin | senha do administrador inicial (segue a política de senha; nunca vai para o repositório) |
 | `ADMIN_NOME`             | `Administrador`                            | não         | nome do administrador inicial |
+| `LOGIN_MAX_TENTATIVAS`   | `5`                                        | não         | falhas de login seguidas de uma mesma conta antes do bloqueio temporário (429) |
+| `LOGIN_JANELA_MINUTOS`   | `15`                                       | não         | duração, em minutos, da janela de contagem e do bloqueio do login |
 | `SERVER_PORT`            | `8081`                                     | não         | porta HTTP da API                                                 |
 | `APPLICATION_PREFIX`     | `api/v1`                                   | não         | prefixo (context-path) das rotas                                  |
 | `APPLICATION_NAME`       | `oficina-mecanica-api`                     | não         | nome da aplicação                                                 |
@@ -317,6 +319,8 @@ curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: applic
 ```
 
 4. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`.
+
+Após 5 falhas de login de uma mesma conta em 15 minutos, o login dela responde **429** até a janela expirar (configurável por `LOGIN_MAX_TENTATIVAS` e `LOGIN_JANELA_MINUTOS`).
 
 Perfis existentes (migration `V10__perfis_fase_1.sql`): `ADMIN` (tudo, inclusive exclusões e cadastro de usuários),
 `FUNCIONARIO` (cadastros sem exclusão e ordens de serviço) e `CLIENTE` (consulta das próprias OS).
