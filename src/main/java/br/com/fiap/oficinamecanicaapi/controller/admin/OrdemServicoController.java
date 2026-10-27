@@ -57,6 +57,11 @@ public class OrdemServicoController implements OrdemServicoAPI {
     }
 
     @Override
+    public ResponseEntity<OrdemServicoResponse> rejeitarOrcamento(String token, Long id) throws ApplicationException {
+        return ResponseEntity.ok(useCase.registrarOrcamentoRejeitado(id));
+    }
+
+    @Override
     public ResponseEntity<TempoMedioExecucaoResponse> consultarTempoMedioExecucao() {
         return ResponseEntity.ok(useCase.consultarTempoMedioExecucao());
     }
