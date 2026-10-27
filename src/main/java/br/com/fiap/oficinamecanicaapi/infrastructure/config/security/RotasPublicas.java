@@ -16,9 +16,10 @@ import java.util.stream.Stream;
 public final class RotasPublicas {
 
     /**
-     * Cadastro, login e validação do token.
+     * Login e validação do token. Listadas uma a uma, sem curinga: uma rota nova em /auth nasce protegida
+     * (o cadastro de usuários, por exemplo, exige ADMINISTRATOR).
      */
-    public static final String[] AUTENTICACAO = {"/auth/**"};
+    public static final String[] AUTENTICACAO = {"/auth/login", "/auth/validate"};
 
     public static final String[] DOCUMENTACAO = {
             "/v3/api-docs/**",
