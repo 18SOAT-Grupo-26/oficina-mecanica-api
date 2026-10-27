@@ -483,6 +483,8 @@ class OrdemServicoUseCaseTest {
         void deveCancelarAteAguardandoAprovacao() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(RECEBIDA)),
                     Optional.of(osNoStatus(EM_DIAGNOSTICO)), Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
+            when(pecaInsumoPortOut.liberar(ID_PECA, 2)).thenReturn(true);
+            when(pecaInsumoPortOut.liberar(ID_VELA, 4)).thenReturn(true);
             retornarOsSalva();
 
             for (StatusOrdemServico anterior : List.of(RECEBIDA, EM_DIAGNOSTICO, AGUARDANDO_APROVACAO)) {
@@ -492,6 +494,23 @@ class OrdemServicoUseCaseTest {
                 assertThat(response.historico()).last()
                         .isEqualTo(new OrdemServicoResponse.RegistroHistorico(anterior, CANCELADA, AGORA));
             }
+        }
+
+        @Test
+        @DisplayName("Deve liberar a reserva só ao cancelar com o orçamento pendente (AGUARDANDO_APROVACAO)")
+        void deveLiberarReservaAoCancelarComOrcamentoPendente() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)),
+                    Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
+            when(pecaInsumoPortOut.liberar(ID_PECA, 2)).thenReturn(true);
+            when(pecaInsumoPortOut.liberar(ID_VELA, 4)).thenReturn(true);
+            retornarOsSalva();
+
+            useCase.alterarStatus(ID_OS, mudarStatus(CANCELADA));
+            verifyNoInteractions(pecaInsumoPortOut);
+
+            useCase.alterarStatus(ID_OS, mudarStatus(CANCELADA));
+            verify(pecaInsumoPortOut).liberar(ID_PECA, 2);
+            verify(pecaInsumoPortOut).liberar(ID_VELA, 4);
         }
 
         @Test
@@ -634,7 +653,19 @@ class OrdemServicoUseCaseTest {
 
             assertErro(409, "Transição inválida: AGUARDANDO_APROVACAO → AGUARDANDO_APROVACAO",
                     () -> useCase.registrarOrcamentoEnviado(ID_OS));
-            assertErro(409, "Transição inválida: EM_EXECUCAO → CANCELADA", () -> useCase.registrarOrcamentoRejeitado(ID_OS));
+            assertErro(409, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO",
+                    () -> useCase.registrarOrcamentoRejeitado(ID_OS));
+            verify(ordemServicoPortOut, never()).salvar(any());
+        }
+
+        @Test
+        @DisplayName("Deve recusar rejeitar o orçamento antes do envio, sem mexer no estoque nem gravar")
+        void deveRecusarRejeitarAntesDoEnvio() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
+
+            assertErro(409, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO",
+                    () -> useCase.registrarOrcamentoRejeitado(ID_OS));
+            verifyNoInteractions(pecaInsumoPortOut);
             verify(ordemServicoPortOut, never()).salvar(any());
         }
 

@@ -143,7 +143,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
 
     @Override
     public OrdemServicoResponse registrarOrcamentoRejeitado(Long id) {
-        return registrarOrcamento(id, OrdemServico::cancelar, AcaoEstoque.LIBERAR,
+        return registrarOrcamento(id, OrdemServico::rejeitarOrcamento, AcaoEstoque.LIBERAR,
                 "os_orcamento_rejeitado");
     }
 
@@ -290,7 +290,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
     /**
      * Mudanças manuais. Pedir o status atual também é transição inválida: o status só avança.
      * EM_DIAGNOSTICO vem da abertura; AGUARDANDO_APROVACAO e EM_EXECUCAO, do orçamento. CANCELADA é o
-     * cancelamento da OS, que não a remove.
+     * cancelamento da OS, que não a remove; com o orçamento pendente, libera as peças reservadas (ADR 003).
      */
     private void aplicarStatus(OrdemServico os, StatusOrdemServico destino) {
         switch (destino) {
@@ -299,7 +299,13 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
                 os.getTempoExecucao().ifPresent(tempoExecucao::record);
             }
             case ENTREGUE -> os.entregar(agora());
-            case CANCELADA -> os.cancelar(agora());
+            case CANCELADA -> {
+                boolean temReserva = os.getStatus() == StatusOrdemServico.AGUARDANDO_APROVACAO;
+                os.cancelar(agora());
+                if (temReserva) {
+                    atualizarEstoqueOrcamento(os, AcaoEstoque.LIBERAR);
+                }
+            }
             case EM_DIAGNOSTICO -> throw new ApplicationException(409, "EM_DIAGNOSTICO é automático: a OS entra nele ao ser aberta");
             case AGUARDANDO_APROVACAO -> throw new ApplicationException(409, "AGUARDANDO_APROVACAO é automático: vem do envio do orçamento");
             case EM_EXECUCAO -> throw new ApplicationException(409, "EM_EXECUCAO é automático: vem da aprovação do orçamento");

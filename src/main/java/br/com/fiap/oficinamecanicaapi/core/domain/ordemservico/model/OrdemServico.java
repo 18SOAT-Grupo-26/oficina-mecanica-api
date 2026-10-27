@@ -132,6 +132,15 @@ public class OrdemServico {
         registrarTransicao(EM_EXECUCAO, momento);
     }
 
+    /** O cliente rejeitou o orçamento: só existe orçamento a rejeitar em AGUARDANDO_APROVACAO. */
+    public void rejeitarOrcamento(OffsetDateTime momento) {
+        exigirMomento(momento);
+        if (status != AGUARDANDO_APROVACAO) {
+            throw new ApplicationException(409, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO");
+        }
+        cancelar(momento);
+    }
+
     /**
      * Cancela a OS sem removê-la, pela rejeição do orçamento ou por decisão da oficina. Vale até
      * AGUARDANDO_APROVACAO (a partir de EM_EXECUCAO, não); liberar reservas é com quem chama.
