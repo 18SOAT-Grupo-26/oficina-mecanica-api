@@ -7,6 +7,7 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.utils.MascaraDados;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,21 +60,21 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
 
     @Override
     public AuthToken autenticar(SigninRequest request) throws ApplicationException {
-        log.info("action=signin_start identifier={}", request.identificador());
+        log.info("action=signin_start identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
 
         try {
             var detalhesUsuario = usuarioService.buscarPorIdentificador(request.identificador());
 
             if (!passwordEncoder.matches(request.senha(), detalhesUsuario.usuario().senha())) {
                 contarLogin("senha_invalida");
-                log.warn("action=signin_invalid_password identifier={}", request.identificador());
+                log.warn("action=signin_invalid_password identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
                 throw new ApplicationException(401, "Credenciais inválidas");
             }
 
             String token = BEARER_PREFIX + jwtTokenProvider.gerarToken(detalhesUsuario);
             contarLogin("sucesso");
             log.info("action=signin_success identifier={} changeRequired={}",
-                    request.identificador(), detalhesUsuario.usuario().trocaSenhaObrigatoria());
+                    MascaraDados.mascararIdentificador(request.identificador()), detalhesUsuario.usuario().trocaSenhaObrigatoria());
 
             return AuthToken.builder()
                     .token(token)
@@ -86,7 +87,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             // Usuário inexistente: mesma resposta e mesmo custo de bcrypt da senha errada,
             // para nem o status nem o tempo revelarem quais logins existem.
             passwordEncoder.encode(request.senha());
-            log.warn("action=signin_user_not_found identifier={}", request.identificador());
+            log.warn("action=signin_user_not_found identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
             contarLogin("usuario_inexistente");
             throw new ApplicationException(401, "Credenciais inválidas");
         }
