@@ -11,6 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 /** Papéis provisórios: todos os perfis até o grupo definir quem pode cada mudança. */
 @RestController
 @RequestMapping("/ordens-servico")
@@ -31,6 +33,11 @@ public class OrdemServicoController implements OrdemServicoAPI {
     @Override
     public ResponseEntity<OrdemServicoResponse> consultar(Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.consultar(id));
+    }
+
+    @Override
+    public ResponseEntity<List<OrdemServicoResponse>> listar(Long idCliente) throws ApplicationException {
+        return ResponseEntity.ok(useCase.listar(idCliente));
     }
 
     @Override

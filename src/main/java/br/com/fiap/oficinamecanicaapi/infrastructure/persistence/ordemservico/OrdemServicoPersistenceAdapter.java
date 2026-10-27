@@ -46,8 +46,10 @@ public class OrdemServicoPersistenceAdapter implements OrdemServicoPortOut {
     }
 
     @Override
-    public Object listarOrdens() {
-        return repository.findAll();
+    public List<OrdemServico> listarOrdens(Long idCliente) {
+        return repository.listarOrdensByClientId(idCliente).stream()
+                .map(mapper::toDomain)
+                .toList();
     }
 
     private OrdemServicoEntity carregarParaAtualizar(OrdemServico ordemServico) {

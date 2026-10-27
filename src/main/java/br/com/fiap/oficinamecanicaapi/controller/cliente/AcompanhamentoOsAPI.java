@@ -16,16 +16,16 @@ import java.util.List;
 
 public interface AcompanhamentoOsAPI {
 
-    @Operation(summary = "Consultar OS", description = "Status, itens e histórico.", tags = "Ordem de Serviço")
+    @Operation(summary = "Consultar OS", description = "Status, itens e histórico.", tags = "Acompanhar Ordem de Serviço")
     @ApiResponse(responseCode = "200", description = "OS encontrada", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
     @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/consultar/{id}")
-    ResponseEntity<OrdemServicoResponse> consultar(@RequestHeader(value = "Authorization") String token, @PathVariable Long id) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> consultar(@PathVariable Long id) throws ApplicationException;
 
-    @Operation(summary = "Listar OS", description = "Status, itens e histórico.", tags = "Ordem de Serviço")
+    @Operation(summary = "Listar OS", description = "Status, itens e histórico.", tags = "Acompanhar Ordem de Serviço")
     @ApiResponse(responseCode = "200", description = "OS encontradas", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
     @ApiResponse(responseCode = "404", description = "Nenhuma OS encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @GetMapping("/listar")
-    ResponseEntity<List<OrdemServicoResponse>> listar(@RequestHeader(value = "Authorization") String token) throws ApplicationException;
+    @GetMapping("/listar/{idCliente}")
+    ResponseEntity<List<OrdemServicoResponse>> listar(@PathVariable Long idCliente) throws ApplicationException;
 
 }

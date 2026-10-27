@@ -20,7 +20,7 @@ public interface OrdemServicoUseCasePortIn {
 
     OrdemServicoResponse consultar(Long id) throws ApplicationException;
 
-    List<OrdemServicoResponse> listar() throws ApplicationException;
+    List<OrdemServicoResponse> listar(Long idCliente) throws ApplicationException;
 
     /**
      * Atualização completa dos dados (cliente, veículo, itens): todos os campos são obrigatórios, e

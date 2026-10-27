@@ -13,7 +13,7 @@ import java.util.List;
 
 /** Papéis provisórios: todos os perfis até o grupo definir quem pode cada mudança. */
 @RestController
-@RequestMapping("/ordens-servico")
+@RequestMapping("/acompanhamento-os")
 @PreAuthorize("hasAnyRole('OPERATOR', 'MANAGER', 'ADMINISTRATOR')")
 public class AcompanhamentoOsController implements AcompanhamentoOsAPI {
 
@@ -24,13 +24,13 @@ public class AcompanhamentoOsController implements AcompanhamentoOsAPI {
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> consultar(String token, Long id) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> consultar(Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.consultar(id));
     }
 
     @Override
-    public ResponseEntity<List<OrdemServicoResponse>> listar(String token) throws ApplicationException {
-        return ResponseEntity.ok(useCase.listar());
+    public ResponseEntity<List<OrdemServicoResponse>> listar(Long idCliente) throws ApplicationException {
+        return ResponseEntity.ok(useCase.listar(idCliente));
     }
 
 

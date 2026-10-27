@@ -19,5 +19,5 @@ public interface OrdemServicoPortOut {
      */
     List<Duration> listarTemposExecucao();
 
-    Object listarOrdens();
+    List<OrdemServico> listarOrdens(Long idCliente);
 }
