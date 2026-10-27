@@ -40,15 +40,9 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
 
                 .authorizeHttpRequests(auth -> auth
+                        // preflight de CORS não leva token
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/api-docs-personalized/**",
-                                "/documentation/**")
-                        .permitAll()
+                        .requestMatchers(RotasPublicas.todas()).permitAll()
                         .anyRequest()
                         .authenticated()
                 )

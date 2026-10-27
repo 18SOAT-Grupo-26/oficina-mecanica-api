@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 public interface PecaInsumoAPI {
@@ -22,21 +21,20 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Insumo with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    ResponseEntity<PecaInsumoResponse> criar(@RequestHeader(value = "Authorization") String token, @RequestBody PecaInsumoRequest request) throws ApplicationException;
+    ResponseEntity<PecaInsumoResponse> criar(@RequestBody PecaInsumoRequest request) throws ApplicationException;
 
     @Operation(summary = "Listar insumos", tags = "Insumo")
     @ApiResponse(responseCode = "200", description = "Página de insumos")
     @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Insumo with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    ResponseEntity<Pagina<PecaInsumoResponse>> listar(@RequestHeader(value = "Authorization") String token,
-                                                      @RequestParam(required = false) Integer page,
+    ResponseEntity<Pagina<PecaInsumoResponse>> listar(@RequestParam(required = false) Integer page,
                                                       @RequestParam(required = false) Integer size) throws ApplicationException;
 
     @Operation(summary = "Buscar insumo por id", tags = "Insumo")
     @ApiResponse(responseCode = "200", description = "Insumo encontrado", content = @Content(schema = @Schema(implementation = PecaInsumoResponse.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    ResponseEntity<PecaInsumoResponse> buscarPorId(@RequestHeader(value = "Authorization") String token, @PathVariable Long id) throws ApplicationException;
+    ResponseEntity<PecaInsumoResponse> buscarPorId(@PathVariable Long id) throws ApplicationException;
 
 
     @Operation(summary = "Atualizar insumo", tags = "Insumo")
@@ -44,10 +42,10 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Nome de insumo já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    ResponseEntity<PecaInsumoResponse> atualizar(@RequestHeader(value = "Authorization") String token, @PathVariable Long id, @RequestBody PecaInsumoRequest request) throws ApplicationException;
+    ResponseEntity<PecaInsumoResponse> atualizar(@PathVariable Long id, @RequestBody PecaInsumoRequest request) throws ApplicationException;
 
     @Operation(summary = "Excluir insumo", tags = "Insumo")
     @ApiResponse(responseCode = "204", description = "Insumo excluído")
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    ResponseEntity<Void> excluir(@RequestHeader(value = "Authorization") String token, @PathVariable Long id) throws ApplicationException;
+    ResponseEntity<Void> excluir(@PathVariable Long id) throws ApplicationException;
 }
