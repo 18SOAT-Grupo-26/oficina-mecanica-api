@@ -105,7 +105,7 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 
 - **Prós:** é o padrão mais conhecido no Spring, tem menos classes e menos mapeamentos, e a curva de aprendizado é menor.
 - **Contras:** as entidades JPA viram o modelo de domínio, então regra de negócio e persistência ficam acopladas. Os services dependem direto dos repositórios, o que dificulta testar sem banco e trocar a persistência.
-- **Por que não:** perdemos o domínio testável e isolado. Parte do código atual (`servico`, `pecaInsumo`, `identidade`, `usuario`) ainda segue esse formato e está registrada como dívida técnica nas issues do repositório.
+- **Por que não:** perdemos o domínio testável e isolado. Parte do código atual (`servico`, `pecaInsumo`, `usuario`) ainda segue esse formato e está registrada como dívida técnica nas issues do repositório.
 
 ### 3. Monólito modular com módulos isolados (Spring Modulith ou módulos Maven)
 
@@ -155,7 +155,7 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 - A aplicação escala só como um todo. Um bug ou um deploy afeta todos os contextos.
 - Hoje, a regra de dependência depende de disciplina e de code review. A mitigação planejada é adicionar testes de arquitetura (ArchUnit) ao pipeline que já roda Sonar e JaCoCo em cada PR, para que uma violação de camada reprove o PR.
 - Observabilidade (métricas e padronização de logs) ficou para as próximas fases (decisão de 21/10). Quando entrar, ficará em `infrastructure`/config, sem acoplar o `core`.
-- Parte do código atual ainda não segue esta decisão (`identidade`, `usuario`, `servico`, `pecaInsumo` e `ordemservico`). As correções são acompanhadas como issues de dívida técnica no repositório, em PRs separados por contexto.
+- Parte do código atual ainda não segue esta decisão (`usuario`, `servico`, `pecaInsumo` e `ordemservico`). As correções são acompanhadas como issues de dívida técnica no repositório, em PRs separados por contexto.
 
 ## Referências
 

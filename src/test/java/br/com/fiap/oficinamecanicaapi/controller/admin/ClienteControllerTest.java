@@ -217,6 +217,6 @@ class ClienteControllerTest {
         when(jwtTokenProvider.validarToken(TOKEN)).thenReturn(true);
         when(jwtTokenProvider.extrairNomeUsuario(TOKEN)).thenReturn(USERNAME);
         when(usuarioUseCase.buscarPorIdentificador(USERNAME))
-                .thenReturn(new DetalhesUsuario(null, new Usuario(USERNAME, null, false, perfil), Set.of()));
+                .thenReturn(new DetalhesUsuario(new Usuario(null, null, USERNAME, null, false, perfil), Set.of()));
     }
 }

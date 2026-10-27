@@ -37,8 +37,8 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
 
             return Jwts.builder()
                     .claim("username", detalhesUsuario.usuario().nomeUsuario())
-                    .claim("given_name", detalhesUsuario.identidade().primeiroNome())
-                    .claim("email", detalhesUsuario.identidade().contato().email())
+                    .claim("name", detalhesUsuario.usuario().nome())
+                    .claim("email", detalhesUsuario.usuario().email())
                     .claim("role", detalhesUsuario.usuario().perfil().name())
                     .claim("permissions", permissoes)
                     .issuedAt(now)
