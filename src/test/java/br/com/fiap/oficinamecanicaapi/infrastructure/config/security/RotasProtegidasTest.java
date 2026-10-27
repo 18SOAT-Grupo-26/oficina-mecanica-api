@@ -117,7 +117,9 @@ class RotasProtegidasTest {
     @Test
     @DisplayName("Cadastro é público: sem header Authorization chega à validação do corpo, sem 401 nem 500")
     void cadastroDeveSerPublicoSemHeader() throws Exception {
-        mockMvc.perform(post("/auth/cadastro").contentType(MediaType.APPLICATION_JSON).content("{}"))
+        // trocaSenhaObrigatoria é boolean primitivo: sem ele o JSON nem chega à validação (422)
+        mockMvc.perform(post("/auth/cadastro").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"trocaSenhaObrigatoria\": false}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(startsWith("Campos inválidos")));
     }
