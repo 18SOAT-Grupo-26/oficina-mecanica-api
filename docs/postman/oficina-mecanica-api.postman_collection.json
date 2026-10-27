@@ -85,6 +85,10 @@
     {
       "key": "veiculoPlaca",
       "value": ""
+    },
+    {
+      "key": "ordemServicoId",
+      "value": ""
     }
   ],
   "item": [
@@ -433,10 +437,10 @@
                 "servico"
               ]
             },
-            "description": "`pecasInsumoIds` deve conter ids de peças existentes. O nome é único.",
+            "description": "O nome do serviço é único.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Troca de óleo {{sufixo}}\",\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"preco\": 150.0,\n  \"pecasInsumoIds\": [\n    {{pecaInsumoId}}\n  ]\n}",
+              "raw": "{\n  \"nome\": \"Troca de óleo {{sufixo}}\",\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"preco\": 150.0\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -558,7 +562,7 @@
             "description": "Substitui todos os campos.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Troca de óleo {{sufixo}}\",\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"preco\": 180.0,\n  \"pecasInsumoIds\": [\n    {{pecaInsumoId}}\n  ]\n}",
+              "raw": "{\n  \"nome\": \"Troca de óleo {{sufixo}}\",\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"preco\": 180.0\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -997,6 +1001,306 @@
                 }
               }
             }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Ordens de serviço",
+      "description": "Depende de cliente, veículo, serviço e peça já cadastrados (variáveis clienteDocumento, veiculoId, servicoId, pecaInsumoId). Rode em ordem.",
+      "item": [
+        {
+          "name": "Criar OS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordens-servico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens-servico"
+              ]
+            },
+            "description": "Nasce RECEBIDA e vai para EM_DIAGNOSTICO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentoCliente\": \"{{clienteDocumento}}\",\n  \"idVeiculo\": {{veiculoId}},\n  \"servicos\": [\n    { \"idServico\": {{servicoId}}, \"quantidade\": 1 }\n  ],\n  \"pecas\": [\n    { \"idPeca\": {{pecaInsumoId}}, \"quantidade\": 1 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set(\"ordemServicoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar OS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens-servico/{{ordemServicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens-servico",
+                "{{ordemServicoId}}"
+              ]
+            },
+            "description": "Status, itens e histórico."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar dados da OS",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordens-servico/{{ordemServicoId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens-servico",
+                "{{ordemServicoId}}"
+              ]
+            },
+            "description": "Atualização completa; itens só mudam em EM_DIAGNOSTICO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentoCliente\": \"{{clienteDocumento}}\",\n  \"idVeiculo\": {{veiculoId}},\n  \"servicos\": [\n    { \"idServico\": {{servicoId}}, \"quantidade\": 2 }\n  ],\n  \"pecas\": [\n    { \"idPeca\": {{pecaInsumoId}}, \"quantidade\": 2 }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Gerar orçamento",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens-servico/{{ordemServicoId}}/gerar-orcamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens-servico",
+                "{{ordemServicoId}}",
+                "gerar-orcamento"
+              ]
+            },
+            "description": "Envia o orçamento (AGUARDANDO_APROVACAO) e reserva o estoque das peças."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Aprovar orçamento",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens-servico/{{ordemServicoId}}/aprovar-orcamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens-servico",
+                "{{ordemServicoId}}",
+                "aprovar-orcamento"
+              ]
+            },
+            "description": "Aprova o orçamento (EM_EXECUCAO) e baixa o estoque reservado."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Rejeitar orçamento",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens-servico/{{ordemServicoId}}/rejeitar-orcamento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens-servico",
+                "{{ordemServicoId}}",
+                "rejeitar-orcamento"
+              ]
+            },
+            "description": "Rejeita o orçamento (CANCELADA) e libera a reserva de estoque."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mudar status da OS",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/ordens-servico/{{ordemServicoId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens-servico",
+                "{{ordemServicoId}}",
+                "status"
+              ]
+            },
+            "description": "Só avança para o próximo status. Manuais: FINALIZADA, ENTREGUE; CANCELADA até AGUARDANDO_APROVACAO.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELADA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Consultar tempo médio de execução",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens-servico/tempo-medio-execucao",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens-servico",
+                "tempo-medio-execucao"
+              ]
+            },
+            "description": "Média em minutos de EM_EXECUCAO a FINALIZADA; nula sem OS finalizada."
           },
           "event": [
             {
