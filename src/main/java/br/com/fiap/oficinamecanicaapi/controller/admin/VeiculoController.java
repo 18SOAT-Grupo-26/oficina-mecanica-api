@@ -28,27 +28,27 @@ public class VeiculoController implements VeiculoAPI {
     }
 
     @Override
-    public ResponseEntity<Pagina<VeiculoResponse>> listar(String token, Long clienteId, Integer page, Integer size) {
+    public ResponseEntity<Pagina<VeiculoResponse>> listar(Long clienteId, Integer page, Integer size) {
         return ResponseEntity.ok(useCase.listar(clienteId, page, size));
     }
 
     @Override
-    public ResponseEntity<VeiculoResponse> buscarPorId(String token, Long id) throws ApplicationException {
+    public ResponseEntity<VeiculoResponse> buscarPorId(Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.buscarPorId(id));
     }
 
     @Override
-    public ResponseEntity<VeiculoResponse> buscarPorPlaca(String token, String placa) throws ApplicationException {
+    public ResponseEntity<VeiculoResponse> buscarPorPlaca(String placa) throws ApplicationException {
         return ResponseEntity.ok(useCase.buscarPorPlaca(placa));
     }
 
     @Override
-    public ResponseEntity<VeiculoResponse> atualizar(String token, Long id, VeiculoRequest request) throws ApplicationException {
+    public ResponseEntity<VeiculoResponse> atualizar(Long id, VeiculoRequest request) throws ApplicationException {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
-    public ResponseEntity<Void> desativar(String token, Long id) throws ApplicationException {
+    public ResponseEntity<Void> desativar(Long id) throws ApplicationException {
         useCase.desativar(id);
         return ResponseEntity.noContent().build();
     }

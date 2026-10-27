@@ -45,6 +45,8 @@ logging:
 
 api:
   secret: "${API_SECRET}"
+  cors:
+    allowed-origins: "${CORS_ALLOWED_ORIGINS:}"
 
 springdoc:
   swagger-ui:

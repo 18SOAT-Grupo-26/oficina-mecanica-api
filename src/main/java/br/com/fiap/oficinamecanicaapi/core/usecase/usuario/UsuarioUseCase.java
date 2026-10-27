@@ -1,6 +1,5 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.usuario;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.identidade.entity.IdentidadeEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
@@ -45,10 +44,11 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
 
     @Override
     @Transactional
-    public void cadastrar(Usuario usuario, IdentidadeEntity identidadeEntity) {
+    public void cadastrar(Usuario usuario) {
         try {
             validarPayloads(usuario);
             politicaSenha.validar(usuario.senha());
+            validarEmailDisponivel(usuario.email());
             validarNomeUsuarioDisponivel(usuario.nomeUsuario());
 
             var perfilEntity = perfilRepository.findByNome(usuario.perfil().name())
@@ -56,13 +56,15 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
                             "Perfil não encontrado: " + usuario.perfil().name()));
 
             var usuarioComSenhaCifrada = new Usuario(
+                    usuario.nome(),
+                    usuario.email(),
                     usuario.nomeUsuario(),
                     passwordEncoder.encode(usuario.senha()),
                     usuario.trocaSenhaObrigatoria(),
                     usuario.perfil()
             );
 
-            usuarioRepository.save(usuarioMapper.toEntityCadastro(usuarioComSenhaCifrada, identidadeEntity, perfilEntity));
+            usuarioRepository.save(usuarioMapper.toEntityCadastro(usuarioComSenhaCifrada, perfilEntity));
             log.info("action=user_register_success username={}", usuario.nomeUsuario());
         } catch (RuntimeException e) {
             log.error("action=user_register_failure username={} error={}",
@@ -77,7 +79,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
         var tipoIdentificador = usuarioPayload.isEmail(identificador) ? "email" : "username";
         try {
             var entity = usuarioPayload.isEmail(identificador)
-                    ? usuarioRepository.buscarPorEmail(identificador)
+                    ? usuarioRepository.findByEmail(identificador)
                     .orElseThrow(() -> new ApplicationException(404, MENSAGEM_NAO_ENCONTRADO))
                     : usuarioRepository.findByNomeUsuario(identificador)
                     .orElseThrow(() -> new ApplicationException(404, MENSAGEM_NAO_ENCONTRADO));
@@ -94,6 +96,12 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     private void validarPayloads(Usuario usuario) {
         log.info("Validating user payload: {}", usuario.nomeUsuario());
         usuarioPayload.validarUsuario(usuario);
+    }
+
+    private void validarEmailDisponivel(String email) {
+        if (usuarioRepository.existsByEmail(email)) {
+            throw new ApplicationException(409, "Já existe um usuário cadastrado com este e-mail");
+        }
     }
 
     private void validarNomeUsuarioDisponivel(String nomeUsuario) {

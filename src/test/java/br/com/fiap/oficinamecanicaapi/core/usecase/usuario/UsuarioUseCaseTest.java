@@ -1,6 +1,5 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.usuario;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.identidade.entity.IdentidadeEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity.PerfilEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity.UsuarioEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
@@ -31,9 +30,14 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UsuarioUseCaseTest {
 
+    private static final String NOME = "Ana Administradora";
+    private static final String EMAIL = "ana@oficina.com.br";
     private static final String NOME_USUARIO = "admin";
     private static final String SENHA = "Admin@123";
-    private static final Usuario USUARIO = new Usuario(NOME_USUARIO, SENHA, false, Perfil.ADMINISTRATOR);
+    private static final String SENHA_CIFRADA = "cifrada";
+    private static final Usuario USUARIO = new Usuario(NOME, EMAIL, NOME_USUARIO, SENHA, false, Perfil.ADMINISTRATOR);
+    private static final Usuario USUARIO_CIFRADO =
+            new Usuario(NOME, EMAIL, NOME_USUARIO, SENHA_CIFRADA, false, Perfil.ADMINISTRATOR);
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -63,23 +67,35 @@ class UsuarioUseCaseTest {
     void deveCadastrarUsuario() {
         var perfilEntity = new PerfilEntity();
         var usuarioEntity = new UsuarioEntity();
+        when(usuarioRepository.existsByEmail(EMAIL)).thenReturn(false);
         when(usuarioRepository.existsByNomeUsuario(NOME_USUARIO)).thenReturn(false);
         when(perfilRepository.findByNome(Perfil.ADMINISTRATOR.name())).thenReturn(Optional.of(perfilEntity));
-        when(passwordEncoder.encode(SENHA)).thenReturn("cifrada");
-        when(usuarioMapper.toEntityCadastro(any(Usuario.class), any(), any())).thenReturn(usuarioEntity);
+        when(passwordEncoder.encode(SENHA)).thenReturn(SENHA_CIFRADA);
+        when(usuarioMapper.toEntityCadastro(USUARIO_CIFRADO, perfilEntity)).thenReturn(usuarioEntity);
 
-        useCase.cadastrar(USUARIO, new IdentidadeEntity());
+        useCase.cadastrar(USUARIO);
 
         verify(usuarioRepository).save(usuarioEntity);
     }
 
     @Test
+    @DisplayName("Deve rejeitar com 409 e-mail já cadastrado")
+    void deveRejeitarEmailRepetido() {
+        when(usuarioRepository.existsByEmail(EMAIL)).thenReturn(true);
+
+        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.cadastrar(USUARIO));
+
+        assertThat(ex.getErrorCode()).isEqualTo(409);
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Deve rejeitar com 409 nome de usuário já cadastrado")
     void deveRejeitarNomeUsuarioRepetido() {
+        when(usuarioRepository.existsByEmail(EMAIL)).thenReturn(false);
         when(usuarioRepository.existsByNomeUsuario(NOME_USUARIO)).thenReturn(true);
 
-        ApplicationException ex = assertThrows(ApplicationException.class,
-                () -> useCase.cadastrar(USUARIO, new IdentidadeEntity()));
+        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.cadastrar(USUARIO));
 
         assertThat(ex.getErrorCode()).isEqualTo(409);
         verify(usuarioRepository, never()).save(any());

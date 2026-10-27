@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -69,6 +70,12 @@ public class HandlerException {
                 .sorted()
                 .collect(Collectors.joining(", "));
         return buildError(HttpStatus.BAD_REQUEST, "Campos inválidos: " + campos);
+    }
+
+    /** Header obrigatório ausente (ex.: Authorization no /auth/validate); sem este handler cairia no 500. */
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorTemplate> handleMissingHeader(MissingRequestHeaderException e) {
+        return buildError(HttpStatus.BAD_REQUEST, "Header obrigatório ausente: " + e.getHeaderName());
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
