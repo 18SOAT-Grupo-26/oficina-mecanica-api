@@ -63,6 +63,19 @@ public interface OrdemServicoAPI {
     @PatchMapping("/{id}/status")
     ResponseEntity<OrdemServicoResponse> alterarStatus(@RequestHeader(value = "Authorization") String token, @PathVariable Long id, @Valid @RequestBody OrdemServicoRequest.Status request) throws ApplicationException;
 
+
+    @Operation(summary = "Gerar Orcamento",
+            description = "Gera Orçamento",
+            tags = "Ordem de Serviço")
+    @ApiResponse(responseCode = "200", description = "Orçamento gerado", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "Conflito ao gerar orçamento", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "422", description = "Entidade não processável", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @PatchMapping("/{id}/gerar-orcamento")
+    ResponseEntity<OrdemServicoResponse> gerarOrcamento(@RequestHeader(value = "Authorization") String token, @PathVariable Long id) throws ApplicationException;
+
+
     @Operation(summary = "Consultar tempo médio de execução",
             description = "Média de EM_EXECUCAO a FINALIZADA das OS que passaram por FINALIZADA (inclusive as entregues), em minutos truncados. Sem OS finalizada, a média vem nula.",
             tags = "Ordem de Serviço")

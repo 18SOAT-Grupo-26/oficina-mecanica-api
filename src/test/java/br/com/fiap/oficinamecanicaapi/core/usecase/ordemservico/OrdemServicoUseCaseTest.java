@@ -540,6 +540,8 @@ class OrdemServicoUseCaseTest {
         @DisplayName("Deve ir para AGUARDANDO_APROVACAO quando o orçamento é enviado")
         void deveAguardarAprovacaoNoEnvio() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
+            when(pecaInsumoPortOut.reservar(ID_PECA, 2)).thenReturn(true);
+            when(pecaInsumoPortOut.reservar(ID_VELA, 4)).thenReturn(true);
             retornarOsSalva();
 
             OrdemServicoResponse response = useCase.registrarOrcamentoEnviado(ID_OS);
@@ -547,12 +549,16 @@ class OrdemServicoUseCaseTest {
             assertThat(response.status()).isEqualTo(AGUARDANDO_APROVACAO);
             assertThat(response.historico()).last()
                     .isEqualTo(new OrdemServicoResponse.RegistroHistorico(EM_DIAGNOSTICO, AGUARDANDO_APROVACAO, AGORA));
+            verify(pecaInsumoPortOut).reservar(ID_PECA, 2);
+            verify(pecaInsumoPortOut).reservar(ID_VELA, 4);
         }
 
         @Test
         @DisplayName("Deve ir para EM_EXECUCAO automaticamente na aprovação, gravando o histórico")
         void deveIniciarExecucaoNaAprovacao() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
+            when(pecaInsumoPortOut.baixar(ID_PECA, 2)).thenReturn(true);
+            when(pecaInsumoPortOut.baixar(ID_VELA, 4)).thenReturn(true);
             retornarOsSalva();
 
             OrdemServicoResponse response = useCase.registrarOrcamentoAprovado(ID_OS);
@@ -561,12 +567,16 @@ class OrdemServicoUseCaseTest {
             assertThat(response.status()).isEqualTo(EM_EXECUCAO);
             assertThat(response.historico()).last()
                     .isEqualTo(new OrdemServicoResponse.RegistroHistorico(AGUARDANDO_APROVACAO, EM_EXECUCAO, AGORA));
+            verify(pecaInsumoPortOut).baixar(ID_PECA, 2);
+            verify(pecaInsumoPortOut).baixar(ID_VELA, 4);
         }
 
         @Test
         @DisplayName("Deve ir para CANCELADA automaticamente na rejeição, gravando o histórico")
         void deveCancelarNaRejeicao() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
+            when(pecaInsumoPortOut.liberar(ID_PECA, 2)).thenReturn(true);
+            when(pecaInsumoPortOut.liberar(ID_VELA, 4)).thenReturn(true);
             retornarOsSalva();
 
             OrdemServicoResponse response = useCase.registrarOrcamentoRejeitado(ID_OS);
@@ -574,6 +584,35 @@ class OrdemServicoUseCaseTest {
             assertThat(response.status()).isEqualTo(CANCELADA);
             assertThat(response.historico()).last()
                     .isEqualTo(new OrdemServicoResponse.RegistroHistorico(AGUARDANDO_APROVACAO, CANCELADA, AGORA));
+            verify(pecaInsumoPortOut).liberar(ID_PECA, 2);
+            verify(pecaInsumoPortOut).liberar(ID_VELA, 4);
+        }
+
+        @Test
+        @DisplayName("Deve recusar enviar o orçamento quando não há saldo suficiente para reservar as peças")
+        void deveRecusarEnviarSemSaldoParaReserva() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
+            when(pecaInsumoPortOut.reservar(ID_PECA, 2)).thenReturn(false);
+
+            assertErro(409, "Saldo insuficiente para reservar a peça Filtro de óleo",
+                    () -> useCase.registrarOrcamentoEnviado(ID_OS));
+
+            verify(ordemServicoPortOut, never()).salvar(any());
+            verify(pecaInsumoPortOut, never()).salvar(any());
+            verify(pecaInsumoPortOut, never()).reservar(ID_VELA, 4);
+        }
+
+        @Test
+        @DisplayName("Deve recusar aprovar o orçamento quando não existe reserva suficiente")
+        void deveRecusarAprovacaoSemReserva() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
+            when(pecaInsumoPortOut.baixar(ID_PECA, 2)).thenReturn(false);
+
+            assertErro(409, "Não há reserva suficiente para atualizar o estoque da peça Filtro de óleo",
+                    () -> useCase.registrarOrcamentoAprovado(ID_OS));
+
+            verify(ordemServicoPortOut, never()).salvar(any());
+            verify(pecaInsumoPortOut, never()).baixar(ID_VELA, 4);
         }
 
         @Test
