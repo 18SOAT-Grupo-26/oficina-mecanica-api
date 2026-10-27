@@ -268,7 +268,7 @@
             "description": "`reservado` é opcional (padrão 0) e deve ficar entre 0 e `quantidade`. O nome é único.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Filtro de óleo {{sufixo}}\",\n  \"descricao\": \"Filtro de óleo para motores 1.0 a 2.0\",\n  \"quantidade\": 50,\n  \"reservado\": 0,\n  \"preco\": 39.9\n}",
+              "raw": "{\n  \"nome\": \"Filtro de óleo\",\n  \"descricao\": \"Filtro de óleo para motores 1.0 a 2.0\",\n  \"quantidade\": 50,\n  \"reservado\": 0,\n  \"preco\": 39.9\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -390,7 +390,7 @@
             "description": "Substitui todos os campos.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Filtro de óleo {{sufixo}}\",\n  \"descricao\": \"Filtro de óleo para motores 1.0 a 2.0\",\n  \"quantidade\": 80,\n  \"reservado\": 0,\n  \"preco\": 42.5\n}",
+              "raw": "{\n  \"nome\": \"Filtro de óleo\",\n  \"descricao\": \"Filtro de óleo para motores 1.0 a 2.0\",\n  \"quantidade\": 80,\n  \"reservado\": 0,\n  \"preco\": 42.5\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -440,7 +440,7 @@
             "description": "O nome do serviço é único.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Troca de óleo {{sufixo}}\",\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"preco\": 150.0\n}",
+              "raw": "{\n  \"nome\": \"Troca de óleo\",\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"preco\": 150.0\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -562,7 +562,7 @@
             "description": "Substitui todos os campos.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Troca de óleo {{sufixo}}\",\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"preco\": 180.0\n}",
+              "raw": "{\n  \"nome\": \"Troca de óleo\",\n  \"descricao\": \"Troca de óleo e filtro\",\n  \"preco\": 180.0\n}",
               "options": {
                 "raw": {
                   "language": "json"
