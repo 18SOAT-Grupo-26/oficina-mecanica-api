@@ -1,14 +1,11 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.servico.entity;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "servico")
@@ -30,14 +27,6 @@ public class ServicoEntity {
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal preco;
-
-    @ManyToMany
-    @JoinTable(
-            name = "servico_peca_insumo",
-            joinColumns = @JoinColumn(name = "servico_id"),
-            inverseJoinColumns = @JoinColumn(name = "peca_insumo_id")
-    )
-    private List<PecaInsumoEntity> pecasInsumo = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;

@@ -30,6 +30,24 @@ public class PecaInsumoPersistenceAdapter implements PecaInsumoPortOut {
     }
 
     @Override
+    @Transactional
+    public boolean reservar(Long id, int quantidade) {
+        return repository.reservar(id, quantidade) == 1;
+    }
+
+    @Override
+    @Transactional
+    public boolean liberar(Long id, int quantidade) {
+        return repository.liberar(id, quantidade) == 1;
+    }
+
+    @Override
+    @Transactional
+    public boolean baixar(Long id, int quantidade) {
+        return repository.baixar(id, quantidade) == 1;
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public Optional<PecaInsumoEntity> buscarPorId(Long id) {
         return repository.findById(id);

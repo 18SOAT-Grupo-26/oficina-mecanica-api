@@ -71,6 +71,37 @@ public interface OrdemServicoAPI {
     @PatchMapping("/{id}/status")
     ResponseEntity<OrdemServicoResponse> alterarStatus(@PathVariable Long id, @Valid @RequestBody OrdemServicoRequest.Status request) throws ApplicationException;
 
+
+    @Operation(summary = "Gerar Orcamento",
+            description = "Gera Orçamento",
+            tags = "Ordem de Serviço")
+    @ApiResponse(responseCode = "200", description = "Orçamento gerado", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
+    @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "Conflito ao gerar orçamento", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "422", description = "Entidade não processável", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @PatchMapping("/{id}/gerar-orcamento")
+    ResponseEntity<OrdemServicoResponse> gerarOrcamento(@PathVariable Long id) throws ApplicationException;
+
+
+    @Operation(summary = "Aprovar orçamento",
+            description = "Aprova o orçamento enviado: a OS vai para EM_EXECUCAO e o estoque reservado das peças é baixado. Só vale para OS em AGUARDANDO_APROVACAO.",
+            tags = "Ordem de Serviço")
+    @ApiResponse(responseCode = "200", description = "Orçamento aprovado", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
+    @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "OS fora de AGUARDANDO_APROVACAO ou saldo reservado insuficiente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @PatchMapping("/{id}/aprovar-orcamento")
+    ResponseEntity<OrdemServicoResponse> aprovarOrcamento(@PathVariable Long id) throws ApplicationException;
+
+    @Operation(summary = "Rejeitar orçamento",
+            description = "Rejeita o orçamento enviado: a OS é cancelada e a reserva de estoque das peças é liberada, sem consumo. Só vale para OS em AGUARDANDO_APROVACAO.",
+            tags = "Ordem de Serviço")
+    @ApiResponse(responseCode = "200", description = "Orçamento rejeitado", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
+    @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "OS fora de AGUARDANDO_APROVACAO ou reserva inconsistente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @PatchMapping("/{id}/rejeitar-orcamento")
+    ResponseEntity<OrdemServicoResponse> rejeitarOrcamento(@PathVariable Long id) throws ApplicationException;
+
     @Operation(summary = "Consultar tempo médio de execução",
             description = "Média de EM_EXECUCAO a FINALIZADA das OS que passaram por FINALIZADA (inclusive as entregues), em minutos truncados. Sem OS finalizada, a média vem nula.",
             tags = "Ordem de Serviço")
