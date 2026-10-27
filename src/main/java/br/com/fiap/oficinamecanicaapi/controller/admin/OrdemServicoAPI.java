@@ -73,7 +73,7 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "409", description = "Conflito ao gerar orçamento", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Entidade não processável", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PatchMapping("/{id}/gerar-orcamento")
-    ResponseEntity<OrdemServicoResponse> gerarOrcamento(@RequestHeader(value = "Authorization") String token, @PathVariable Long id) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> gerarOrcamento(@PathVariable Long id) throws ApplicationException;
 
 
     @Operation(summary = "Aprovar orçamento",
@@ -83,7 +83,7 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "OS fora de AGUARDANDO_APROVACAO ou saldo reservado insuficiente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PatchMapping("/{id}/aprovar-orcamento")
-    ResponseEntity<OrdemServicoResponse> aprovarOrcamento(@RequestHeader(value = "Authorization") String token, @PathVariable Long id) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> aprovarOrcamento(@PathVariable Long id) throws ApplicationException;
 
     @Operation(summary = "Rejeitar orçamento",
             description = "Rejeita o orçamento enviado: a OS é cancelada e a reserva de estoque das peças é liberada, sem consumo. Só vale para OS em AGUARDANDO_APROVACAO.",
@@ -92,7 +92,7 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "OS fora de AGUARDANDO_APROVACAO ou reserva inconsistente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PatchMapping("/{id}/rejeitar-orcamento")
-    ResponseEntity<OrdemServicoResponse> rejeitarOrcamento(@RequestHeader(value = "Authorization") String token, @PathVariable Long id) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> rejeitarOrcamento(@PathVariable Long id) throws ApplicationException;
 
     @Operation(summary = "Consultar tempo médio de execução",
             description = "Média de EM_EXECUCAO a FINALIZADA das OS que passaram por FINALIZADA (inclusive as entregues), em minutos truncados. Sem OS finalizada, a média vem nula.",

@@ -44,17 +44,17 @@ public class OrdemServicoController implements OrdemServicoAPI {
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> gerarOrcamento(String token, Long id) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> gerarOrcamento(Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.registrarOrcamentoEnviado(id));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> aprovarOrcamento(String token, Long id) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> aprovarOrcamento(Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.registrarOrcamentoAprovado(id));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> rejeitarOrcamento(String token, Long id) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> rejeitarOrcamento(Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.registrarOrcamentoRejeitado(id));
     }
 
