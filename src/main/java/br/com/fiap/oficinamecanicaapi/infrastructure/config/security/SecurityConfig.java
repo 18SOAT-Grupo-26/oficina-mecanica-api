@@ -40,15 +40,23 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
 
                 .authorizeHttpRequests(auth -> auth
+                        // preflight de CORS do navegador; não executa nenhuma operação
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/auth/**").permitAll()
+                        // única operação sem token: troca credenciais por um JWT
+                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                        // criar usuário exige um administrador autenticado
+                        .requestMatchers(HttpMethod.POST, "/auth/cadastro").hasRole("ADMINISTRATOR")
+                        // actuator: acessível só pela porta de gerenciamento, que não é publicada (item 3)
                         .requestMatchers("/actuator/**").permitAll()
+                        // documentação da API (leitura); as chamadas feitas por ela continuam exigindo token
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
+                                "/swagger-ui.html",
                                 "/api-docs-personalized/**",
                                 "/documentation/**")
                         .permitAll()
+                        // todo o resto, inclusive /auth/validate, exige token
                         .anyRequest()
                         .authenticated()
                 )

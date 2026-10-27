@@ -45,6 +45,11 @@ public class OrdemServicoPersistenceAdapter implements OrdemServicoPortOut {
                 .toList();
     }
 
+    @Override
+    public Object listarOrdens() {
+        return repository.findAll();
+    }
+
     private OrdemServicoEntity carregarParaAtualizar(OrdemServico ordemServico) {
         OrdemServicoEntity entity = repository.findById(ordemServico.getId())
                 .orElseThrow(() -> new ApplicationException(404, "Ordem de serviço não encontrada"));
