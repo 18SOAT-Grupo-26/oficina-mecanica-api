@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServic
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.TempoMedioExecucaoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.port.in.pecaInsumo.PecaInsumoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,11 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrdemServicoController implements OrdemServicoAPI {
 
     private final OrdemServicoUseCasePortIn useCase;
-    private final PecaInsumoUseCasePortIn pecaInsumoUseCase;
 
-    public OrdemServicoController(OrdemServicoUseCasePortIn useCase, PecaInsumoUseCasePortIn pecaInsumoUseCase) {
+    public OrdemServicoController(OrdemServicoUseCasePortIn useCase) {
         this.useCase = useCase;
-        this.pecaInsumoUseCase = pecaInsumoUseCase;
     }
 
     @Override
