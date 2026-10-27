@@ -3,8 +3,8 @@ package br.com.fiap.oficinamecanicaapi.core.usecase.auth;
 import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.AuthToken;
 import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.CadastroRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SigninRequest;
+import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.port.in.identidade.IdentidadeUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -20,33 +20,30 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
     private static final Logger log = LoggerFactory.getLogger(AuthenticationUseCase.class);
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final IdentidadeUseCasePortIn identidadeService;
     private final UsuarioUseCasePortIn usuarioService;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProviderUseCase jwtTokenProvider;
 
-    public AuthenticationUseCase(IdentidadeUseCasePortIn identidadeService,
-                                 UsuarioUseCasePortIn usuarioService,
+    public AuthenticationUseCase(UsuarioUseCasePortIn usuarioService,
                                  PasswordEncoder passwordEncoder,
                                  JwtTokenProviderUseCase jwtTokenProvider,
                                  MeterRegistry meterRegistry) {
-        this.identidadeService = identidadeService;
         this.usuarioService = usuarioService;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
     }
 
-    /** Identidade, contato, endereço e usuário numa transação só (ADR 003). */
+    /** Usuário gravado numa transação (ADR 003). */
     @Override
     @Transactional
     public void cadastrarUsuario(CadastroRequest request) throws ApplicationException {
         try {
-            log.info("action=register_start username={}", request.usuario().nomeUsuario());
+            log.info("action=register_start username={}", request.nomeUsuario());
 
-            var identidadeEntity = identidadeService.cadastrar(request.identidade());
-            usuarioService.cadastrar(request.usuario(), identidadeEntity);
+            usuarioService.cadastrar(new Usuario(request.nome(), request.email(), request.nomeUsuario(),
+                    request.senha(), request.trocaSenhaObrigatoria(), request.perfil()));
 
-            log.info("action=register_success username={}", request.usuario().nomeUsuario());
+            log.info("action=register_success username={}", request.nomeUsuario());
         } catch (ApplicationException e) {
             throw e;
         } catch (Exception e) {
@@ -58,21 +55,32 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
     public AuthToken autenticar(SigninRequest request) throws ApplicationException {
         log.info("action=signin_start identifier={}", request.identificador());
 
-        var detalhesUsuario = usuarioService.buscarPorIdentificador(request.identificador());
+        try {
+            var detalhesUsuario = usuarioService.buscarPorIdentificador(request.identificador());
 
-        if (!passwordEncoder.matches(request.senha(), detalhesUsuario.usuario().senha())) {
-            log.warn("action=signin_invalid_password identifier={}", request.identificador());
+            if (!passwordEncoder.matches(request.senha(), detalhesUsuario.usuario().senha())) {
+                log.warn("action=signin_invalid_password identifier={}", request.identificador());
+                throw new ApplicationException(401, "Credenciais inválidas");
+            }
+
+            String token = BEARER_PREFIX + jwtTokenProvider.gerarToken(detalhesUsuario);
+            log.info("action=signin_success identifier={} changeRequired={}",
+                    request.identificador(), detalhesUsuario.usuario().trocaSenhaObrigatoria());
+
+            return AuthToken.builder()
+                    .token(token)
+                    .trocaSenhaObrigatoria(detalhesUsuario.usuario().trocaSenhaObrigatoria())
+                    .build();
+        } catch (ApplicationException e) {
+            if (e.getErrorCode() != 404) {
+                throw e;
+            }
+            // Usuário inexistente: mesma resposta e mesmo custo de bcrypt da senha errada,
+            // para nem o status nem o tempo revelarem quais logins existem.
+            passwordEncoder.encode(request.senha());
+            log.warn("action=signin_user_not_found identifier={}", request.identificador());
             throw new ApplicationException(401, "Credenciais inválidas");
         }
-
-        String token = BEARER_PREFIX + jwtTokenProvider.gerarToken(detalhesUsuario);
-        log.info("action=signin_success identifier={} changeRequired={}",
-                request.identificador(), detalhesUsuario.usuario().trocaSenhaObrigatoria());
-
-        return AuthToken.builder()
-                .token(token)
-                .trocaSenhaObrigatoria(detalhesUsuario.usuario().trocaSenhaObrigatoria())
-                .build();
     }
 
     @Override

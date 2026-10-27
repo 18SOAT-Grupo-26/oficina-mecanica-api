@@ -1,6 +1,5 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.identidade.entity.IdentidadeEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,11 +16,13 @@ public class UsuarioEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "identidade_id")
-    private IdentidadeEntity identidade;
+    @Column(nullable = false)
+    private String nome;
 
-    @Column(name = "nome_usuario")
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(name = "nome_usuario", unique = true)
     private String nomeUsuario;
 
     private String senha;

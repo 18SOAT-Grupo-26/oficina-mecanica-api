@@ -39,7 +39,7 @@ Fluxos cobertos por esta ADR:
 | Aprovar orçamento | Status da OS, baixa de cada peça |
 | Reprovar orçamento | Status da OS, liberação de cada peça |
 | Cancelar OS | Status da OS e liberação das peças, se ainda houver reserva |
-| Cadastro de usuário | Identidade, contato, endereço e usuário |
+| Cadastro de usuário | Usuário (até a V8, também identidade, contato e endereço) |
 
 ## Decisão
 
@@ -116,6 +116,8 @@ O tratamento fica no `HandlerException` (`shared/handler`). O servidor **não te
 ### 6. Cadastro de usuário
 
 `AuthenticationUseCase.cadastrarUsuario` passa a ser a fronteira da transação. Identidade, contato, endereço e usuário são gravados juntos ou nada é gravado. O `@Transactional` do método privado `IdentityUseCase.saveIdentity` sai, e o método público `registerIdentity` recebe a anotação.
+
+> **Atualização (V8):** a identidade, o contato e o endereço foram removidos; o usuário guarda nome e e-mail. O cadastro passou a gravar uma tabela só, e a transação continua em `cadastrarUsuario`.
 
 ## Alternativas consideradas
 

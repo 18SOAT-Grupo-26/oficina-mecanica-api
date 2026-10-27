@@ -25,13 +25,13 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "404", description = "Cliente, veículo, serviço ou peça não cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Veículo de outro cliente, item repetido ou saldo insuficiente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PostMapping
-    ResponseEntity<OrdemServicoResponse> criar(@RequestHeader(value = "Authorization") String token, @Valid @RequestBody OrdemServicoRequest request) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> criar(@Valid @RequestBody OrdemServicoRequest request) throws ApplicationException;
 
     @Operation(summary = "Consultar OS", description = "Status, itens e histórico.", tags = "Ordem de Serviço")
     @ApiResponse(responseCode = "200", description = "OS encontrada", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
     @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/{id}")
-    ResponseEntity<OrdemServicoResponse> consultar(@RequestHeader(value = "Authorization") String token, @PathVariable Long id) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> consultar(@PathVariable Long id) throws ApplicationException;
 
     @Operation(summary = "Atualizar dados da OS",
             description = """
@@ -46,7 +46,7 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "404", description = "OS ou cadastro não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "OS em EM_EXECUCAO ou depois, cliente ou veículo diferente, itens fora de EM_DIAGNOSTICO, item repetido ou saldo insuficiente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PutMapping("/{id}")
-    ResponseEntity<OrdemServicoResponse> atualizar(@RequestHeader(value = "Authorization") String token, @PathVariable Long id, @Valid @RequestBody OrdemServicoRequest request) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> atualizar(@PathVariable Long id, @Valid @RequestBody OrdemServicoRequest request) throws ApplicationException;
 
     @Operation(summary = "Mudar status da OS",
             description = """
@@ -61,7 +61,7 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "409", description = "Transição inválida ou status automático", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Status desconhecido ou body ilegível", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PatchMapping("/{id}/status")
-    ResponseEntity<OrdemServicoResponse> alterarStatus(@RequestHeader(value = "Authorization") String token, @PathVariable Long id, @Valid @RequestBody OrdemServicoRequest.Status request) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> alterarStatus(@PathVariable Long id, @Valid @RequestBody OrdemServicoRequest.Status request) throws ApplicationException;
 
 
     @Operation(summary = "Gerar Orcamento",

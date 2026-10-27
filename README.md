@@ -145,6 +145,7 @@ Possíveis problemas:
 | `DATASOURCE_USERNAME`    | vazio                                      | sim         | usuário do banco                                                  |
 | `DATASOURCE_PASSWORD`    | —                                          | sim         | senha do banco                                                    |
 | `API_SECRET`             | —                                          | sim         | chave de assinatura do JWT, em Base64 (`openssl rand -base64 64`) |
+| `CORS_ALLOWED_ORIGINS`   | vazio                                      | não         | origens do front que podem chamar a API pelo navegador, separadas por vírgula (ex.: `http://localhost:3000`); vazio = nenhuma |
 | `SERVER_PORT`            | `8081`                                     | não         | porta HTTP da API                                                 |
 | `APPLICATION_PREFIX`     | `api/v1`                                   | não         | prefixo (context-path) das rotas                                  |
 | `APPLICATION_NAME`       | `oficina-mecanica-api`                     | não         | nome da aplicação                                                 |
@@ -276,21 +277,12 @@ A autenticação usa JWT:
 > **Limitação conhecida:** `POST /auth/cadastro` é público e aceita qualquer `perfil`, inclusive `ADMINISTRATOR`. Use
 > apenas em ambiente local até a regra de criação de administradores ser restringida.
 
-1. Cadastrar um usuário (o `documento` aceita CPF ou CNPJ, com ou sem máscara):
+1. Cadastrar um usuário (o e-mail também serve para o login):
 
 ```bash
 curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -d '{
-  "identidade": {
-    "nomeCompleto": "Ana Administradora",
-    "primeiroNome": "Ana",
-    "documento": "52998224725",
-    "rg": "123456789",
-    "dataNascimento": "1990-05-10",
-    "contato": { "telefone": "11999999999", "email": "ana@oficina.com.br" },
-    "endereco": { "logradouro": "Av. Paulista", "numero": "1000", "bairro": "Bela Vista",
-                  "cidade": "São Paulo", "estado": "SP", "cep": "01310100", "complemento": "" }
-  },
-  "usuario": { "nomeUsuario": "admin", "senha": "Admin@123", "trocaSenhaObrigatoria": false, "perfil": "ADMINISTRATOR" }
+  "nome": "Ana Administradora", "email": "ana@oficina.com.br",
+  "nomeUsuario": "admin", "senha": "Admin@123", "trocaSenhaObrigatoria": false, "perfil": "ADMINISTRATOR"
 }'
 ```
 

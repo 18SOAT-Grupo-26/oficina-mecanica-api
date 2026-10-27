@@ -24,22 +24,22 @@ public class OrdemServicoController implements OrdemServicoAPI {
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> criar(String token, OrdemServicoRequest request) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> criar(OrdemServicoRequest request) throws ApplicationException {
         return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> consultar(String token, Long id) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> consultar(Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.consultar(id));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> atualizar(String token, Long id, OrdemServicoRequest request) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> atualizar(Long id, OrdemServicoRequest request) throws ApplicationException {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> alterarStatus(String token, Long id, OrdemServicoRequest.Status request) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> alterarStatus(Long id, OrdemServicoRequest.Status request) throws ApplicationException {
         return ResponseEntity.ok(useCase.alterarStatus(id, request));
     }
 
