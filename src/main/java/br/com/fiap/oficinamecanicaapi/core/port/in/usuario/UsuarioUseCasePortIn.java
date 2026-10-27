@@ -9,4 +9,6 @@ public interface UsuarioUseCasePortIn {
 
     DetalhesUsuario buscarPorIdentificador(String identificador);
 
+    boolean existeAdministrador();
+
 }

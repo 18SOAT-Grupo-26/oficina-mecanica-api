@@ -1,6 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.usuario;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
+import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.usecase.usuario.mapper.UsuarioMapper;
@@ -74,6 +75,12 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
             log.error("action=user_register_failure username={}", usuario.nomeUsuario(), e);
             throw e;
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existeAdministrador() {
+        return usuarioRepository.existsByPerfil_Nome(Perfil.ADMINISTRATOR.name());
     }
 
     @Override
