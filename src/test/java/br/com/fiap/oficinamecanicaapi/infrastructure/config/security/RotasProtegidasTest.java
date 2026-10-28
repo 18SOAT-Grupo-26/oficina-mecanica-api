@@ -16,7 +16,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -108,16 +107,6 @@ class RotasProtegidasTest {
                 () -> mockMvc.perform(request(rota.metodo(), rota.caminho())
                                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN_INVALIDO))
                         .andExpect(status().isUnauthorized())));
-    }
-
-    @Test
-    @DisplayName("Cadastro é público: sem header Authorization chega à validação do corpo, sem 401 nem 500")
-    void cadastroDeveSerPublicoSemHeader() throws Exception {
-        // trocaSenhaObrigatoria é boolean primitivo: sem ele o JSON nem chega à validação (422)
-        mockMvc.perform(post("/auth/cadastro").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"trocaSenhaObrigatoria\": false}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(startsWith("Campos inválidos")));
     }
 
     @Test

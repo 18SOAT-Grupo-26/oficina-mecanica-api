@@ -146,14 +146,18 @@ Possíveis problemas:
 | `DATASOURCE_PASSWORD`    | —                                          | sim         | senha do banco                                                    |
 | `API_SECRET`             | —                                          | sim         | chave de assinatura do JWT, em Base64 (`openssl rand -base64 64`) |
 | `CORS_ALLOWED_ORIGINS`   | vazio                                      | não         | origens do front que podem chamar a API pelo navegador, separadas por vírgula (ex.: `http://localhost:3000`); vazio = nenhuma |
+| `ADMIN_EMAIL`            | —                                          | para criar o admin | e-mail do administrador inicial, criado na subida se não existir nenhum `ADMINISTRATOR` |
+| `ADMIN_USUARIO`          | —                                          | para criar o admin | nome de usuário (login) do administrador inicial |
+| `ADMIN_SENHA`            | —                                          | para criar o admin | senha do administrador inicial (segue a política de senha; nunca vai para o repositório) |
+| `ADMIN_NOME`             | `Administrador`                            | não         | nome do administrador inicial |
 | `SERVER_PORT`            | `8081`                                     | não         | porta HTTP da API                                                 |
 | `APPLICATION_PREFIX`     | `api/v1`                                   | não         | prefixo (context-path) das rotas                                  |
 | `APPLICATION_NAME`       | `oficina-mecanica-api`                     | não         | nome da aplicação                                                 |
 | `LOG_PATH`               | `/tmp/logs`                                | não         | diretório dos logs                                                |
 | `GRAFANA_ADMIN_PASSWORD` | `admin`                                    | não         | senha do admin do Grafana (só no compose)                         |
 
-No Docker Compose, as variáveis da API já estão no `docker-compose.yml`; só `API_SECRET` e `GRAFANA_ADMIN_PASSWORD` vêm
-do `.env`.
+No Docker Compose, as variáveis da API já estão no `docker-compose.yml`; vêm do `.env` o `API_SECRET`, o `GRAFANA_ADMIN_PASSWORD`, o `CORS_ALLOWED_ORIGINS` e as variáveis
+`ADMIN_*` do administrador inicial.
 
 ## Instruções para execução dos testes
 
@@ -246,8 +250,9 @@ docker compose --profile observability up -d
 A collection [`docs/postman/oficina-mecanica-api.postman_collection.json`](docs/postman/oficina-mecanica-api.postman_collection.json) traz todos os endpoints implementados (auth, peças e insumos, serviços, clientes, veículos e actuator). Para usar:
 
 1. No Postman, **Import** → selecione o arquivo.
-2. Rode **Auth → Cadastrar usuário** e depois **Auth → Login**. O token fica salvo na variável `token` e é enviado como Bearer nas demais requisições.
-3. Os cadastros salvam os ids criados (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`) para as requisições seguintes.
+2. Preencha as variáveis da collection `adminUsuario` e `adminSenha` com o `ADMIN_USUARIO` e o `ADMIN_SENHA` do seu `.env` (elas vão vazias no arquivo).
+3. Rode **Auth → Login administrador**: o token fica salvo na variável `token` e é enviado como Bearer nas demais requisições. **Auth → Cadastrar usuário** usa esse token para criar um usuário de teste.
+4. Os cadastros salvam os ids criados (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`) para as requisições seguintes.
 
 Também dá para executar a collection inteira no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução, então ela pode ser rodada várias vezes sem violar as constraints `UNIQUE`. Para apontar para outro ambiente, altere a variável `baseUrl` (padrão: `http://localhost:8081/api/v1`).
 
@@ -264,43 +269,46 @@ alternativas avaliadas estão na [ADR 002](docs/adr/0002-escolha-do-banco-de-dad
 
 A autenticação usa JWT:
 
-| Método | Rota                    | Acesso                     |
-|--------|-------------------------|----------------------------|
-| `POST` | `/api/v1/auth/cadastro` | público                    |
-| `POST` | `/api/v1/auth/login`    | público                    |
-| `GET`  | `/api/v1/auth/validate` | header `Authorization`     |
-| `*`    | `/api/v1/clientes`      | `ADMINISTRATOR`            |
-| `*`    | `/api/v1/veiculos`      | `ADMINISTRATOR`            |
-| `*`    | `/api/v1/servico`       | `ADMINISTRATOR`            |
-| `*`    | `/api/v1/insumos`       | `MANAGER`, `ADMINISTRATOR` |
+| Método | Rota                           | Acesso                                 |
+|--------|--------------------------------|----------------------------------------|
+| `POST` | `/api/v1/auth/login`           | público                                |
+| `GET`  | `/api/v1/auth/validate`        | público (valida o token do header `Authorization`) |
+| `POST` | `/api/v1/auth/cadastro`        | `ADMINISTRATOR`                        |
+| `*`    | `/api/v1/clientes`             | `ADMINISTRATOR`                        |
+| `*`    | `/api/v1/veiculos`             | `ADMINISTRATOR`                        |
+| `*`    | `/api/v1/servico`              | `ADMINISTRATOR`                        |
+| `*`    | `/api/v1/insumos`              | `MANAGER`, `ADMINISTRATOR`             |
+| `*`    | `/api/v1/ordens-servico`       | `OPERATOR`, `MANAGER`, `ADMINISTRATOR` |
 
-> **Limitação conhecida:** `POST /auth/cadastro` é público e aceita qualquer `perfil`, inclusive `ADMINISTRATOR`. Use
-> apenas em ambiente local até a regra de criação de administradores ser restringida.
+Só um `ADMINISTRATOR` logado cadastra usuários. O primeiro administrador é criado pela própria API na subida, a partir
+das variáveis do `.env` — nenhuma credencial fica no repositório:
 
-1. Cadastrar um usuário (o e-mail também serve para o login):
+1. Defina no `.env` `ADMIN_EMAIL`, `ADMIN_USUARIO` e `ADMIN_SENHA` (opcional: `ADMIN_NOME`) e suba a API. Se ainda não
+   existir nenhum `ADMINISTRATOR`, ele é criado; se as variáveis faltarem, a API sobe sem administrador e avisa no log.
+   A senha precisa ter de 8 a 64 caracteres, com maiúscula, minúscula, dígito e um destes especiais:
+   `!@#$%^&*()-_=+[]{}<>?/,.:|~` (senha fora da política impede a subida, com a mensagem no log).
+
+2. Fazer login com esse administrador (o `identificador` aceita nome de usuário ou e-mail); a resposta traz o token:
 
 ```bash
-curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -d '{
-  "nome": "Ana Administradora", "email": "ana@oficina.com.br",
-  "nomeUsuario": "admin", "senha": "Admin@123", "trocaSenhaObrigatoria": false, "perfil": "ADMINISTRATOR"
+source .env   # carrega ADMIN_USUARIO e ADMIN_SENHA no terminal
+TOKEN=$(curl -s -X POST http://localhost:8081/api/v1/auth/login -H "Content-Type: application/json" \
+  -d "{\"identificador\": \"$ADMIN_USUARIO\", \"senha\": \"$ADMIN_SENHA\"}" | sed -E 's/.*"token":"([^"]+)".*/\1/')
+```
+
+3. Cadastrar outros usuários enviando o token (perfil `ADMINISTRATOR`, `MANAGER` ou `OPERATOR`):
+
+```bash
+curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -H "Authorization: $TOKEN" -d '{
+  "nome": "Bruno Operador", "email": "bruno@oficina.com.br",
+  "nomeUsuario": "bruno", "senha": "Bruno@123", "trocaSenhaObrigatoria": false, "perfil": "OPERATOR"
 }'
 ```
 
-A senha precisa ter de 8 a 64 caracteres, com maiúscula, minúscula, dígito e um destes especiais:
-`!@#$%^&*()-_=+[]{}<>?/,.:|~`.
+4. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`.
 
-2. Fazer login (o `identificador` aceita nome de usuário ou e-mail); a resposta traz o token:
-
-```bash
-curl -X POST http://localhost:8081/api/v1/auth/login -H "Content-Type: application/json" \
-  -d '{ "identificador": "admin", "senha": "Admin@123" }'
-```
-
-3. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`.
-
-Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, criados pela migration `V2__perfis_iniciais.sql`. Nenhum usuário é criado automaticamente: o primeiro administrador é cadastrado pelo próprio `POST /api/v1/auth/cadastro` com `"perfil": "ADMINISTRATOR"`.
-
-Credenciais de demonstração: `admin` / `Admin@123`, depois de rodar o cadastro acima.
+Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, criados pela migration `V2__perfis_iniciais.sql`.
+Credenciais: as do administrador inicial definidas no seu `.env` (`ADMIN_USUARIO` / `ADMIN_SENHA`).
 
 ## Estrutura dos principais diretórios
 

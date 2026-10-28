@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "7ebc0463-1563-47a3-b17a-4fba01aa7ef6",
     "name": "Oficina Mecânica API",
-    "description": "Endpoints implementados da API da oficina mecânica.\n\n**Como usar**\n1. Suba a aplicação (`docker compose up`).\n2. Rode **Auth → Cadastrar usuário** e **Auth → Login**: o token fica salvo em `{{token}}` e é enviado como Bearer nas demais pastas.\n3. As requisições de cadastro salvam os ids (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`) usados pelas seguintes.\n\nA collection inteira pode ser executada no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução para não violar as constraints UNIQUE.\n\nOrdem de serviço e acompanhamento da OS ainda não têm endpoints.",
+    "description": "Endpoints implementados da API da oficina mecânica.\n\n**Como usar**\n1. Suba a aplicação (`docker compose up`).\n2. Preencha `adminUsuario` e `adminSenha` (variáveis da collection) com o `ADMIN_USUARIO`/`ADMIN_SENHA` do seu `.env` e rode **Auth → Login administrador**: o token fica salvo em `{{token}}` e é enviado como Bearer nas demais pastas.\n3. As requisições de cadastro salvam os ids (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`) usados pelas seguintes.\n\nA collection inteira pode ser executada no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução para não violar as constraints UNIQUE.\n\nOrdem de serviço e acompanhamento da OS ainda não têm endpoints.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "13807568"
   },
@@ -11,6 +11,55 @@
       "name": "Auth",
       "item": [
         {
+          "name": "Login administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"token\", token.replace(/^Bearer\\s+/, \"\"));\npm.test(\"Token recebido\", function () {\n    pm.expect(pm.collectionVariables.get(\"token\")).to.not.be.empty;\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"{{adminUsuario}}\",\n  \"senha\": \"{{adminSenha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login com o administrador inicial, criado pela API a partir de ADMIN_USUARIO/ADMIN_SENHA do .env. Preencha as variáveis da collection `adminUsuario` e `adminSenha` com esses valores (vão vazias no arquivo). O script guarda o token em `{{token}}`, usado pelas demais pastas."
+          },
+          "response": []
+        },
+        {
           "name": "Cadastrar usuário",
           "event": [
             {
@@ -18,7 +67,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.collectionVariables.set(\"username\", \"admin_\" + pm.variables.get(\"sufixo\"));"
+                  "pm.collectionVariables.set(\"username\", \"operador_\" + pm.variables.get(\"sufixo\"));"
                 ]
               }
             },
@@ -46,7 +95,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"identidade\": {\n        \"nomeCompleto\": \"Administrador da Oficina\",\n        \"primeiroNome\": \"Admin\",\n        \"documento\": \"{{cpfGerado}}\",\n        \"rg\": \"123456789\",\n        \"dataNascimento\": \"1990-05-20\",\n        \"contato\": {\n            \"telefone\": \"11987654321\",\n            \"email\": \"{{username}}@oficina.com\"\n        },\n        \"endereco\": {\n            \"logradouro\": \"Rua das Oficinas\",\n            \"numero\": \"100\",\n            \"bairro\": \"Centro\",\n            \"cidade\": \"São Paulo\",\n            \"estado\": \"SP\",\n            \"cep\": \"01001000\",\n            \"complemento\": \"Galpão 2\"\n        }\n    },\n    \"usuario\": {\n        \"nomeUsuario\": \"{{username}}\",\n        \"senha\": \"{{password}}\",\n        \"trocaSenhaObrigatoria\": false,\n        \"perfil\": \"ADMINISTRATOR\"\n    }\n}",
+              "raw": "{\n  \"nome\": \"Operador de Teste\",\n  \"email\": \"{{username}}@oficina.com\",\n  \"nomeUsuario\": \"{{username}}\",\n  \"senha\": \"{{password}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"OPERATOR\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -63,56 +112,17 @@
                 "cadastro"
               ]
             },
-            "description": "Cadastra identidade, contato, endereço e usuário numa transação só. O perfil (`perfil`) deve existir: `ADMINISTRATOR`, `MANAGER` ou `OPERATOR`. O script gera username, e-mail e CPF únicos e guarda as credenciais para o login.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial."
-          },
-          "response": []
-        },
-        {
-          "name": "Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"token\", token.replace(/^Bearer\\s+/, \"\"));\npm.test(\"Token recebido\", function () {\n    pm.expect(pm.collectionVariables.get(\"token\")).to.not.be.empty;\n});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "",
-                "value": "",
-                "disabled": true
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"identificador\": \"{{username}}\",\n  \"senha\": \"{{password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+            "description": "Cadastra um usuário de teste (perfil OPERATOR). Só ADMINISTRATOR cadastra usuários: usa o token do **Login administrador**. O script gera username e e-mail únicos a cada execução.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
                 }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
               ]
-            },
-            "description": "Gera o token JWT. `identificador` aceita nome de usuário ou e-mail. O script guarda o token em `{{token}}`, usado pelas demais pastas."
+            }
           },
           "response": []
         },
@@ -149,7 +159,17 @@
                 "validate"
               ]
             },
-            "description": "Retorna `true` se o token enviado no header `Authorization` for válido."
+            "description": "Retorna `true` se o token enviado no header `Authorization` for válido.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
           "response": []
         }
@@ -1640,6 +1660,18 @@
     {
       "key": "ordemId",
       "value": ""
+    },
+    {
+      "key": "adminUsuario",
+      "value": "",
+      "type": "string",
+      "description": "ADMIN_USUARIO do seu .env (não versionar o valor)"
+    },
+    {
+      "key": "adminSenha",
+      "value": "",
+      "type": "string",
+      "description": "ADMIN_SENHA do seu .env (não versionar o valor)"
     }
   ]
 }

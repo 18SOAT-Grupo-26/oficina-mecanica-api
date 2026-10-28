@@ -98,4 +98,12 @@ class UsuarioUseCaseTest {
         assertThat(ex.getErrorCode()).isEqualTo(409);
         verify(usuarioRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("Deve informar se já existe usuário com perfil ADMINISTRATOR")
+    void deveInformarSeExisteAdministrador() {
+        when(usuarioRepository.existsByPerfil_Nome(Perfil.ADMINISTRATOR.name())).thenReturn(true);
+
+        assertThat(useCase.existeAdministrador()).isTrue();
+    }
 }
