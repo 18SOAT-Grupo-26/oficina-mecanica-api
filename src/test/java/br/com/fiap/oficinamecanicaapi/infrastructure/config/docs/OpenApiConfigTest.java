@@ -131,7 +131,9 @@ class OpenApiConfigTest {
     void naoDeveDocumentarRespostasDeGateway() {
         List<Map<String, Object>> respostas = documentacao.read(OPERACOES + ".responses");
 
-        assertThat(respostas).allSatisfy(r -> assertThat(r).doesNotContainKeys("503", "504"));
+        assertThat(respostas)
+                .isNotEmpty()
+                .allSatisfy(r -> assertThat(r).doesNotContainKeys("503", "504"));
     }
 
     @Test

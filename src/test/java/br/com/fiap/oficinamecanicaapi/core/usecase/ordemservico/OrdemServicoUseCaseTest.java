@@ -14,6 +14,8 @@ import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.veiculo.VeiculoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico.mapper.OrdemServicoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -37,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -714,6 +717,143 @@ class OrdemServicoUseCaseTest {
         }
     }
 
+    @Nested
+    @DisplayName("Listagem por cliente e métricas da OS")
+    class ListagemEMetricas {
+
+        @Test
+        @DisplayName("Deve listar as OS do cliente convertidas em resposta")
+        void deveListarOrdensDoCliente() {
+            when(ordemServicoPortOut.listarOrdens(ID_CLIENTE)).thenReturn(List.of(osNoStatus(ENTREGUE), osNoStatus(RECEBIDA)));
+
+            List<OrdemServicoResponse> ordens = useCase.listar(ID_CLIENTE);
+
+            assertThat(ordens).hasSize(2).extracting(OrdemServicoResponse::status).containsExactly(ENTREGUE, RECEBIDA);
+            assertThat(ordens.getFirst().idCliente()).isEqualTo(ID_CLIENTE);
+        }
+
+        @Test
+        @DisplayName("Deve listar vazio quando o cliente não tem OS")
+        void deveListarVazio() {
+            when(ordemServicoPortOut.listarOrdens(ID_CLIENTE)).thenReturn(List.of());
+
+            assertThat(useCase.listar(ID_CLIENTE)).isEmpty();
+        }
+
+        @Test
+        @DisplayName("Deve contar a OS criada")
+        void deveContarOsCriada() {
+            Cliente cliente = Cliente.reconstituir(ID_CLIENTE, "Maria", new Documento(DOCUMENTO), "maria@email.com",
+                    "11999998888", null, true, ABERTURA, ABERTURA);
+            when(clientePortOut.buscarAtivoPorDocumento(new Documento(DOCUMENTO))).thenReturn(Optional.of(cliente));
+            when(veiculoPortOut.buscarAtivoPorId(ID_VEICULO)).thenReturn(Optional.of(Veiculo.reconstituir(ID_VEICULO,
+                    new Placa("BRA2E19"), "Volkswagen", "Gol", 2020, ID_CLIENTE, true, ABERTURA, ABERTURA)));
+            retornarOsSalva();
+
+            useCase.criar(new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), List.of()));
+
+            assertThat(meterRegistry.get("oficina.os.criadas").counter().count()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("Deve contar a transição manual de status com os status de origem e destino")
+        void deveContarTransicaoManual() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_EXECUCAO)));
+            retornarOsSalva();
+
+            useCase.alterarStatus(ID_OS, new OrdemServicoRequest.Status(FINALIZADA));
+
+            assertThat(transicoes(EM_EXECUCAO, FINALIZADA)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("Não deve contar transição recusada")
+        void naoDeveContarTransicaoRecusada() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
+            var paraFinalizada = new OrdemServicoRequest.Status(FINALIZADA);
+
+            assertThatThrownBy(() -> useCase.alterarStatus(ID_OS, paraFinalizada))
+                    .isInstanceOf(ApplicationException.class);
+
+            assertThat(meterRegistry.find("oficina.os.transicoes").counter()).isNull();
+        }
+
+        @Test
+        @DisplayName("Deve registrar o tempo total da abertura até a entrega")
+        void deveRegistrarTempoTotalNaEntrega() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(FINALIZADA)));
+            retornarOsSalva();
+
+            useCase.alterarStatus(ID_OS, new OrdemServicoRequest.Status(ENTREGUE));
+
+            Timer tempoTotal = meterRegistry.get("oficina.os.tempo.total").timer();
+            assertThat(tempoTotal.count()).isEqualTo(1);
+            assertThat(tempoTotal.totalTime(TimeUnit.MINUTES)).isEqualTo(30.0);
+            assertThat(transicoes(FINALIZADA, ENTREGUE)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("Deve registrar o valor do orçamento enviado e as unidades reservadas")
+        void deveRegistrarValorDoOrcamentoEnviado() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
+            when(pecaInsumoPortOut.reservar(ID_PECA, 2)).thenReturn(true);
+            when(pecaInsumoPortOut.reservar(ID_VELA, 4)).thenReturn(true);
+            retornarOsSalva();
+
+            useCase.registrarOrcamentoEnviado(ID_OS);
+
+            // 1 × R$100 + 2 × R$30 + 4 × R$20
+            DistributionSummary valor = meterRegistry.get("oficina.os.orcamento.valor").summary();
+            assertThat(valor.count()).isEqualTo(1);
+            assertThat(valor.totalAmount()).isEqualTo(240.0);
+            assertThat(unidades("reservar")).isEqualTo(6);
+            assertThat(transicoes(EM_DIAGNOSTICO, AGUARDANDO_APROVACAO)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("Deve contar as unidades baixadas na aprovação, sem registrar valor de orçamento")
+        void deveContarUnidadesBaixadasNaAprovacao() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
+            when(pecaInsumoPortOut.baixar(ID_PECA, 2)).thenReturn(true);
+            when(pecaInsumoPortOut.baixar(ID_VELA, 4)).thenReturn(true);
+            retornarOsSalva();
+
+            useCase.registrarOrcamentoAprovado(ID_OS);
+
+            assertThat(unidades("consumir")).isEqualTo(6);
+            assertThat(meterRegistry.get("oficina.os.orcamento.valor").summary().count()).isZero();
+            assertThat(transicoes(AGUARDANDO_APROVACAO, EM_EXECUCAO)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("Deve contar a unidades liberadas na rejeição do orçamento")
+        void deveContarUnidadesLiberadasNaRejeicao() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
+            when(pecaInsumoPortOut.liberar(ID_PECA, 2)).thenReturn(true);
+            when(pecaInsumoPortOut.liberar(ID_VELA, 4)).thenReturn(true);
+            retornarOsSalva();
+
+            useCase.registrarOrcamentoRejeitado(ID_OS);
+
+            assertThat(unidades("liberar")).isEqualTo(6);
+            assertThat(transicoes(AGUARDANDO_APROVACAO, CANCELADA)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("Deve contar a reserva recusada por falta de saldo, sem transição nem valor de orçamento")
+        void deveContarReservaRecusada() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
+            when(pecaInsumoPortOut.reservar(ID_PECA, 2)).thenReturn(false);
+
+            assertThatThrownBy(() -> useCase.registrarOrcamentoEnviado(ID_OS)).isInstanceOf(ApplicationException.class);
+
+            Counter recusada = meterRegistry.get("oficina.estoque.movimentacao.recusada").tag("tipo", "reservar").counter();
+            assertThat(recusada.count()).isEqualTo(1);
+            assertThat(meterRegistry.find("oficina.os.transicoes").counter()).isNull();
+            assertThat(meterRegistry.get("oficina.os.orcamento.valor").summary().count()).isZero();
+        }
+    }
+
     // ---- montagem de cenários --------------------------------------------------------------------
 
     private static OrdemServicoRequest.Status mudarStatus(StatusOrdemServico status) {
@@ -797,5 +937,15 @@ class OrdemServicoUseCaseTest {
         ApplicationException exception = assertThrows(ApplicationException.class, acao);
         assertThat(exception.getErrorCode()).isEqualTo(codigo);
         assertThat(exception.getMessage()).isEqualTo(mensagem);
+    }
+
+    private double transicoes(StatusOrdemServico de, StatusOrdemServico para) {
+        var contador = meterRegistry.find("oficina.os.transicoes").tags("de", de.name(), "para", para.name()).counter();
+        return contador == null ? 0 : contador.count();
+    }
+
+    private double unidades(String tipo) {
+        var contador = meterRegistry.find("oficina.estoque.movimentacao.unidades").tag("tipo", tipo).counter();
+        return contador == null ? 0 : contador.count();
     }
 }

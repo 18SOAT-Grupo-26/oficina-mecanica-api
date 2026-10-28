@@ -2,6 +2,7 @@ package br.com.fiap.oficinamecanicaapi.shared.handler;
 
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
+import br.com.fiap.oficinamecanicaapi.shared.utils.GetLocalTime;
 import io.micrometer.core.instrument.Metrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +22,6 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -42,9 +42,11 @@ public class HandlerException {
         }
 
         if (status.is5xxServerError()) {
-            log.error("action=erro_aplicacao status={} rota={} traceId={} mensagem={}",
-                    status.value(), rota(), e.getTraceId(), e.getMessage(), e);
-        } else {
+            if (log.isErrorEnabled()) {
+                log.error("action=erro_aplicacao status={} rota={} traceId={} mensagem={}",
+                        status.value(), rota(), e.getTraceId(), e.getMessage(), e);
+            }
+        } else if (log.isWarnEnabled()) {
             log.warn("action=erro_negocio status={} rota={} traceId={} mensagem={}",
                     status.value(), rota(), e.getTraceId(), e.getMessage());
         }
@@ -126,9 +128,11 @@ public class HandlerException {
     private static ResponseEntity<ErrorTemplate> buildError(HttpStatus status, String message, Exception causa) {
         String traceId = UUID.randomUUID().toString();
         if (causa != null) {
-            log.error("action=erro_servidor status={} rota={} traceId={} mensagem={}",
-                    status.value(), rota(), traceId, message, causa);
-        } else {
+            if (log.isErrorEnabled()) {
+                log.error("action=erro_servidor status={} rota={} traceId={} mensagem={}",
+                        status.value(), rota(), traceId, message, causa);
+            }
+        } else if (log.isWarnEnabled()) {
             log.warn("action=erro_requisicao status={} rota={} traceId={} mensagem={}",
                     status.value(), rota(), traceId, message);
         }
@@ -136,7 +140,7 @@ public class HandlerException {
         ErrorTemplate errorBody = ErrorTemplate.builder()
                 .errorCode(status.value())
                 .message(message)
-                .timestamp(LocalDateTime.now())
+                .timestamp(GetLocalTime.getLocalTime())
                 .traceId(traceId)
                 .build();
         return ResponseEntity.status(status).body(errorBody);

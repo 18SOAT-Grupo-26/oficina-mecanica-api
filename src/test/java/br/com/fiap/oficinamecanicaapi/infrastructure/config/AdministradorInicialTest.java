@@ -70,8 +70,9 @@ class AdministradorInicialTest {
         when(usuarioUseCase.existeAdministrador()).thenReturn(false);
         doThrow(new ApplicationException(400, "A senha deve conter uma letra maiúscula"))
                 .when(usuarioUseCase).cadastrar(ADMINISTRADOR);
+        AdministradorInicial administradorInicial = administrador(EMAIL, USUARIO, SENHA);
 
-        assertThatThrownBy(() -> administrador(EMAIL, USUARIO, SENHA).run(null))
+        assertThatThrownBy(() -> administradorInicial.run(null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("A senha deve conter uma letra maiúscula");
     }
@@ -83,7 +84,9 @@ class AdministradorInicialTest {
         doThrow(new ApplicationException(409, "Já existe um usuário cadastrado com este e-mail"))
                 .when(usuarioUseCase).cadastrar(ADMINISTRADOR);
 
-        assertDoesNotThrow(() -> administrador(EMAIL, USUARIO, SENHA).run(null));
+        AdministradorInicial administradorInicial = administrador(EMAIL, USUARIO, SENHA);
+
+        assertDoesNotThrow(() -> administradorInicial.run(null));
 
         verify(usuarioUseCase).cadastrar(ADMINISTRADOR);
     }

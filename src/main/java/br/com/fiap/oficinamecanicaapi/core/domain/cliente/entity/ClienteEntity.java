@@ -1,17 +1,17 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente;
+package br.com.fiap.oficinamecanicaapi.core.domain.cliente.entity;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.TipoDocumento;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente.EnderecoEmbeddable;
+import br.com.fiap.oficinamecanicaapi.shared.persistence.EntidadeComDatas;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "clientes")
 @Getter
 @Setter
-public class ClienteEntity {
+public class ClienteEntity extends EntidadeComDatas {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,21 +39,4 @@ public class ClienteEntity {
     @Column(nullable = false)
     private boolean ativo;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
-
-    @PrePersist
-    void onCreate() {
-        OffsetDateTime now = OffsetDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        this.updatedAt = OffsetDateTime.now();
-    }
 }

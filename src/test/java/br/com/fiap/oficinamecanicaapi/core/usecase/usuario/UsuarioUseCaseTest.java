@@ -1,8 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.usuario;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity.PerfilEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity.UsuarioEntity;
+import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
@@ -21,8 +21,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -38,7 +40,7 @@ class UsuarioUseCaseTest {
     private static final Usuario USUARIO = new Usuario(NOME, EMAIL, NOME_USUARIO, SENHA, false, Perfil.ADMIN);
     private static final Usuario USUARIO_CIFRADO =
             new Usuario(NOME, EMAIL, NOME_USUARIO, SENHA_CIFRADA, false, Perfil.ADMIN);
-    private static final Long CLIENTE_ID = 10L;
+    private static final DetalhesUsuario DETALHES = new DetalhesUsuario(USUARIO, Set.of());
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -106,62 +108,6 @@ class UsuarioUseCaseTest {
     }
 
     @Test
-    @DisplayName("Deve cadastrar usuário CLIENTE ligado a um cliente ativo")
-    void deveCadastrarCliente() {
-        var cliente = usuario(Perfil.CLIENTE, CLIENTE_ID);
-        var perfilEntity = new PerfilEntity();
-        var usuarioEntity = new UsuarioEntity();
-        prepararEmailENomeDisponiveis();
-        when(clientePortOut.buscarAtivoPorId(CLIENTE_ID)).thenReturn(Optional.of(mock(Cliente.class)));
-        when(usuarioRepository.existsByClienteId(CLIENTE_ID)).thenReturn(false);
-        when(perfilRepository.findByNome(Perfil.CLIENTE.name())).thenReturn(Optional.of(perfilEntity));
-        when(passwordEncoder.encode(SENHA)).thenReturn(SENHA_CIFRADA);
-        when(usuarioMapper.toEntityCadastro(
-                new Usuario(NOME, EMAIL, NOME_USUARIO, SENHA_CIFRADA, false, Perfil.CLIENTE, CLIENTE_ID), perfilEntity))
-                .thenReturn(usuarioEntity);
-
-        useCase.cadastrar(cliente);
-
-        verify(usuarioRepository).save(usuarioEntity);
-    }
-
-    @Test
-    @DisplayName("Deve rejeitar com 400 usuário CLIENTE sem clienteId")
-    void deveRejeitarClienteSemClienteId() {
-        prepararEmailENomeDisponiveis();
-
-        assertCadastroRecusado(usuario(Perfil.CLIENTE, null), 400);
-    }
-
-    @Test
-    @DisplayName("Deve rejeitar com 400 clienteId em perfil diferente de CLIENTE")
-    void deveRejeitarClienteIdEmOutroPerfil() {
-        prepararEmailENomeDisponiveis();
-
-        assertCadastroRecusado(usuario(Perfil.FUNCIONARIO, CLIENTE_ID), 400);
-        verifyNoInteractions(clientePortOut);
-    }
-
-    @Test
-    @DisplayName("Deve rejeitar com 404 usuário CLIENTE de cliente inexistente ou inativo")
-    void deveRejeitarClienteInexistente() {
-        prepararEmailENomeDisponiveis();
-        when(clientePortOut.buscarAtivoPorId(CLIENTE_ID)).thenReturn(Optional.empty());
-
-        assertCadastroRecusado(usuario(Perfil.CLIENTE, CLIENTE_ID), 404);
-    }
-
-    @Test
-    @DisplayName("Deve rejeitar com 409 segundo usuário para o mesmo cliente")
-    void deveRejeitarClienteComUsuario() {
-        prepararEmailENomeDisponiveis();
-        when(clientePortOut.buscarAtivoPorId(CLIENTE_ID)).thenReturn(Optional.of(mock(Cliente.class)));
-        when(usuarioRepository.existsByClienteId(CLIENTE_ID)).thenReturn(true);
-
-        assertCadastroRecusado(usuario(Perfil.CLIENTE, CLIENTE_ID), 409);
-    }
-
-    @Test
     @DisplayName("Deve informar se já existe usuário com perfil ADMIN")
     void deveInformarSeExisteAdministrador() {
         when(usuarioRepository.existsByPerfil_Nome(Perfil.ADMIN.name())).thenReturn(true);
@@ -169,19 +115,101 @@ class UsuarioUseCaseTest {
         assertThat(useCase.existeAdministrador()).isTrue();
     }
 
-    private static Usuario usuario(Perfil perfil, Long clienteId) {
-        return new Usuario(NOME, EMAIL, NOME_USUARIO, SENHA, false, perfil, clienteId);
+    @Test
+    @DisplayName("Deve buscar pelo nome de usuário quando o identificador não tem @")
+    void deveBuscarPorNomeUsuario() {
+        UsuarioEntity entity = new UsuarioEntity();
+        when(usuarioRepository.findByNomeUsuario("ana")).thenReturn(Optional.of(entity));
+        when(usuarioMapper.toDetalhesUsuario(entity)).thenReturn(DETALHES);
+
+        assertThat(useCase.buscarPorIdentificador("ana")).isEqualTo(DETALHES);
+        verify(usuarioRepository, never()).findByEmail(any());
     }
 
-    private void prepararEmailENomeDisponiveis() {
-        when(usuarioRepository.existsByEmail(EMAIL)).thenReturn(false);
-        when(usuarioRepository.existsByNomeUsuario(NOME_USUARIO)).thenReturn(false);
+    @Test
+    @DisplayName("Deve buscar pelo e-mail quando o identificador tem @")
+    void deveBuscarPorEmail() {
+        UsuarioEntity entity = new UsuarioEntity();
+        when(usuarioRepository.findByEmail("ana@oficina.com.br")).thenReturn(Optional.of(entity));
+        when(usuarioMapper.toDetalhesUsuario(entity)).thenReturn(DETALHES);
+
+        assertThat(useCase.buscarPorIdentificador("ana@oficina.com.br")).isEqualTo(DETALHES);
+        verify(usuarioRepository, never()).findByNomeUsuario(any());
     }
 
-    private void assertCadastroRecusado(Usuario usuario, int status) {
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.cadastrar(usuario));
+    @Test
+    @DisplayName("Deve responder 404 quando o usuário não existe, por nome ou por e-mail")
+    void deveResponderNaoEncontrado() {
+        when(usuarioRepository.findByNomeUsuario("fantasma")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByEmail("fantasma@oficina.com")).thenReturn(Optional.empty());
 
-        assertThat(ex.getErrorCode()).isEqualTo(status);
+        assertNaoEncontrado("fantasma");
+        assertNaoEncontrado("fantasma@oficina.com");
+    }
+
+    @Test
+    @DisplayName("Deve responder 404 também quando a busca falha por outro motivo, sem expor a causa")
+    void deveEsconderFalhaNaBusca() {
+        when(usuarioRepository.findByNomeUsuario("ana")).thenThrow(new IllegalStateException("banco caiu"));
+
+        assertNaoEncontrado("ana");
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar com 400 o cadastro com perfil que não existe na tabela de perfis")
+    void deveRejeitarPerfilInexistente() {
+        when(usuarioRepository.existsByEmail(USUARIO.email())).thenReturn(false);
+        when(usuarioRepository.existsByNomeUsuario(USUARIO.nomeUsuario())).thenReturn(false);
+        when(perfilRepository.findByNome("ADMIN")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> useCase.cadastrar(USUARIO))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessage("Perfil não encontrado: ADMIN")
+                .extracting("errorCode").isEqualTo(400);
         verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar com 400 o cadastro com dados inválidos antes de consultar o banco")
+    void deveRejeitarPayloadInvalido() {
+        Usuario semNome = new Usuario(" ", "ana@oficina.com.br", "ana", "Admin@123", false, Perfil.FUNCIONARIO);
+
+        assertThatThrownBy(() -> useCase.cadastrar(semNome))
+                .isInstanceOf(ApplicationException.class)
+                .extracting("errorCode").isEqualTo(400);
+        verifyNoInteractions(usuarioRepository, perfilRepository, politicaSenha);
+    }
+
+    @Test
+    @DisplayName("Deve rejeitar o cadastro quando a senha não segue a política, sem gravar")
+    void deveRejeitarSenhaFraca() {
+        doThrow(new ApplicationException(400, "A senha deve conter um número")).when(politicaSenha).validar("Admin@123");
+
+        assertThatThrownBy(() -> useCase.cadastrar(USUARIO))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessage("A senha deve conter um número");
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Deve propagar falha inesperada ao gravar")
+    void devePropagarFalhaAoGravar() {
+        PerfilEntity perfil = new PerfilEntity();
+        UsuarioEntity entity = new UsuarioEntity();
+        when(usuarioRepository.existsByEmail(USUARIO.email())).thenReturn(false);
+        when(usuarioRepository.existsByNomeUsuario(USUARIO.nomeUsuario())).thenReturn(false);
+        when(perfilRepository.findByNome("ADMIN")).thenReturn(Optional.of(perfil));
+        when(passwordEncoder.encode("Admin@123")).thenReturn("{bcrypt}cifrada");
+        when(usuarioMapper.toEntityCadastro(any(Usuario.class), any(PerfilEntity.class))).thenReturn(entity);
+        when(usuarioRepository.save(entity)).thenThrow(new IllegalStateException("violação de constraint"));
+
+        assertThatThrownBy(() -> useCase.cadastrar(USUARIO)).isInstanceOf(IllegalStateException.class);
+    }
+
+    private void assertNaoEncontrado(String identificador) {
+        assertThatThrownBy(() -> useCase.buscarPorIdentificador(identificador))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessage("Usuário não encontrado")
+                .extracting("errorCode").isEqualTo(404);
     }
 }

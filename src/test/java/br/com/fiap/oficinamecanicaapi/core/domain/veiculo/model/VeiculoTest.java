@@ -1,6 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model;
 
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.utils.GetLocalTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +32,7 @@ class VeiculoTest {
     @Test
     @DisplayName("Deve aceitar os anos limite: 1900 e o ano seguinte ao atual")
     void deveAceitarAnosLimite() {
-        int anoSeguinte = Year.now().getValue() + 1;
+        int anoSeguinte = Year.now(GetLocalTime.FUSO).getValue() + 1;
 
         assertThat(Veiculo.novo(PLACA, MARCA, MODELO, Veiculo.ANO_MINIMO, CLIENTE_ID).getAno())
                 .isEqualTo(Veiculo.ANO_MINIMO);
@@ -52,7 +53,7 @@ class VeiculoTest {
     @Test
     @DisplayName("Deve rejeitar ano posterior ao ano seguinte ao atual com erro 400")
     void deveRejeitarAnoFuturo() {
-        int anoInvalido = Year.now().getValue() + 2;
+        int anoInvalido = Year.now(GetLocalTime.FUSO).getValue() + 2;
 
         ApplicationException exception = assertThrows(ApplicationException.class,
                 () -> Veiculo.novo(PLACA, MARCA, MODELO, anoInvalido, CLIENTE_ID));

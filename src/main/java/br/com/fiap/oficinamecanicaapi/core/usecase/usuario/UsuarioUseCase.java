@@ -47,6 +47,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
         this.clientePortOut = clientePortOut;
     }
 
+    @SuppressWarnings("java:S2139")
     @Override
     @Transactional
     public void cadastrar(Usuario usuario) {
