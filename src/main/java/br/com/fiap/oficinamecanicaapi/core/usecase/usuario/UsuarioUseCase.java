@@ -43,6 +43,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
         this.politicaSenha = politicaSenha;
     }
 
+    @SuppressWarnings("java:S2139")
     @Override
     @Transactional
     public void cadastrar(Usuario usuario) {

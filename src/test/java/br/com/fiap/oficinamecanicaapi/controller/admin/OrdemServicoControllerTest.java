@@ -32,7 +32,9 @@ import java.util.Set;
 import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,6 +47,7 @@ class OrdemServicoControllerTest {
     private static final String USERNAME = "admin";
     private static final Long ID = 99L;
     private static final OffsetDateTime ABERTURA = OffsetDateTime.parse("2026-10-24T08:00:00-03:00");
+    private static final Long ID_CLIENTE = 10L;
 
     @Autowired
     private MockMvc mockMvc;
@@ -336,5 +339,38 @@ class OrdemServicoControllerTest {
         when(jwtTokenProvider.extrairNomeUsuario(TOKEN)).thenReturn(USERNAME);
         when(usuarioUseCase.buscarPorIdentificador(USERNAME))
                 .thenReturn(new DetalhesUsuario(new Usuario(null, null, USERNAME, null, false, perfil), Set.of()));
+    }
+
+    @Test
+    @DisplayName("Deve listar as OS do cliente")
+    void deveListarOrdensDoCliente() throws Exception {
+        autenticarComo(Perfil.OPERATOR);
+        when(useCase.listar(ID_CLIENTE)).thenReturn(List.of(
+                new OrdemServicoResponse(2L, ID_CLIENTE, 20L, StatusOrdemServico.EM_DIAGNOSTICO, List.of(), List.of(), List.of()),
+                new OrdemServicoResponse(1L, ID_CLIENTE, 20L, StatusOrdemServico.ENTREGUE, List.of(), List.of(), List.of())));
+
+        mockMvc.perform(get("/ordens-servico/listar/{idCliente}", ID_CLIENTE).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(2))
+                .andExpect(jsonPath("$[1].status").value("ENTREGUE"));
+    }
+
+    @Test
+    @DisplayName("Deve responder lista vazia quando o cliente não tem OS")
+    void deveResponderListaVazia() throws Exception {
+        autenticarComo(Perfil.OPERATOR);
+        when(useCase.listar(ID_CLIENTE)).thenReturn(List.of());
+
+        mockMvc.perform(get("/ordens-servico/listar/{idCliente}", ID_CLIENTE).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("Deve responder 401 sem token")
+    void deveExigirToken() throws Exception {
+        mockMvc.perform(get("/ordens-servico/listar/{idCliente}", ID_CLIENTE))
+                .andExpect(status().isUnauthorized());
     }
 }

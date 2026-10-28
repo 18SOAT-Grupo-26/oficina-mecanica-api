@@ -1,11 +1,14 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico;
+package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.entity;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico.HistoricoStatusOsEntity;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico.ItemPecaOsEntity;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico.ItemServicoOsEntity;
+import br.com.fiap.oficinamecanicaapi.shared.persistence.EntidadeComDatas;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +20,7 @@ import java.util.List;
 @Table(name = "ordem_servico")
 @Getter
 @Setter
-public class OrdemServicoEntity {
+public class OrdemServicoEntity extends EntidadeComDatas {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,21 +48,4 @@ public class OrdemServicoEntity {
     @OrderBy("idHistorico")
     private List<HistoricoStatusOsEntity> historico = new ArrayList<>();
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
-
-    @PrePersist
-    void onCreate() {
-        OffsetDateTime now = OffsetDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        this.updatedAt = OffsetDateTime.now();
-    }
 }

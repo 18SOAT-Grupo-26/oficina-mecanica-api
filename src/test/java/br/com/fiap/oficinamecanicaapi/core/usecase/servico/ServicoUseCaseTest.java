@@ -3,6 +3,7 @@ package br.com.fiap.oficinamecanicaapi.core.usecase.servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.entity.ServicoEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoResponse;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.servico.mapper.ServicoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
@@ -12,17 +13,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,8 +40,9 @@ class ServicoUseCaseTest {
     @Mock
     private ServicoPortOut servicoPortOut;
 
-    @Mock
-    private ServicoMapper servicoMapper;
+    /** Mapper real (MapStruct) espionado: os testes que precisam fixam a resposta com when(...). */
+    @Spy
+    private ServicoMapper servicoMapper = Mappers.getMapper(ServicoMapper.class);
 
     private ServicoUseCase useCase;
 
@@ -140,5 +148,141 @@ class ServicoUseCaseTest {
         ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.buscarPorId(ID));
 
         assertThat(ex.getErrorCode()).isEqualTo(404);
+    }
+
+    @Test
+    @DisplayName("listar aplica a paginação padrão quando nada é informado")
+    void listarComPaginacaoPadrao() {
+        when(servicoPortOut.listar(0, 20)).thenReturn(new Pagina<>(List.of(servico("Troca de óleo", "80.00")), 0, 20, 1));
+
+        Pagina<ServicoResponse> pagina = useCase.listar(null, null);
+
+        assertThat(pagina.itens()).extracting(ServicoResponse::nome).containsExactly("Troca de óleo");
+        assertThat(pagina.total()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("listar corrige página negativa e limita o tamanho a 100")
+    void listarCorrigePaginacao() {
+        when(servicoPortOut.listar(0, 100)).thenReturn(new Pagina<>(List.of(), 0, 100, 0));
+
+        assertThat(useCase.listar(-3, 500).tamanho()).isEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("buscarPorId devolve o serviço")
+    void buscarPorId() {
+        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(servico("Troca de óleo", "80.00")));
+
+        assertThat(useCase.buscarPorId(ID).preco()).isEqualByComparingTo("80.00");
+    }
+
+    @Test
+    @DisplayName("atualizar mantendo o nome não confere duplicidade, troca o preço e conta a operação")
+    void atualizarMesmoNome() {
+        ServicoEntity atual = servico("Troca de óleo", "80.00");
+        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
+        when(servicoPortOut.salvar(atual)).thenReturn(atual);
+
+        ServicoResponse response = useCase.atualizar(ID, new ServicoRequest("TROCA DE ÓLEO", "Com filtro",
+                new BigDecimal("95.5")));
+
+        assertThat(response.preco()).isEqualByComparingTo("95.50");
+        assertThat(response.descricao()).isEqualTo("Com filtro");
+        assertThat(atual.getPreco().scale()).isEqualTo(2);
+        verify(servicoPortOut, never()).existePorNomeNormalizado(anyString());
+        assertThat(operacoes("atualizado")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("atualizar para o nome de outro serviço responde 409 sem gravar")
+    void atualizarNomeDuplicado() {
+        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(servico("Troca de óleo", "80.00")));
+        when(servicoPortOut.existePorNomeNormalizado("alinhamento")).thenReturn(true);
+
+        assertErro(409, "Já existe um serviço cadastrado com este nome",
+                () -> useCase.atualizar(ID, new ServicoRequest("Alinhamento", null, new BigDecimal("50"))));
+        verify(servicoPortOut, never()).salvar(any());
+    }
+
+    @Test
+    @DisplayName("atualizar serviço inexistente responde 404 sem validar o request")
+    void atualizarInexistente() {
+        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
+
+        assertErro(404, "Serviço não encontrado", () -> useCase.atualizar(ID, new ServicoRequest(null, null, null)));
+    }
+
+    @Test
+    @DisplayName("excluir remove o serviço e conta a operação")
+    void excluir() {
+        ServicoEntity atual = servico("Troca de óleo", "80.00");
+        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
+
+        useCase.excluir(ID);
+
+        verify(servicoPortOut).excluir(atual);
+        assertThat(operacoes("excluido")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("excluir serviço inexistente responde 404")
+    void excluirInexistente() {
+        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
+
+        assertErro(404, "Serviço não encontrado", () -> useCase.excluir(ID));
+        verify(servicoPortOut, never()).excluir(any());
+    }
+
+    @Test
+    @DisplayName("criar conta a operação no sucesso e não conta quando a validação falha")
+    void criarContaOperacao() {
+        when(servicoPortOut.existePorNomeNormalizado("balanceamento")).thenReturn(false);
+        when(servicoPortOut.salvar(any())).thenAnswer(invocacao -> invocacao.getArgument(0));
+
+        useCase.criar(new ServicoRequest("Balanceamento", null, new BigDecimal("60")));
+        var semPreco = new ServicoRequest("Balanceamento", null, null);
+        assertThatThrownBy(() -> useCase.criar(semPreco))
+                .isInstanceOf(ApplicationException.class);
+
+        assertThat(operacoes("criado")).isEqualTo(1);
+    }
+
+    @ParameterizedTest(name = "nome=[{0}] preco={1} → {2}")
+    @CsvSource(value = {
+            "NULL, 10, O campo nome é obrigatório",
+            "'   ', 10, O campo nome é obrigatório",
+            "Ab, 10, O nome deve ter no mínimo 3 caracteres",
+            "Alinhamento, NULL, O campo preco é obrigatório",
+            "Alinhamento, -1, Preço inválido"}, nullValues = "NULL")
+    @DisplayName("criar responde 422 para nome ou preço inválidos, sem consultar a persistência")
+    void criarValidaCampos(String nome, String preco, String mensagem) {
+        ServicoRequest request = new ServicoRequest(nome, null, preco == null ? null : new BigDecimal(preco));
+
+        assertErro(422, mensagem, () -> useCase.criar(request));
+        verifyNoInteractions(servicoPortOut);
+    }
+
+    private static ServicoEntity servico(String nome, String preco) {
+        ServicoEntity servico = new ServicoEntity();
+        servico.setId(ID);
+        servico.setNome(nome);
+        servico.setNomeNormalizado("troca de oleo");
+        servico.setPreco(new BigDecimal(preco));
+        return servico;
+    }
+
+    private double operacoes(String operacao) {
+        var contador = meterRegistry.find("oficina.cadastro.operacoes")
+                .tags("entidade", "servico", "operacao", operacao).counter();
+        return contador == null ? 0 : contador.count();
+    }
+
+    private static void assertErro(int codigo, String mensagem,
+                                   org.assertj.core.api.ThrowableAssert.ThrowingCallable acao) {
+        assertThatThrownBy(acao)
+                .isInstanceOf(ApplicationException.class)
+                .hasMessage(mensagem)
+                .extracting("errorCode").isEqualTo(codigo);
     }
 }

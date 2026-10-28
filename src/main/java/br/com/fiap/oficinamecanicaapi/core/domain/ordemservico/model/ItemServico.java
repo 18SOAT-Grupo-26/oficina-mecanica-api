@@ -12,10 +12,10 @@ public class ItemServico extends ItemOrdemServico {
     private final Long idServico;
 
     private ItemServico(Long id, Long idServico, String descricao, ValorMonetario precoUnitario, int quantidade) {
-        super(id, descricao, precoUnitario, quantidade);
         if (idServico == null) {
             throw new ApplicationException(400, "O serviço do item é obrigatório");
         }
+        super(id, descricao, precoUnitario, quantidade);
         this.idServico = idServico;
     }
 

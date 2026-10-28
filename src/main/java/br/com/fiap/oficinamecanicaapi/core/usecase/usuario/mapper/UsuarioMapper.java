@@ -5,16 +5,16 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity.UsuarioEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
+import br.com.fiap.oficinamecanicaapi.shared.utils.GetLocalTime;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Mapper(
         componentModel = "spring",
-        imports = {OffsetDateTime.class, Perfil.class, Set.class, Collectors.class}
+        imports = {GetLocalTime.class, Perfil.class, Set.class, Collectors.class}
 )
 public interface UsuarioMapper {
 
@@ -32,8 +32,8 @@ public interface UsuarioMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "nome", source = "usuario.nome")
     @Mapping(target = "perfil", source = "perfilEntity")
-    @Mapping(target = "createdAt", expression = "java(OffsetDateTime.now())")
-    @Mapping(target = "updatedAt", expression = "java(OffsetDateTime.now())")
+    @Mapping(target = "createdAt", expression = "java(GetLocalTime.getLocalTime())")
+    @Mapping(target = "updatedAt", expression = "java(GetLocalTime.getLocalTime())")
     @Mapping(target = "ativo", constant = "true")
     UsuarioEntity toEntityCadastro(
             Usuario usuario,
