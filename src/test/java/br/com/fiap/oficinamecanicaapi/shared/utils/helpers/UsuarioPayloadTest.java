@@ -55,7 +55,7 @@ class UsuarioPayloadTest {
     }
 
     private static Usuario usuario(String nome, String email, String nomeUsuario) {
-        return new Usuario(nome, email, nomeUsuario, SENHA, false, Perfil.ADMINISTRATOR);
+        return new Usuario(nome, email, nomeUsuario, SENHA, false, Perfil.ADMIN);
     }
 
     private static void assertErro400(Executable chamada) {

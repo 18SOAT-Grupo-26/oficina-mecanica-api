@@ -54,7 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 List<GrantedAuthority> authorities = new ArrayList<>();
 
-                // Perfil como authority (ex: ROLE_ADMINISTRATOR)
+                // Perfil como authority (ex: ROLE_ADMIN)
                 authorities.add(detalhesUsuario.usuario().perfil());
 
                 // Permissões como authorities individuais (ex: TUTOR_CREATE)

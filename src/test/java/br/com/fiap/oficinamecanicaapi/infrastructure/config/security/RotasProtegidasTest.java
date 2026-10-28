@@ -44,9 +44,9 @@ class RotasProtegidasTest {
     private static final String PACOTE_DA_APLICACAO = "br.com.fiap.oficinamecanicaapi";
     private static final String TOKEN_INVALIDO = "token-invalido";
     /**
-     * CRUDs de cliente, veículo, insumo e serviço e operações da OS na data do teste.
+     * CRUDs de cliente, veículo, insumo e serviço, operações da OS e as duas rotas do cliente na data do teste.
      */
-    private static final int ROTAS_PROTEGIDAS_MINIMO = 26;
+    private static final int ROTAS_PROTEGIDAS_MINIMO = 28;
 
     @Autowired
     private MockMvc mockMvc;

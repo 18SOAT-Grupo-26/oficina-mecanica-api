@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.stream.Stream;
 
 /**
- * Cria o primeiro ADMINISTRATOR na subida, a partir de ADMIN_* do ambiente (.env), quando ainda não existe nenhum.
+ * Cria o primeiro ADMIN na subida, a partir de ADMIN_* do ambiente (.env), quando ainda não existe nenhum.
  * A senha nunca vai para o repositório nem para o log. Passa pelas mesmas regras do cadastro (política de senha,
  * e-mail e unicidade); se forem recusadas, a subida falha para o problema não passar despercebido.
  */
@@ -49,12 +49,12 @@ public class AdministradorInicial implements ApplicationRunner {
             return;
         }
         if (Stream.of(email, usuario, senha).anyMatch(valor -> valor == null || valor.isBlank())) {
-            log.warn("action=admin_inicial_ausente: nenhum ADMINISTRATOR cadastrado e ADMIN_EMAIL, ADMIN_USUARIO "
+            log.warn("action=admin_inicial_ausente: nenhum ADMIN cadastrado e ADMIN_EMAIL, ADMIN_USUARIO "
                     + "ou ADMIN_SENHA não definidos; defina-os no .env para poder cadastrar usuários");
             return;
         }
         try {
-            usuarioUseCase.cadastrar(new Usuario(nome, email, usuario, senha, false, Perfil.ADMINISTRATOR));
+            usuarioUseCase.cadastrar(new Usuario(nome, email, usuario, senha, false, Perfil.ADMIN));
             log.info("action=admin_inicial_criado");
         } catch (ApplicationException | DataIntegrityViolationException e) {
             // outra instância subindo ao mesmo tempo pode ter criado o administrador primeiro (409 ou constraint)

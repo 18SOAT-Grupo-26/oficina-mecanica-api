@@ -4,6 +4,7 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
+import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.usuario.mapper.UsuarioMapper;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.PerfilRepository;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.UsuarioRepository;
@@ -28,19 +29,22 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     private final UsuarioPayload usuarioPayload;
     private final PasswordEncoder passwordEncoder;
     private final PoliticaSenha politicaSenha;
+    private final ClientePortOut clientePortOut;
 
     public UsuarioUseCase(UsuarioRepository usuarioRepository,
                           PerfilRepository perfilRepository,
                           UsuarioMapper usuarioMapper,
                           UsuarioPayload usuarioPayload,
                           PasswordEncoder passwordEncoder,
-                          PoliticaSenha politicaSenha) {
+                          PoliticaSenha politicaSenha,
+                          ClientePortOut clientePortOut) {
         this.usuarioRepository = usuarioRepository;
         this.perfilRepository = perfilRepository;
         this.usuarioMapper = usuarioMapper;
         this.usuarioPayload = usuarioPayload;
         this.passwordEncoder = passwordEncoder;
         this.politicaSenha = politicaSenha;
+        this.clientePortOut = clientePortOut;
     }
 
     @SuppressWarnings("java:S2139")
@@ -52,6 +56,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
             politicaSenha.validar(usuario.senha());
             validarEmailDisponivel(usuario.email());
             validarNomeUsuarioDisponivel(usuario.nomeUsuario());
+            validarCliente(usuario);
 
             var perfilEntity = perfilRepository.findByNome(usuario.perfil().name())
                     .orElseThrow(() -> new ApplicationException(400,
@@ -63,7 +68,8 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
                     usuario.nomeUsuario(),
                     passwordEncoder.encode(usuario.senha()),
                     usuario.trocaSenhaObrigatoria(),
-                    usuario.perfil()
+                    usuario.perfil(),
+                    usuario.clienteId()
             );
 
             usuarioRepository.save(usuarioMapper.toEntityCadastro(usuarioComSenhaCifrada, perfilEntity));
@@ -81,7 +87,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     @Override
     @Transactional(readOnly = true)
     public boolean existeAdministrador() {
-        return usuarioRepository.existsByPerfil_Nome(Perfil.ADMINISTRATOR.name());
+        return usuarioRepository.existsByPerfil_Nome(Perfil.ADMIN.name());
     }
 
     @Override
@@ -112,6 +118,27 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     private void validarEmailDisponivel(String email) {
         if (usuarioRepository.existsByEmail(email)) {
             throw new ApplicationException(409, "Já existe um usuário cadastrado com este e-mail");
+        }
+    }
+
+    /**
+     * O usuário CLIENTE só enxerga as OS do cliente ligado a ele; os outros perfis não têm cliente.
+     */
+    private void validarCliente(Usuario usuario) {
+        if (usuario.perfil() != Perfil.CLIENTE) {
+            if (usuario.clienteId() != null) {
+                throw new ApplicationException(400, "Só o perfil CLIENTE é ligado a um cliente");
+            }
+            return;
+        }
+        if (usuario.clienteId() == null) {
+            throw new ApplicationException(400, "Informe o clienteId para o perfil CLIENTE");
+        }
+        if (clientePortOut.buscarAtivoPorId(usuario.clienteId()).isEmpty()) {
+            throw new ApplicationException(404, "Cliente não encontrado");
+        }
+        if (usuarioRepository.existsByClienteId(usuario.clienteId())) {
+            throw new ApplicationException(409, "Já existe um usuário para este cliente");
         }
     }
 
