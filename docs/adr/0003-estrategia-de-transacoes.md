@@ -1,7 +1,7 @@
 # ADR 003 — Estratégia de transações
 
 - **Status:** Proposto
-- **Data:** 2026-10-24
+- **Data:** 2026-10-23
 - **Responsável:** Ana Albuquerque
 
 ## Contexto
@@ -32,26 +32,26 @@ Restrições que já vêm das ADRs anteriores:
   ([ADR 002](0002-escolha-do-banco-de-dados.md)). O estoque fica nas colunas `quantidade` e `reservado` de
   `peca_insumo`.
 
-Como está o código hoje:
+Problemas que o código tinha antes desta ADR:
 
-- O `@Transactional` fica nos `*PersistenceAdapter`, um por chamada ao `PortOut`. Um caso de uso que chama dois adapters
-  faz duas transações. Se a segunda falhar, a primeira já foi gravada.
-- No cadastro de usuário, `IdentityUseCase.saveIdentity` tem `@Transactional` num método **privado** chamado de dentro
-  da própria classe. O proxy do Spring não intercepta essa chamada, então a anotação não tem efeito. Identidade,
-  contato, endereço e usuário são gravados em transações separadas.
-- Não existe controle de concorrência no estoque nem tratamento de 503 quando o banco cai (a resposta é um 500
+- O `@Transactional` ficava só nos `*PersistenceAdapter`, um por chamada ao `PortOut`. Um caso de uso que chamava dois
+  adapters fazia duas transações. Se a segunda falhasse, a primeira já estava gravada.
+- No cadastro de usuário, o `@Transactional` estava num método **privado** chamado de dentro da própria classe. O proxy
+  do Spring não intercepta essa chamada, então a anotação não tinha efeito, e identidade, contato, endereço e usuário
+  eram gravados em transações separadas.
+- Não havia controle de concorrência no estoque nem tratamento de 503 quando o banco caía (a resposta era um 500
   genérico).
-- A OS ainda não foi implementada. Esta ADR define as regras que a implementação deve seguir.
 
 Fluxos cobertos por esta ADR:
 
-| Fluxo               | Escritas envolvidas                                         |
-|---------------------|-------------------------------------------------------------|
-| Gerar orçamento     | Status da OS, itens do orçamento, reserva de cada peça      |
-| Aprovar orçamento   | Status da OS, baixa de cada peça                            |
-| Reprovar orçamento  | Status da OS, liberação de cada peça                        |
-| Cancelar OS         | Status da OS e liberação das peças, se ainda houver reserva |
-| Cadastro de usuário | Usuário (até a V8, também identidade, contato e endereço)   |
+| Fluxo                         | Rota                                           | Escritas envolvidas                              |
+|-------------------------------|------------------------------------------------|--------------------------------------------------|
+| Abrir ou editar a OS          | `POST` e `PUT /ordens-servico`                 | OS, itens de serviço e de peça, histórico        |
+| Gerar orçamento               | `PATCH /ordens-servico/{id}/gerar-orcamento`   | Status da OS, histórico, reserva de cada peça    |
+| Aprovar orçamento             | `PATCH /ordens-servico/{id}/aprovar-orcamento` | Status da OS, histórico, baixa de cada peça      |
+| Rejeitar orçamento            | `PATCH /ordens-servico/{id}/rejeitar-orcamento` | Status da OS (`CANCELADA`), liberação das peças |
+| Cancelar, finalizar, entregar | `PATCH /ordens-servico/{id}/status`            | Status da OS, histórico e, no cancelamento com orçamento pendente, liberação das peças |
+| Cadastro de usuário           | `POST /auth/cadastro`                          | Usuário                                          |
 
 ## Decisão
 
@@ -83,7 +83,7 @@ gravar:
 |----------|----------------------------------------------------------------------------------------------------------------------|
 | Reservar | `UPDATE peca_insumo SET reservado = reservado + :q WHERE id = :id AND quantidade - reservado >= :q`                  |
 | Liberar  | `UPDATE peca_insumo SET reservado = reservado - :q WHERE id = :id AND reservado >= :q`                               |
-| Baixar   | `UPDATE peca_insumo SET quantidade = quantidade - :q, reservado = reservado - :q WHERE id = :id AND reservado >= :q` |
+| Baixar   | `UPDATE peca_insumo SET quantidade = quantidade - :q, reservado = reservado - :q WHERE id = :id AND reservado >= :q AND quantidade >= :q` |
 
 - O comando devolve o número de linhas afetadas. Se for `0`, a condição não foi atendida (sem saldo ou reserva
   inexistente). O caso de uso lança `ApplicationException` com **409**, e a transação inteira é desfeita, inclusive as
@@ -115,29 +115,61 @@ WHERE id = :id
 - A ordem dentro de cada transação é sempre: **1) transição de status → 2) movimento de estoque → 3) gravação dos itens
   e valores**.
 
+#### Situação da implementação
+
+A OS valida a transição no domínio (`StatusOrdemServico.podeTransitarPara`), movimenta o estoque e grava o agregado com
+`save()` do JPA. O `UPDATE` da OS **não tem a condição de status**, e a `OrdemServicoEntity` não tem `@Version`. Em
+requisições sequenciais, a regra funciona: a segunda recebe 409 porque o status já mudou. Em requisições
+**simultâneas**, as duas leem o mesmo status e passam pela validação:
+
+- dois `gerar-orcamento` reservam as peças duas vezes, se houver saldo;
+- dois `aprovar-orcamento` ou dois cancelamentos só são barrados pelo `WHERE` do estoque. Se outra OS tiver reserva da
+  mesma peça, a segunda requisição consome ou libera a reserva da outra OS.
+
+O caminho proposto é **`@Version` na `OrdemServicoEntity`**, com a `OptimisticLockException` traduzida para 409 no
+`HandlerException`. A segunda requisição falha no `save()`, e o rollback desfaz também o movimento de estoque, porque
+tudo está na mesma transação. Para o status da OS, o conflito é raro (duplo clique, reenvio), então o lock otimista não
+tem o problema que tem no estoque (alternativa 4). Até essa correção entrar, a proteção contra duplicidade simultânea é
+uma dívida técnica.
+
 ### 4. Efeito de cada transição no estoque
+
+A máquina de estados é a do `StatusOrdemServico`. A OS avança uma etapa por vez, sem voltar nem pular status.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Recebida
-    Recebida --> AguardandoAprovacao: gerar orçamento (reserva as peças)
-    AguardandoAprovacao --> EmExecucao: aprovar (baixa as peças)
-    AguardandoAprovacao --> Reprovada: reprovar (libera a reserva)
-    Recebida --> Cancelada: cancelar (sem efeito no estoque)
-    AguardandoAprovacao --> Cancelada: cancelar (libera a reserva)
-    EmExecucao --> Cancelada: cancelar (não devolve, peça já consumida)
+    [*] --> RECEBIDA: abrir OS
+    RECEBIDA --> EM_DIAGNOSTICO: automático, na abertura
+    EM_DIAGNOSTICO --> AGUARDANDO_APROVACAO: gerar orçamento (reserva as peças)
+    AGUARDANDO_APROVACAO --> EM_EXECUCAO: aprovar orçamento (baixa as peças)
+    AGUARDANDO_APROVACAO --> CANCELADA: rejeitar orçamento ou cancelar (libera a reserva)
+    RECEBIDA --> CANCELADA: cancelar (sem efeito no estoque)
+    EM_DIAGNOSTICO --> CANCELADA: cancelar (sem efeito no estoque)
+    EM_EXECUCAO --> FINALIZADA
+    FINALIZADA --> ENTREGUE
+    ENTREGUE --> [*]
+    CANCELADA --> [*]
 ```
 
-Os nomes dos status são ilustrativos. A lista final é definida na implementação da OS, mas o efeito no estoque segue
-esta tabela:
+| Transição                                     | Estoque                                                   |
+|-----------------------------------------------|-----------------------------------------------------------|
+| Incluir ou alterar peça na OS                 | Nenhum: só confere o saldo disponível (sem reservar)      |
+| Gerar orçamento                               | Reserva cada peça do orçamento                            |
+| Aprovar orçamento                             | Baixa o que foi reservado                                 |
+| Rejeitar orçamento                            | Libera a reserva e cancela a OS                           |
+| Cancelar com orçamento pendente               | Libera a reserva                                          |
+| Cancelar antes do orçamento                   | Nenhum: ainda não há reserva                              |
+| Cancelar depois da aprovação                  | Não permitido: a partir de `EM_EXECUCAO` a OS só avança   |
 
-| Transição                       | Estoque                        |
-|---------------------------------|--------------------------------|
-| Gerar orçamento                 | Reserva cada peça do orçamento |
-| Aprovar                         | Baixa o que foi reservado      |
-| Reprovar                        | Libera a reserva               |
-| Cancelar com orçamento pendente | Libera a reserva               |
-| Cancelar depois da aprovação    | Nenhum: a baixa não é desfeita |
+Regras que complementam o diagrama:
+
+- `EM_DIAGNOSTICO`, `AGUARDANDO_APROVACAO` e `EM_EXECUCAO` são **automáticos**: vêm da abertura e das rotas de
+  orçamento, e o `PATCH /status` recusa esses destinos com 409. Pelo `PATCH /status` só se cancela, finaliza ou
+  entrega.
+- Os itens só mudam em `RECEBIDA` e `EM_DIAGNOSTICO`. Depois que o orçamento é gerado, a OS fica **congelada**: o valor
+  aprovado é o valor reservado.
+- A aprovação e a rejeição do orçamento são registradas pelo funcionário ([ADR 004](0004-seguranca.md)).
+- O cancelamento não apaga a OS: ela vai para `CANCELADA`, que é um status final (delete lógico, decisão de 21/10).
 
 ### 5. Erros e respostas HTTP
 
@@ -151,12 +183,10 @@ decide se reenvia, e a transição condicional garante que um reenvio não dupli
 
 ### 6. Cadastro de usuário
 
-`AuthenticationUseCase.cadastrarUsuario` passa a ser a fronteira da transação. Identidade, contato, endereço e usuário
-são gravados juntos ou nada é gravado. O `@Transactional` do método privado `IdentityUseCase.saveIdentity` sai, e o
-método público `registerIdentity` recebe a anotação.
-
-> **Atualização (V8):** a identidade, o contato e o endereço foram removidos; o usuário guarda nome e e-mail. O cadastro
-> passou a gravar uma tabela só, e a transação continua em `cadastrarUsuario`.
+`AuthenticationUseCase.cadastrarUsuario` é a fronteira da transação, e o `@Transactional` saiu do método privado que
+não tinha efeito. Com a migration V8, a identidade, o contato e o endereço deixaram de existir, e o usuário guarda só
+nome e e-mail. O cadastro grava uma tabela só, mas a fronteira continua no caso de uso para valer quando o cadastro
+voltar a gravar mais de uma tabela.
 
 ## Alternativas consideradas
 
@@ -167,14 +197,15 @@ método público `registerIdentity` recebe a anotação.
 | Port de transação (`TransactionTemplate`) | Fronteira    | Descartada por enquanto: mais código sem ganho prático |
 | **`UPDATE` condicional atômico**          | Concorrência | **Escolhida**                                          |
 | Lock pessimista (`SELECT ... FOR UPDATE`) | Concorrência | Viável, sem vantagem                                   |
-| Lock otimista (`@Version`)                | Concorrência | Descartada: exige retry                                |
+| Lock otimista (`@Version`) no estoque     | Concorrência | Descartada: exige retry                                |
+| Lock otimista (`@Version`) na OS          | Duplicidade  | Proposta para implementar a transição condicional      |
 | Isolamento `SERIALIZABLE`                 | Concorrência | Descartada: exige retry em todo conflito               |
 | **Transição de status condicional**       | Duplicidade  | **Escolhida**                                          |
 | Chave de idempotência                     | Duplicidade  | Evolução futura                                        |
 | Retry automático no servidor              | Erros        | Descartada                                             |
 | Sagas / transações distribuídas           | Arquitetura  | Não se aplica (monólito)                               |
 
-### 1. Transação só nos adapters (situação atual)
+### 1. Transação só nos adapters (situação anterior)
 
 - **Prós:** nenhuma anotação de transação no `core`, e cada adapter é simples.
 - **Contras:** cada chamada ao `PortOut` confirma sozinha. Na geração do orçamento, uma falha na terceira peça deixaria
@@ -202,7 +233,7 @@ O caso de uso carrega as peças com `@Lock(PESSIMISTIC_WRITE)`, confere o saldo 
 - **Por que não:** o `UPDATE` condicional entrega a mesma garantia com um comando só e com o lock pelo menor tempo
   possível. Fica como opção se a regra de saldo ficar complexa demais para um `WHERE`.
 
-### 4. Lock otimista (`@Version`)
+### 4. Lock otimista (`@Version`) no estoque
 
 - **Prós:** não trava linhas na leitura e é o padrão do JPA para edições concorrentes.
 - **Contras:** um conflito gera `OptimisticLockException` depois de todo o trabalho ter sido feito. Para estoque
@@ -251,25 +282,31 @@ Header `Idempotency-Key` com uma tabela de requisições já processadas, que de
 - Aprovar, reprovar ou cancelar duas vezes não duplica efeito no estoque. A segunda requisição recebe 409.
 - Banco fora do ar vira 503 com mensagem clara, e não 500 genérico (RNF04).
 - A regra é testável: nos testes unitários do `core`, o `PortOut` mockado devolve `false` para simular falta de saldo ou
-  transição já feita.
+  transição já feita ([ADR 005](0005-estrategia-de-testes.md)).
 - O cadastro de usuário deixa de gravar dados parciais.
 
 ### Negativas e trade-offs
 
 - Parte da regra de estoque fica no SQL do adapter (o `WHERE` do `UPDATE`), e não só no domínio. Ela precisa de teste de
-  integração com PostgreSQL de verdade (ex.: Testcontainers) para ser validada sob concorrência.
+  integração com PostgreSQL de verdade (Testcontainers, [ADR 005](0005-estrategia-de-testes.md)) para ser validada,
+  e ainda não há teste que dispare requisições simultâneas.
+- A transição de status condicional ainda não está implementada (ver "Situação da implementação" na seção 3). Até
+  entrar o `@Version`, duas requisições simultâneas na mesma OS podem duplicar a reserva ou consumir a reserva de outra
+  OS.
 - `@Transactional` aumenta a dependência do Spring no `core/usecase`, além do `@Service` já aceito na ADR 001.
 - Os `UPDATE`s via `@Modifying @Query` não passam pelo ciclo de vida do Hibernate. Entidades já carregadas na mesma
   transação podem ficar desatualizadas e precisam ser recarregadas, ou a query deve usar `clearAutomatically = true`.
 - Um reenvio legítimo do cliente recebe 409 em vez da resposta original até existir chave de idempotência.
 - Com `open-in-view` desligado, qualquer relacionamento lazy precisa ser carregado dentro do caso de uso. Senão, ocorre
   `LazyInitializationException`.
-- A lista de status da OS ainda vai ser definida. O diagrama acima mostra só o efeito de cada transição no estoque.
 
 ## Referências
 
 - [ADR 001 — Monólito em camadas (ports & adapters)](0001-monolito-em-camadas.md)
 - [ADR 002 — Escolha do banco de dados](0002-escolha-do-banco-de-dados.md)
+- [ADR 004 — Segurança: autenticação e autorização](0004-seguranca.md)
+- [ADR 005 — Estratégia de testes](0005-estrategia-de-testes.md)
+- PR #104: rotas de orçamento com reserva, baixa e liberação do estoque
 - Event Storming do grupo (Miro) e a reunião de 16/10/2026
 - [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
 - [Spring Framework — Declarative transaction management](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative.html)
