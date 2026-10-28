@@ -31,7 +31,7 @@ class JwtTokenProviderUseCaseTest {
     private static final String OUTRO_SEGREDO =
             "b3V0cm8tc2VncmVkby1jb20tbWFpcy1kZS02NC1ieXRlcy1wYXJhLW8taHM1MTItZnVuY2lvbmFyLW9rISEhISE=";
     private static final DetalhesUsuario DETALHES = new DetalhesUsuario(
-            new Usuario("Ana Admin", "ana@oficina.com.br", "ana", "{bcrypt}x", false, Perfil.MANAGER),
+            new Usuario("Ana Admin", "ana@oficina.com.br", "ana", "{bcrypt}x", false, Perfil.FUNCIONARIO),
             Set.of("OS_LER"));
 
     private SimpleMeterRegistry meterRegistry;
@@ -56,7 +56,7 @@ class JwtTokenProviderUseCaseTest {
         assertThat(claims.get("username", String.class)).isEqualTo("ana");
         assertThat(claims.get("name", String.class)).isEqualTo("Ana Admin");
         assertThat(claims.get("email", String.class)).isEqualTo("ana@oficina.com.br");
-        assertThat(claims.get("role", String.class)).isEqualTo("MANAGER");
+        assertThat(claims.get("role", String.class)).isEqualTo("FUNCIONARIO");
         assertThat(claims.get("permissions")).asInstanceOf(InstanceOfAssertFactories.LIST).containsExactly("OS_LER");
         assertThat(Duration.between(claims.getIssuedAt().toInstant(), claims.getExpiration().toInstant()))
                 .isEqualTo(Duration.ofHours(1));

@@ -74,7 +74,7 @@ class UsuarioPayloadTest {
     @Test
     @DisplayName("Deve recusar com 400 o cadastro com trocaSenhaObrigatoria verdadeiro")
     void deveRecusarTrocaDeSenhaObrigatoria() {
-        Usuario usuario = new Usuario("Ana", "ana@oficina.com.br", "ana", "Admin@123", true, Perfil.OPERATOR);
+        Usuario usuario = new Usuario("Ana", "ana@oficina.com.br", "ana", "Admin@123", true, Perfil.FUNCIONARIO);
 
         assertThatThrownBy(() -> usuarioPayload.validarUsuario(usuario))
                 .isInstanceOf(ApplicationException.class)

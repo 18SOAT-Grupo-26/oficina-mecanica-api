@@ -44,10 +44,10 @@ class AuthControllerTest {
     private static final String USERNAME = "admin";
     private static final String CADASTRO_JSON = """
             {"nome":"Bruno Operador","email":"bruno@oficina.com.br","nomeUsuario":"bruno",
-             "senha":"Senha@Forte123","trocaSenhaObrigatoria":false,"perfil":"OPERATOR"}
+             "senha":"Senha@Forte123","trocaSenhaObrigatoria":false,"perfil":"FUNCIONARIO"}
             """;
     private static final CadastroRequest CADASTRO = new CadastroRequest("Bruno Operador", "bruno@oficina.com.br",
-            "bruno", "Senha@Forte123", false, Perfil.OPERATOR);
+            "bruno", "Senha@Forte123", false, Perfil.FUNCIONARIO, null);
     private static final String LOGIN_JSON = """
             {"identificador":"admin","senha":"Senha@Forte123"}
             """;
@@ -79,7 +79,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve responder 403 quando quem cadastra não for ADMINISTRATOR")
     void deveRecusarCadastroDeQuemNaoEhAdministrador() throws Exception {
-        autenticarComo(Perfil.OPERATOR);
+        autenticarComo(Perfil.FUNCIONARIO);
 
         mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(CADASTRO_JSON))
@@ -92,7 +92,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve cadastrar quando quem cadastra for ADMINISTRATOR")
     void deveCadastrarComoAdministrador() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(CADASTRO_JSON))
@@ -104,7 +104,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve responder 400 listando os campos obrigatórios ausentes no cadastro")
     void deveRejeitarCadastroIncompleto() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content("""
@@ -120,7 +120,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve responder 409 quando o e-mail ou o nome de usuário já existir")
     void deveResponderConflitoNoCadastro() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         doThrow(new ApplicationException(409, "Já existe um usuário cadastrado com este e-mail"))
                 .when(authService).cadastrarUsuario(CADASTRO);
 

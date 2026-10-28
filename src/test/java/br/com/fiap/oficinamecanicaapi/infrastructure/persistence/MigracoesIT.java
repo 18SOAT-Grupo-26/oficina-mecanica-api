@@ -17,15 +17,26 @@ class MigracoesIT extends IntegracaoBase {
                 "select count(*) from flyway_schema_history where success = true and version is not null", Integer.class);
 
         assertThat(falhas).isZero();
-        assertThat(aplicadas).isGreaterThanOrEqualTo(9);
+        assertThat(aplicadas).isGreaterThanOrEqualTo(10);
     }
 
     @Test
-    @DisplayName("Os três perfis do enum devem existir, e nenhum usuário deve vir das migrations")
-    void perfisSemUsuarios() {
+    @DisplayName("Devem existir só os três perfis da fase 1 (V10), iguais ao enum Perfil")
+    void perfisDaFase1() {
         var perfis = jdbcTemplate.queryForList("select nome from perfis order by nome", String.class);
 
-        assertThat(perfis).containsExactly("ADMINISTRATOR", "MANAGER", "OPERATOR");
+        assertThat(perfis).containsExactly("ADMIN", "CLIENTE", "FUNCIONARIO");
+    }
+
+    @Test
+    @DisplayName("O usuário deve poder ser ligado a um cliente (V10), um login por cliente")
+    void usuarioLigadoAoCliente() {
+        Integer coluna = jdbcTemplate.queryForObject("""
+                select count(*) from information_schema.columns
+                where table_schema = 'public' and table_name = 'usuarios' and column_name = 'cliente_id'
+                """, Integer.class);
+
+        assertThat(coluna).isEqualTo(1);
     }
 
     @Test

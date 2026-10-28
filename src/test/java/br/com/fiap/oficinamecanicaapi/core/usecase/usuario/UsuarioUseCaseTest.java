@@ -5,6 +5,7 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity.UsuarioEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
+import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.usuario.mapper.UsuarioMapper;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.PerfilRepository;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.UsuarioRepository;
@@ -36,9 +37,9 @@ class UsuarioUseCaseTest {
     private static final String NOME_USUARIO = "admin";
     private static final String SENHA = "Admin@123";
     private static final String SENHA_CIFRADA = "cifrada";
-    private static final Usuario USUARIO = new Usuario(NOME, EMAIL, NOME_USUARIO, SENHA, false, Perfil.ADMINISTRATOR);
+    private static final Usuario USUARIO = new Usuario(NOME, EMAIL, NOME_USUARIO, SENHA, false, Perfil.ADMIN);
     private static final Usuario USUARIO_CIFRADO =
-            new Usuario(NOME, EMAIL, NOME_USUARIO, SENHA_CIFRADA, false, Perfil.ADMINISTRATOR);
+            new Usuario(NOME, EMAIL, NOME_USUARIO, SENHA_CIFRADA, false, Perfil.ADMIN);
     private static final DetalhesUsuario DETALHES = new DetalhesUsuario(USUARIO, Set.of());
 
     @Mock
@@ -56,12 +57,15 @@ class UsuarioUseCaseTest {
     @Mock
     private PoliticaSenha politicaSenha;
 
+    @Mock
+    private ClientePortOut clientePortOut;
+
     private UsuarioUseCase useCase;
 
     @BeforeEach
     void setUp() {
         useCase = new UsuarioUseCase(usuarioRepository, perfilRepository, usuarioMapper, new UsuarioPayload(),
-                passwordEncoder, politicaSenha);
+                passwordEncoder, politicaSenha, clientePortOut);
     }
 
     @Test
@@ -71,7 +75,7 @@ class UsuarioUseCaseTest {
         var usuarioEntity = new UsuarioEntity();
         when(usuarioRepository.existsByEmail(EMAIL)).thenReturn(false);
         when(usuarioRepository.existsByNomeUsuario(NOME_USUARIO)).thenReturn(false);
-        when(perfilRepository.findByNome(Perfil.ADMINISTRATOR.name())).thenReturn(Optional.of(perfilEntity));
+        when(perfilRepository.findByNome(Perfil.ADMIN.name())).thenReturn(Optional.of(perfilEntity));
         when(passwordEncoder.encode(SENHA)).thenReturn(SENHA_CIFRADA);
         when(usuarioMapper.toEntityCadastro(USUARIO_CIFRADO, perfilEntity)).thenReturn(usuarioEntity);
 
@@ -104,9 +108,9 @@ class UsuarioUseCaseTest {
     }
 
     @Test
-    @DisplayName("Deve informar se já existe usuário com perfil ADMINISTRATOR")
+    @DisplayName("Deve informar se já existe usuário com perfil ADMIN")
     void deveInformarSeExisteAdministrador() {
-        when(usuarioRepository.existsByPerfil_Nome(Perfil.ADMINISTRATOR.name())).thenReturn(true);
+        when(usuarioRepository.existsByPerfil_Nome(Perfil.ADMIN.name())).thenReturn(true);
 
         assertThat(useCase.existeAdministrador()).isTrue();
     }
@@ -156,11 +160,11 @@ class UsuarioUseCaseTest {
     void deveRejeitarPerfilInexistente() {
         when(usuarioRepository.existsByEmail(USUARIO.email())).thenReturn(false);
         when(usuarioRepository.existsByNomeUsuario(USUARIO.nomeUsuario())).thenReturn(false);
-        when(perfilRepository.findByNome("ADMINISTRATOR")).thenReturn(Optional.empty());
+        when(perfilRepository.findByNome("ADMIN")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.cadastrar(USUARIO))
                 .isInstanceOf(ApplicationException.class)
-                .hasMessage("Perfil não encontrado: ADMINISTRATOR")
+                .hasMessage("Perfil não encontrado: ADMIN")
                 .extracting("errorCode").isEqualTo(400);
         verify(usuarioRepository, never()).save(any());
     }
@@ -168,7 +172,7 @@ class UsuarioUseCaseTest {
     @Test
     @DisplayName("Deve rejeitar com 400 o cadastro com dados inválidos antes de consultar o banco")
     void deveRejeitarPayloadInvalido() {
-        Usuario semNome = new Usuario(" ", "ana@oficina.com.br", "ana", "Admin@123", false, Perfil.OPERATOR);
+        Usuario semNome = new Usuario(" ", "ana@oficina.com.br", "ana", "Admin@123", false, Perfil.FUNCIONARIO);
 
         assertThatThrownBy(() -> useCase.cadastrar(semNome))
                 .isInstanceOf(ApplicationException.class)
@@ -194,7 +198,7 @@ class UsuarioUseCaseTest {
         UsuarioEntity entity = new UsuarioEntity();
         when(usuarioRepository.existsByEmail(USUARIO.email())).thenReturn(false);
         when(usuarioRepository.existsByNomeUsuario(USUARIO.nomeUsuario())).thenReturn(false);
-        when(perfilRepository.findByNome("ADMINISTRATOR")).thenReturn(Optional.of(perfil));
+        when(perfilRepository.findByNome("ADMIN")).thenReturn(Optional.of(perfil));
         when(passwordEncoder.encode("Admin@123")).thenReturn("{bcrypt}cifrada");
         when(usuarioMapper.toEntityCadastro(any(Usuario.class), any(PerfilEntity.class))).thenReturn(entity);
         when(usuarioRepository.save(entity)).thenThrow(new IllegalStateException("violação de constraint"));

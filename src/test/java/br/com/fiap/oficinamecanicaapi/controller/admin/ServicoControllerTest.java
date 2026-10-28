@@ -61,7 +61,7 @@ class ServicoControllerTest {
     @Test
     @DisplayName("Deve criar e responder 201")
     void deveCriar() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.criar(REQUEST)).thenReturn(RESPONSE);
 
         mockMvc.perform(post(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -74,7 +74,7 @@ class ServicoControllerTest {
     @Test
     @DisplayName("Deve responder 422 com a mensagem da validação do caso de uso")
     void deveRepassarErroDeValidacao() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.criar(REQUEST)).thenThrow(new ApplicationException(422, "Preço inválido"));
 
         mockMvc.perform(post(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -86,7 +86,7 @@ class ServicoControllerTest {
     @Test
     @DisplayName("Deve listar repassando página e tamanho")
     void deveListar() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.listar(2, 5)).thenReturn(new Pagina<>(List.of(RESPONSE), 2, 5, 11));
 
         mockMvc.perform(get(ROTA).param("page", "2").param("size", "5").header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -99,7 +99,7 @@ class ServicoControllerTest {
     @Test
     @DisplayName("Deve listar sem paginação informada, repassando nulos ao caso de uso")
     void deveListarSemPaginacao() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.listar(null, null)).thenReturn(new Pagina<>(List.of(), 0, 20, 0));
 
         mockMvc.perform(get(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -110,7 +110,7 @@ class ServicoControllerTest {
     @Test
     @DisplayName("Deve buscar por id")
     void deveBuscarPorId() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.buscarPorId(ID)).thenReturn(RESPONSE);
 
         mockMvc.perform(get(ROTA + "/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -121,7 +121,7 @@ class ServicoControllerTest {
     @Test
     @DisplayName("Deve responder 404 quando não existir")
     void deveResponderNaoEncontrado() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.buscarPorId(ID)).thenThrow(new ApplicationException(404, "Serviço não encontrado"));
 
         mockMvc.perform(get(ROTA + "/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -132,7 +132,7 @@ class ServicoControllerTest {
     @Test
     @DisplayName("Deve responder 400 quando o id não for numérico, sem chamar o caso de uso")
     void deveRejeitarIdInvalido() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(get(ROTA + "/abc").header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isBadRequest())
@@ -144,7 +144,7 @@ class ServicoControllerTest {
     @Test
     @DisplayName("Deve atualizar")
     void deveAtualizar() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.atualizar(ID, REQUEST)).thenReturn(RESPONSE);
 
         mockMvc.perform(put(ROTA + "/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -156,7 +156,7 @@ class ServicoControllerTest {
     @Test
     @DisplayName("Deve excluir e responder 204")
     void deveExcluir() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(delete(ROTA + "/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isNoContent());
@@ -165,24 +165,12 @@ class ServicoControllerTest {
     }
 
     @Test
-    @DisplayName("Deve responder 403 para MANAGER: serviço é só do administrador")
-    void deveNegarGerente() throws Exception {
-        autenticarComo(Perfil.MANAGER);
+    @DisplayName("Deve responder 403 para FUNCIONARIO: serviço é só do administrador")
+    void deveNegarFuncionario() throws Exception {
+        autenticarComo(Perfil.FUNCIONARIO);
 
         mockMvc.perform(get(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isForbidden());
-
-        verifyNoInteractions(useCase);
-    }
-
-    @Test
-    @DisplayName("Deve responder 403 para OPERATOR, sem chamar o caso de uso")
-    void deveNegarOperador() throws Exception {
-        autenticarComo(Perfil.OPERATOR);
-
-        mockMvc.perform(get(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.message").value("Acesso negado"));
 
         verifyNoInteractions(useCase);
     }

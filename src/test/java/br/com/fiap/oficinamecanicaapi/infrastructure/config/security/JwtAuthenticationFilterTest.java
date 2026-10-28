@@ -31,7 +31,7 @@ import static org.mockito.Mockito.*;
 class JwtAuthenticationFilterTest {
 
     private static final String TOKEN = "jwt";
-    private static final Usuario USUARIO = new Usuario("Ana", "ana@oficina.com.br", "ana", null, false, Perfil.MANAGER);
+    private static final Usuario USUARIO = new Usuario("Ana", "ana@oficina.com.br", "ana", null, false, Perfil.FUNCIONARIO);
 
     @Mock
     private JwtTokenProviderUseCase jwtTokenProvider;
@@ -94,7 +94,7 @@ class JwtAuthenticationFilterTest {
         assertThat(auth).isNotNull();
         assertThat(auth.getPrincipal()).isEqualTo(detalhes);
         assertThat(auth.getAuthorities()).extracting(GrantedAuthority::getAuthority)
-                .containsExactlyInAnyOrder("ROLE_MANAGER", "OS_LER");
+                .containsExactlyInAnyOrder("ROLE_FUNCIONARIO", "OS_LER");
         assertThat(chain.getRequest()).isSameAs(request);
     }
 
@@ -109,7 +109,7 @@ class JwtAuthenticationFilterTest {
         filtro.doFilter(request, response, chain);
 
         assertThat(SecurityContextHolder.getContext().getAuthentication().getAuthorities())
-                .extracting(GrantedAuthority::getAuthority).containsExactly("ROLE_MANAGER");
+                .extracting(GrantedAuthority::getAuthority).containsExactly("ROLE_FUNCIONARIO");
     }
 
     @Test

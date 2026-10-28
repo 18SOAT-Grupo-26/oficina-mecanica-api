@@ -37,11 +37,13 @@ class AuthenticationUseCaseTest {
     private static final String SENHA_CIFRADA = "{bcrypt}cifrada";
     private static final String TOKEN = "jwt";
     private static final String MENSAGEM = "Credenciais inválidas";
+    private static final Long ID_CLIENTE = 10L;
     private static final SigninRequest REQUEST = new SigninRequest(IDENTIFICADOR, SENHA);
+    // ADMIN não tem cliente ligado: clienteId nulo
     private static final CadastroRequest CADASTRO = new CadastroRequest("Ana Admin", "ana@oficina.com.br", "ana",
-            "Admin@123", false, Perfil.ADMINISTRATOR);
+            "Admin@123", false, Perfil.ADMIN, null);
     private static final Usuario USUARIO = new Usuario("Ana Admin", "ana@oficina.com.br", "ana",
-            "Admin@123", false, Perfil.ADMINISTRATOR);
+            "Admin@123", false, Perfil.ADMIN);
 
     @Mock
     private UsuarioUseCasePortIn usuarioService;
@@ -57,6 +59,8 @@ class AuthenticationUseCaseTest {
 
     @InjectMocks
     private AuthenticationUseCase useCase;
+
+    // ---- login ------------------------------------------------------------------------------------
 
     @Test
     @DisplayName("Deve gerar o token quando usuário e senha conferem")
@@ -103,11 +107,6 @@ class AuthenticationUseCaseTest {
         verifyNoInteractions(jwtTokenProvider);
     }
 
-    private double logins(String resultado) {
-        var contador = meterRegistry.find("oficina.auth.login").tag("resultado", resultado).counter();
-        return contador == null ? 0 : contador.count();
-    }
-
     @Test
     @DisplayName("Deve propagar erros que não sejam de usuário inexistente")
     void devePropagarOutrosErros() {
@@ -121,13 +120,7 @@ class AuthenticationUseCaseTest {
         assertThat(logins("usuario_inexistente")).isZero();
     }
 
-    private static DetalhesUsuario detalhesComSenha(String senhaCifrada) {
-        Usuario usuario = mock(Usuario.class);
-        when(usuario.senha()).thenReturn(senhaCifrada);
-        DetalhesUsuario detalhes = mock(DetalhesUsuario.class);
-        when(detalhes.usuario()).thenReturn(usuario);
-        return detalhes;
-    }
+    // ---- cadastro ---------------------------------------------------------------------------------
 
     @Test
     @DisplayName("Deve cadastrar repassando os dados do request e contar o cadastro por perfil")
@@ -135,7 +128,21 @@ class AuthenticationUseCaseTest {
         useCase.cadastrarUsuario(CADASTRO);
 
         verify(usuarioService).cadastrar(USUARIO);
-        assertThat(meterRegistry.get("oficina.auth.cadastro").tag("perfil", "ADMINISTRATOR").counter().count())
+        assertThat(meterRegistry.get("oficina.auth.cadastro").tag("perfil", "ADMIN").counter().count())
+                .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Deve repassar o cliente ligado ao cadastrar um usuário CLIENTE")
+    void deveCadastrarClienteComClienteLigado() {
+        var cadastroCliente = new CadastroRequest("Maria Silva", "maria@email.com", "maria",
+                "Cliente@123", false, Perfil.CLIENTE, ID_CLIENTE);
+
+        useCase.cadastrarUsuario(cadastroCliente);
+
+        verify(usuarioService).cadastrar(new Usuario("Maria Silva", "maria@email.com", "maria",
+                "Cliente@123", false, Perfil.CLIENTE, ID_CLIENTE));
+        assertThat(meterRegistry.get("oficina.auth.cadastro").tag("perfil", "CLIENTE").counter().count())
                 .isEqualTo(1);
     }
 
@@ -162,28 +169,30 @@ class AuthenticationUseCaseTest {
                 .extracting("errorCode").isEqualTo(500);
     }
 
+    // ---- validação do token -----------------------------------------------------------------------
+
     @Test
     @DisplayName("Deve tirar o prefixo Bearer antes de validar o token")
     void deveValidarTokenSemPrefixo() {
-        when(jwtTokenProvider.validarToken("jwt")).thenReturn(true);
+        when(jwtTokenProvider.validarToken(TOKEN)).thenReturn(true);
 
-        assertThat(useCase.validarToken("Bearer jwt")).isTrue();
+        assertThat(useCase.validarToken("Bearer " + TOKEN)).isTrue();
     }
 
     @Test
     @DisplayName("Deve validar o token também quando vier sem o prefixo Bearer")
     void deveValidarTokenCru() {
-        when(jwtTokenProvider.validarToken("jwt")).thenReturn(false);
+        when(jwtTokenProvider.validarToken(TOKEN)).thenReturn(false);
 
-        assertThat(useCase.validarToken("jwt")).isFalse();
+        assertThat(useCase.validarToken(TOKEN)).isFalse();
     }
 
     @Test
     @DisplayName("Deve propagar o 401 do token expirado ou inválido")
     void devePropagar401() {
-        when(jwtTokenProvider.validarToken("jwt")).thenThrow(new ApplicationException(401, "Token inválido"));
+        when(jwtTokenProvider.validarToken(TOKEN)).thenThrow(new ApplicationException(401, "Token inválido"));
 
-        assertThatThrownBy(() -> useCase.validarToken("Bearer jwt"))
+        assertThatThrownBy(() -> useCase.validarToken("Bearer " + TOKEN))
                 .isInstanceOf(ApplicationException.class)
                 .extracting("errorCode").isEqualTo(401);
     }
@@ -191,11 +200,26 @@ class AuthenticationUseCaseTest {
     @Test
     @DisplayName("Deve traduzir falha inesperada na validação em 500")
     void deveTraduzirFalhaInesperadaNaValidacao() {
-        when(jwtTokenProvider.validarToken("jwt")).thenThrow(new IllegalStateException("falha"));
+        when(jwtTokenProvider.validarToken(TOKEN)).thenThrow(new IllegalStateException("falha"));
 
-        assertThatThrownBy(() -> useCase.validarToken("Bearer jwt"))
+        assertThatThrownBy(() -> useCase.validarToken("Bearer " + TOKEN))
                 .isInstanceOf(ApplicationException.class)
                 .hasMessage("Erro ao validar o token JWT")
                 .extracting("errorCode").isEqualTo(500);
+    }
+
+    // ---- apoio ------------------------------------------------------------------------------------
+
+    private double logins(String resultado) {
+        var contador = meterRegistry.find("oficina.auth.login").tag("resultado", resultado).counter();
+        return contador == null ? 0 : contador.count();
+    }
+
+    private static DetalhesUsuario detalhesComSenha(String senhaCifrada) {
+        Usuario usuario = mock(Usuario.class);
+        when(usuario.senha()).thenReturn(senhaCifrada);
+        DetalhesUsuario detalhes = mock(DetalhesUsuario.class);
+        when(detalhes.usuario()).thenReturn(usuario);
+        return detalhes;
     }
 }

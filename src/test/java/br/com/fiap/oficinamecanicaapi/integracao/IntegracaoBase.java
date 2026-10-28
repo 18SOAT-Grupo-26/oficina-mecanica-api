@@ -21,7 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Base dos testes de integração (*IT): contexto completo + PostgreSQL em container + banco limpo a cada teste.
  * Não é um teste: os *IT de cada pacote estendem esta classe.
  *
- * <p>O AdministradorInicial cria o ADMINISTRATOR "admin" na subida do contexto, com os api.admin.* abaixo;
+ * <p>O AdministradorInicial cria o ADMIN "admin" na subida do contexto, com os api.admin.* abaixo;
  * a limpeza preserva esse usuário. Outros usuários são cadastrados com o token dele, como na aplicação.
  * Sem Docker na máquina, os testes são pulados (não falham).
  */
@@ -58,15 +58,21 @@ public abstract class IntegracaoBase {
         }
     }
 
+    /**
+     * DELETE na ordem das FKs, e não TRUNCATE ... CASCADE: desde a V10 usuarios.cliente_id aponta para clientes,
+     * e o CASCADE esvaziaria usuarios inteira, apagando o administrador inicial.
+     */
     @BeforeEach
     protected void limparBanco() {
-        // perfis e permissões vêm das migrations; o administrador inicial vem da subida do contexto
-        jdbcTemplate.execute("""
-                truncate table historico_status_os, item_peca_os, item_servico_os, ordem_servico,
-                               veiculos, clientes, servico, peca_insumo
-                restart identity cascade
-                """);
+        jdbcTemplate.update("delete from historico_status_os");
+        jdbcTemplate.update("delete from item_peca_os");
+        jdbcTemplate.update("delete from item_servico_os");
+        jdbcTemplate.update("delete from ordem_servico");
         jdbcTemplate.update("delete from usuarios where nome_usuario <> ?", ADMIN);
+        jdbcTemplate.update("delete from veiculos");
+        jdbcTemplate.update("delete from clientes");
+        jdbcTemplate.update("delete from servico");
+        jdbcTemplate.update("delete from peca_insumo");
     }
 
     // ---- autenticação pela API (token já com o prefixo "Bearer ") ---------------------------------
@@ -75,13 +81,15 @@ public abstract class IntegracaoBase {
         return login(ADMIN);
     }
 
-    /** Cadastra o usuário com o token do administrador e devolve o token dele. */
+    /** Cadastra um ADMIN ou FUNCIONARIO com o token do administrador e devolve o token dele. */
     protected String tokenDe(String nomeUsuario, String perfil) throws Exception {
-        mockMvc.perform(post("/auth/cadastro")
-                        .header(HttpHeaders.AUTHORIZATION, tokenAdmin())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(cadastroJson(nomeUsuario, perfil)))
-                .andExpect(status().isCreated());
+        cadastrar(cadastroJson(nomeUsuario, perfil));
+        return login(nomeUsuario);
+    }
+
+    /** Cadastra um usuário CLIENTE ligado ao cliente informado e devolve o token dele. */
+    protected String tokenDeCliente(String nomeUsuario, long clienteId) throws Exception {
+        cadastrar(cadastroClienteJson(nomeUsuario, clienteId));
         return login(nomeUsuario);
     }
 
@@ -103,7 +111,22 @@ public abstract class IntegracaoBase {
                 """.formatted(nomeUsuario, SENHA, perfil);
     }
 
+    protected static String cadastroClienteJson(String nomeUsuario, long clienteId) {
+        return """
+                {"nome":"Usuário %1$s","email":"%1$s@oficina.com.br","nomeUsuario":"%1$s",
+                 "senha":"%2$s","trocaSenhaObrigatoria":false,"perfil":"CLIENTE","clienteId":%3$d}
+                """.formatted(nomeUsuario, SENHA, clienteId);
+    }
+
     protected static long id(String json) {
         return ((Number) JsonPath.read(json, "$.id")).longValue();
+    }
+
+    private void cadastrar(String json) throws Exception {
+        mockMvc.perform(post("/auth/cadastro")
+                        .header(HttpHeaders.AUTHORIZATION, tokenAdmin())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isCreated());
     }
 }

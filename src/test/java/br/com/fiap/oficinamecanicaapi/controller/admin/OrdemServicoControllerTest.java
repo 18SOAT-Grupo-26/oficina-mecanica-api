@@ -355,7 +355,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve listar as OS do cliente")
     void deveListarOrdensDoCliente() throws Exception {
-        autenticarComo(Perfil.OPERATOR);
+        autenticarComo(Perfil.FUNCIONARIO);
         when(useCase.listar(ID_CLIENTE)).thenReturn(List.of(
                 new OrdemServicoResponse(2L, ID_CLIENTE, 20L, StatusOrdemServico.EM_DIAGNOSTICO, List.of(), List.of(), List.of()),
                 new OrdemServicoResponse(1L, ID_CLIENTE, 20L, StatusOrdemServico.ENTREGUE, List.of(), List.of(), List.of())));
@@ -370,7 +370,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder lista vazia quando o cliente não tem OS")
     void deveResponderListaVazia() throws Exception {
-        autenticarComo(Perfil.OPERATOR);
+        autenticarComo(Perfil.FUNCIONARIO);
         when(useCase.listar(ID_CLIENTE)).thenReturn(List.of());
 
         mockMvc.perform(get("/ordens-servico/listar/{idCliente}", ID_CLIENTE).header(HttpHeaders.AUTHORIZATION, BEARER))

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/servico")
-@PreAuthorize("hasRole('ADMINISTRATOR')")
+@PreAuthorize("hasRole('ADMIN')")
 public class ServicoController implements ServicoAPI {
 
     private final ServicoUseCasePortIn useCase;
