@@ -1,7 +1,7 @@
 # ADR 002 — Escolha do banco de dados
 
 - **Status:** Proposto
-- **Data:** 2026-10-24
+- **Data:** 2026-10-23
 - **Responsável:** Ana Albuquerque
 
 ## Contexto
@@ -12,7 +12,8 @@ usuários com seus perfis e permissões. Esses dados são muito relacionados ent
 - Um veículo pertence a um cliente ("pensando em banco de dados, o veículo é do cliente", Event Storming de 16/10).
 - Uma OS reúne cliente, veículo, serviços e peças. Um serviço tem as peças e insumos que usa.
 - Usuários têm um perfil, e cada perfil tem uma lista de permissões no padrão CRUD (ex.: `Funcionario_CREATE`), decidido
-  em 21/10.
+  em 21/10. Nesta fase, o acesso é controlado só pelo perfil, e as permissões ficam para a fase 2
+  ([ADR 004](0004-seguranca.md)). O usuário com perfil `CLIENTE` fica ligado ao cadastro do cliente.
 
 Algumas regras de negócio dependem de consistência e integridade dos dados:
 
@@ -99,26 +100,43 @@ baixa latência, sem ter que escolher entre as duas.
   `DATASOURCE_PASSWORD`) no `application.yaml`. O compose define os valores de desenvolvimento.
 - **Schema e migrations:** o schema é versionado com **Flyway** (`spring-boot-starter-flyway` e
   `flyway-database-postgresql`). Cada mudança é um arquivo `V<n>__descricao.sql` em `src/main/resources/db/migration`, e
-  a API aplica as migrations pendentes na subida. Hoje existem a `V1__schema_inicial.sql` (tabelas das entidades atuais)
-  e a `V2__perfis_iniciais.sql` (perfis `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, exigidos pelo `/auth/register`). O
-  Hibernate roda com `ddl-auto: validate`: ele não altera o banco, só confere na subida se as entidades batem com as
-  tabelas, e a API não sobe se houver divergência. Uma migration já aplicada nunca é editada, porque o Flyway valida o
-  checksum. Toda correção entra numa migration nova.
+  a API aplica as migrations pendentes na subida. O Hibernate roda com `ddl-auto: validate`: ele não altera o banco, só
+  confere na subida se as entidades batem com as tabelas, e a API não sobe se houver divergência. Uma migration já
+  aplicada nunca é editada, porque o Flyway valida o checksum. Toda correção entra numa migration nova.
     - Em 21/10, o time tinha combinado gerar as tabelas pelo Hibernate (`ddl-auto`) nesta fase. A troca para o Flyway
       veio junto com o primeiro schema completo (PR #83), antes de existirem dados que precisassem ser preservados.
+
+### Migrations
+
+| Versão | Arquivo                                          | O que faz                                                                                                                                                  |
+|--------|--------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| V1     | `V1__schema_inicial.sql`                         | Tabelas das entidades da época: clientes, veículos, serviços, peças e insumos (com `quantidade` e `reservado`) e a relação entre eles, usuários com identidade, contato e endereço, perfis e permissões (em inglês) |
+| V2     | `V2__perfis_iniciais.sql`                        | Perfis iniciais. Nenhum usuário: credenciais não vão para o repositório                                                                                     |
+| V3     | `V3__identities_documento.sql`                   | Documento único (CPF ou CNPJ) na identidade, com `check` entre tipo e tamanho                                                                               |
+| V4     | `V4__clientes_documento_tipo.sql`                | O mesmo `check` de tipo e tamanho do documento em `clientes`                                                                                                |
+| V5     | `V5__padroniza_identidade_usuario_portugues.sql` | Renomeia para o português as tabelas de usuário, perfis, permissões e identidade (`users` → `usuarios`, `roles` → `perfis`), preservando os dados          |
+| V6     | `V6__ordem_servico.sql`                          | OS, itens de serviço e de peça com o **preço congelado** na inclusão, e histórico de status (base do tempo médio de execução)                             |
+| V7     | `V7__usuarios_nome_usuario_unico.sql`            | `UNIQUE` em `usuarios.nome_usuario` (o login busca por ele), renomeando duplicados antigos                                                                  |
+| V8     | `V8__remove_identidade.sql`                      | O usuário passa a guardar só nome e e-mail (`UNIQUE`), e identidade, contato e endereço do usuário deixam de existir (minimização de dados, LGPD)           |
+| V9     | `V9__remove_relacao_servico_peca_insumo.sql`     | Remove `servico_peca_insumo`: as peças entram direto na OS (`item_peca_os`), e não pelo serviço                                                              |
+| V10    | `V10__perfis_fase_1.sql`                         | Perfis da fase 1: `ADMINISTRATOR` → `ADMIN`, `OPERATOR` → `FUNCIONARIO`, `MANAGER` absorvido por `FUNCIONARIO`, novo `CLIENTE` e `usuarios.cliente_id` (`UNIQUE`) |
+
+As migrations que mudam dados (V5, V7, V8 e V10) **preservam o que já existe**: renomeiam no lugar e copiam valores
+antes de apagar colunas. Assim, o banco local de cada um e o da avaliação chegam ao mesmo schema sem `down -v`.
 
 ### Como o banco atende às regras
 
 | Necessidade                        | Como é tratada                                                         | Exemplo no código                                                                                 |
 |------------------------------------|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| Relacionamentos                    | Chaves estrangeiras e tabelas de associação                            | `VeiculoEntity` → `ClienteEntity` (`@ManyToOne`); `servico_peca_insumo` (`@ManyToMany`)           |
-| Unicidade                          | Constraints `UNIQUE` no banco, além da validação no caso de uso        | `documento` em `clientes`, `placa` em `veiculos`, `nome_normalizado` em `servico` e `peca_insumo` |
+| Relacionamentos                    | Chaves estrangeiras                                                    | `VeiculoEntity` → `ClienteEntity` (`@ManyToOne`); itens e histórico → `ordem_servico`             |
+| Unicidade                          | Constraints `UNIQUE` no banco, além da validação no caso de uso        | `documento` em `clientes`, `placa` em `veiculos`, `nome_normalizado` em `servico` e `peca_insumo`, `nome_usuario`, `email` e `cliente_id` em `usuarios` |
+| Preço histórico                    | Preço copiado para o item da OS na inclusão                            | `preco_unitario` em `item_servico_os` e `item_peca_os` (V6)                                       |
 | Reserva de estoque                 | Transações ACID: OS e estoque são atualizados juntos ou nada é gravado | Colunas `quantidade` e `reservado` em `peca_insumo`                                               |
 | Valores monetários                 | Tipo `numeric` com precisão fixa                                       | `preco` com `precision = 12, scale = 2`                                                           |
-| Delete lógico                      | Flag de ativo ou status, sem `DELETE` físico                           | `ativo` em `ClienteEntity` e `VeiculoEntity`                                                      |
+| Delete lógico                      | Flag de ativo ou status, sem `DELETE` físico                           | `ativo` em `ClienteEntity` e `VeiculoEntity`; OS vai para `CANCELADA`                             |
 | Enums legíveis                     | Enum gravado como texto                                                | `tipo_documento` com `@Enumerated(EnumType.STRING)`                                               |
 | Schema igual em todos os ambientes | Migrations versionadas, conferidas pelo Hibernate na subida            | `V1__schema_inicial.sql` e `ddl-auto: validate`                                                   |
-| Dados obrigatórios                 | Migration de dados                                                     | Perfis em `V2__perfis_iniciais.sql`                                                               |
+| Dados obrigatórios                 | Migration de dados                                                     | Perfis em `V2__perfis_iniciais.sql` e `V10__perfis_fase_1.sql`                                    |
 
 ## Alternativas consideradas
 
@@ -248,9 +266,9 @@ As alternativas estão agrupadas pela classificação PACELC e pelo tipo de banc
   `docker compose down -v`, o que apaga os dados locais.
 - As migrations usam SQL do PostgreSQL. Se esta ADR for revista para outro banco, elas precisam ser reescritas ou
   adaptadas (os relacionais distribuídos compatíveis com PostgreSQL reduzem esse custo).
-- Os perfis já são criados pela `V2__perfis_iniciais.sql`. Ainda faltam as permissões de cada perfil, o usuário
-  administrador e as credenciais de demonstração, que precisam ser definidos para a avaliação. Credenciais não devem ir
-  para uma migration versionada no repositório.
+- Os perfis vêm das migrations (V2 e V10), mas nenhum usuário vem delas. O primeiro administrador é criado pela API na
+  subida, a partir das variáveis `ADMIN_*` do `.env` ([ADR 004](0004-seguranca.md)). As tabelas `permissoes` e
+  `perfil_permissoes` existem, mas estão vazias até a fase 2.
 - As credenciais do compose são de desenvolvimento e ficam em texto no repositório. Não devem ser usadas em outro
   ambiente.
 
@@ -259,13 +277,17 @@ As alternativas estão agrupadas pela classificação PACELC e pelo tipo de banc
 - [ADR 001 — Monólito em camadas (ports & adapters)](0001-monolito-em-camadas.md)
 - [ADR 003 — Estratégia de transações](0003-estrategia-de-transacoes.md): reserva de estoque na geração do orçamento e
   liberação quando o orçamento é reprovado.
+- [ADR 004 — Segurança: autenticação e autorização](0004-seguranca.md): perfis, administrador inicial e minimização
+  dos dados do usuário
+- [ADR 005 — Estratégia de testes](0005-estrategia-de-testes.md): testes de integração com PostgreSQL via
+  Testcontainers
 - Event Storming do grupo (Miro) e a reunião de 16/10/2026
 - [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
-- Decisões registradas no grupo do time entre 16/10 e 23/10/2026
+- Decisões registradas no grupo do time entre 16/10 e 27/10/2026
 - [Documentação do PostgreSQL 18](https://www.postgresql.org/docs/18/)
 - [Documentação do Flyway](https://documentation.red-gate.com/flyway)
   e [Spring Boot — Database initialization with Flyway](https://docs.spring.io/spring-boot/how-to/data-initialization.html#howto.data-initialization.migration-tool.flyway)
-- PR #83: adoção do Flyway com schema inicial e perfis
+- PR #83: adoção do Flyway com schema inicial e perfis. PRs #97 (V7), #100 (V8), #104 (V9) e #110 (V10)
 - Renato Augusto, vídeo sobre como escolher o banco de dados (teoremas CAP e PACELC) e a planilha de classificação de
   bancos que o acompanha
 - Eric Brewer, *Towards Robust Distributed Systems* (PODC 2000): teorema CAP

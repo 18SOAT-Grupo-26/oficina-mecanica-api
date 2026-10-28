@@ -50,11 +50,11 @@ Adotamos um **monólito**: uma única aplicação Spring Boot, um artefato impla
 
 | Camada                           | Pacote                          | Responsabilidade                                                                                                                                                                                                                                                                                                     |
 |----------------------------------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Adapter de entrada               | `controller`                    | Endpoints REST. Uma interface `*API` com as anotações OpenAPI e um `*Controller` que a implementa e chama o port in.                                                                                                                                                                                                 |
+| Adapter de entrada               | `controller`                    | Endpoints REST, separados por público: `admin` (cadastros e OS), `auth` (login e cadastro de usuários) e `cliente` (acompanhamento da OS). Uma interface `*API` com as anotações OpenAPI e um `*Controller` que a implementa, declara o `@PreAuthorize` e chama o port in.                                         |
 | Domínio                          | `core/domain`                   | Modelos e value objects com regras de negócio (`Cliente`, `Documento`, `Veiculo`, `Placa`). Sem Spring e sem JPA.                                                                                                                                                                                                    |
 | Portas                           | `core/port/in`, `core/port/out` | Contratos. O `PortIn` descreve os casos de uso oferecidos e o `PortOut`, o que o core precisa do mundo externo (persistência etc.).                                                                                                                                                                                  |
 | Casos de uso                     | `core/usecase`                  | Orquestram o domínio. Implementam o `PortIn` e dependem só de `PortOut` e do domínio.                                                                                                                                                                                                                                |
-| Adapters de saída e configuração | `infrastructure`                | `persistence/<contexto>/`: entidade JPA, `*JpaRepository`, `*PersistenceMapper` e `*PersistenceAdapter`, que implementa o `PortOut`. `config/`: documentação e segurança, o que inclui os aspectos transversais (JWT, headers HTTP de segurança/CSP, sanitização de entradas). Esses aspectos nunca ficam no `core`. |
+| Adapters de saída e configuração | `infrastructure`                | `persistence/<contexto>/`: entidade JPA, `*JpaRepository`, `*PersistenceMapper` e `*PersistenceAdapter`, que implementa o `PortOut`. `config/`: documentação (`docs`), segurança (`security`: filtro JWT, rotas públicas, CORS, ver [ADR 004](0004-seguranca.md)) e métricas (`metrics`). Esses aspectos nunca ficam no `core`. |
 | Transversal                      | `shared`                        | Exceções (`ApplicationException`, `ErrorCode`), handler global e utilitários puros (validação de CPF/CNPJ, normalização de nome).                                                                                                                                                                                    |
 
 Dentro de cada camada o código é **organizado por contexto** (`cliente`, `veiculo`, `servico`, `pecainsumo`,
@@ -63,7 +63,8 @@ Dentro de cada camada o código é **organizado por contexto** (`cliente`, `veic
 - **Gestão administrativa**: `cliente`, `veiculo`, `servico` e `pecainsumo`. São CRUDs expostos em `controller/admin`.
 - **Ordem de serviço** (core do domínio): `ordemservico`. A OS *referencia* os cadastros da gestão administrativa pelos
   ports desses contextos e não é dona deles.
-- **Acompanhamento pelo cliente**: consulta do status da OS, exposta em `controller/cliente`.
+- **Acompanhamento pelo cliente**: o cliente autenticado (perfil `CLIENTE`) consulta as próprias OS em
+  `/minhas-ordens`, exposto em `controller/cliente` ([ADR 004](0004-seguranca.md)).
 
 A comunicação entre contextos é **síncrona**, por chamadas a ports dentro do mesmo processo. Não há fila nem eventos
 nesta fase.
@@ -72,7 +73,8 @@ nesta fase.
 
 - Código e artefatos do sistema (pacotes, classes, métodos, endpoints, documentação) ficam em **português**, conforme
   decidido em 21/10.
-- Mensagens de commit ficam em **inglês**, seguindo Conventional Commits (decidido em 16/10).
+- Mensagens de commit seguem Conventional Commits (decidido em 16/10). Começaram em inglês e, desde 27/10, são escritas
+  em **português**, como o resto do projeto.
 
 ### Regra de dependência
 
@@ -100,11 +102,20 @@ flowchart LR
 
 ### Implementação de referência
 
-Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e servem de modelo para os novos:
+Os contextos **`cliente`**, **`veiculo`** e **`ordemservico`** seguem o padrão por completo e servem de modelo para os
+novos:
 
 - `ClienteUseCase` depende de `ClientePortOut`, que recebe e devolve o modelo de domínio `Cliente`.
 - `ClienteEntity`, `ClienteJpaRepository`, `ClientePersistenceMapper` e `ClientePersistenceAdapter` ficam em
   `infrastructure/persistence/cliente/`.
+- Na OS, o agregado `OrdemServico` (com itens, histórico de status e a máquina de estados de `StatusOrdemServico`) fica
+  em `core/domain/ordemservico`, sem JPA. As entidades `OrdemServicoEntity`, `ItemServicoOsEntity`, `ItemPecaOsEntity`
+  e `HistoricoStatusOsEntity` ficam em `infrastructure/persistence/ordemservico/`.
+
+**Entidades JPA nunca ficam no `core`.** Elas são detalhe do adapter de persistência e ficam em
+`infrastructure/persistence/<contexto>/`. O `core/domain` guarda só os modelos de domínio, que o `*PersistenceMapper`
+converte. As `*Entity` que hoje estão em `core/domain/*/entity` (`servico`, `pecaInsumo` e `usuario`) são dívida técnica,
+e não um segundo padrão.
 
 ### Exceções aceitas conscientemente
 
@@ -187,7 +198,7 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 - Deploy, execução local e debug simples: uma imagem Docker e um banco.
 - Transações locais no PostgreSQL, sem consistência distribuída (ver [ADR 003](0003-estrategia-de-transacoes.md)).
 - Domínio e casos de uso testáveis sem banco, com mocks dos ports (ex.: `ClienteUseCaseTest`, `VeiculoUseCaseTest`,
-  `PlacaTest`).
+  `PlacaTest`). A estratégia de testes está na [ADR 005](0005-estrategia-de-testes.md).
 - A troca ou evolução de um adapter (outro banco, outro canal de entrada) fica isolada em `infrastructure` e
   `controller`.
 - Fronteiras por contexto facilitam a evolução para um monólito modular ou a extração de um serviço.
@@ -202,18 +213,25 @@ Os contextos **`cliente`** e **`veiculo`** seguem o padrão por completo e serve
 - A aplicação escala só como um todo. Um bug ou um deploy afeta todos os contextos.
 - Hoje, a regra de dependência depende de disciplina e de code review. A mitigação planejada é adicionar testes de
   arquitetura (ArchUnit) ao pipeline que já roda Sonar e JaCoCo em cada PR, para que uma violação de camada reprove o
-  PR.
-- Observabilidade (métricas e padronização de logs) ficou para as próximas fases (decisão de 21/10). Quando entrar,
-  ficará em `infrastructure`/config, sem acoplar o `core`.
-- Parte do código atual ainda não segue esta decisão (`usuario`, `servico`, `pecaInsumo` e `ordemservico`). As correções
-  são acompanhadas como issues de dívida técnica no repositório, em PRs separados por contexto.
+  PR ([ADR 005](0005-estrategia-de-testes.md)).
+- As métricas de negócio e de segurança (Micrometer, expostas em `/actuator/prometheus` e lidas pelo Prometheus e pelo
+  Grafana do compose) entraram antes do previsto em 21/10. A configuração fica em `infrastructure/config/metrics`, mas
+  os casos de uso registram contadores direto no `MeterRegistry`, o que é mais uma dependência leve no `core`. A
+  padronização de logs (`action=... chave=valor`) segue o mesmo caminho.
+- Parte do código atual ainda não segue esta decisão. Em `usuario`, `servico` e `pecaInsumo`, as entidades JPA ficam em
+  `core/domain/*/entity`, os repositórios em `infrastructure/persistence/repository/`, e o `UsuarioUseCase` importa
+  repositórios de `infrastructure`. Na segurança, `Perfil` implementa `GrantedAuthority` e o JWT é gerado em
+  `core/usecase/auth` ([ADR 004](0004-seguranca.md)). As correções são acompanhadas como issues de dívida técnica no
+  repositório, em PRs separados por contexto.
 
 ## Referências
 
 - [ADR 002 — Escolha do banco de dados](0002-escolha-do-banco-de-dados.md)
 - [ADR 003 — Estratégia de transações](0003-estrategia-de-transacoes.md): inclui a reserva de estoque na geração do
   orçamento e a liberação quando o orçamento é reprovado, discutidas no Event Storming.
+- [ADR 004 — Segurança: autenticação e autorização](0004-seguranca.md)
+- [ADR 005 — Estratégia de testes](0005-estrategia-de-testes.md)
 - Event Storming do grupo (Miro) e a reunião de 16/10/2026
 - [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
-- Decisões registradas no grupo do time entre 16/10 e 23/10/2026
+- Decisões registradas no grupo do time entre 16/10 e 27/10/2026
 - Alistair Cockburn, *Hexagonal Architecture* (2005)
