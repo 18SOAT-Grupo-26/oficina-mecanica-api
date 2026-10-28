@@ -25,6 +25,11 @@ public interface OrdemServicoUseCasePortIn {
     List<OrdemServicoResponse> listar(Long idCliente) throws ApplicationException;
 
     /**
+     * Consulta feita pelo próprio cliente: a OS de outro cliente responde 404, como se não existisse.
+     */
+    OrdemServicoResponse consultarDoCliente(Long id, Long idCliente) throws ApplicationException;
+
+    /**
      * Atualização completa dos dados (cliente, veículo, itens): todos os campos são obrigatórios, e
      * lista vazia remove os itens daquele type. Campo igual ao atual não conta como alteração.
      */

@@ -248,6 +248,24 @@ class OrdemServicoUseCaseTest {
         }
 
         @Test
+        @DisplayName("Deve consultar a OS do próprio cliente")
+        void deveConsultarOsDoCliente() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
+
+            OrdemServicoResponse response = useCase.consultarDoCliente(ID_OS, ID_CLIENTE);
+
+            assertThat(response.id()).isEqualTo(ID_OS);
+        }
+
+        @Test
+        @DisplayName("Deve responder 404 quando o cliente consulta a OS de outro cliente")
+        void deveEsconderOsDeOutroCliente() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
+
+            assertErro(404, "Ordem de serviço não encontrada", () -> useCase.consultarDoCliente(ID_OS, ID_OUTRO_CLIENTE));
+        }
+
+        @Test
         @DisplayName("Deve responder 404 quando a OS não existe, ao consultar, ao atualizar e ao mudar o status")
         void deveResponder404ParaOsInexistente() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.empty());
