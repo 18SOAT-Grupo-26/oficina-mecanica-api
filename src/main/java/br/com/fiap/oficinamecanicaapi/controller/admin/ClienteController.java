@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/clientes")
-@PreAuthorize("hasRole('ADMINISTRATOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'FUNCIONARIO')")
 public class ClienteController implements ClienteAPI {
 
     private final ClienteUseCasePortIn useCase;
@@ -48,6 +48,7 @@ public class ClienteController implements ClienteAPI {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')") // funcionário não exclui cadastros
     public ResponseEntity<Void> desativar(Long id) throws ApplicationException {
         useCase.desativar(id);
         return ResponseEntity.noContent().build();

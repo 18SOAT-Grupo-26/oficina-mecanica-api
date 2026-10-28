@@ -18,4 +18,6 @@ public interface UsuarioRepository
 
     boolean existsByPerfil_Nome(String nome);
 
+    boolean existsByClienteId(Long clienteId);
+
 }

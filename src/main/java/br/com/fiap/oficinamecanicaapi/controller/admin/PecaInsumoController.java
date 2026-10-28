@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/insumos")
-@PreAuthorize("hasRole('MANAGER') or hasRole('ADMINISTRATOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'FUNCIONARIO')")
 public class PecaInsumoController implements PecaInsumoAPI {
     private final PecaInsumoUseCasePortIn useCase;
 
@@ -45,6 +45,7 @@ public class PecaInsumoController implements PecaInsumoAPI {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')") // funcionário não exclui cadastros
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(Long id) throws ApplicationException {
         useCase.excluir(id);
