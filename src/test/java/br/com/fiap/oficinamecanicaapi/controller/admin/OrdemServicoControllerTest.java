@@ -234,6 +234,29 @@ class OrdemServicoControllerTest {
     }
 
     @Test
+    @DisplayName("Deve cancelar a OS pelo DELETE e responder 204")
+    void deveCancelarOs() throws Exception {
+        autenticarComo(Perfil.ADMINISTRATOR);
+
+        mockMvc.perform(delete("/ordens-servico/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isNoContent());
+
+        verify(useCase).cancelar(ID);
+    }
+
+    @Test
+    @DisplayName("Deve responder 409 no DELETE quando a OS não pode mais ser cancelada")
+    void deveResponderConflitoAoCancelar() throws Exception {
+        autenticarComo(Perfil.ADMINISTRATOR);
+        doThrow(new ApplicationException(409, "Transição inválida: EM_EXECUCAO → CANCELADA"))
+                .when(useCase).cancelar(ID);
+
+        mockMvc.perform(delete("/ordens-servico/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Transição inválida: EM_EXECUCAO → CANCELADA"));
+    }
+
+    @Test
     @DisplayName("Deve responder 409 com a mensagem da transição inválida")
     void deveResponderTransicaoInvalida() throws Exception {
         autenticarComo(Perfil.ADMINISTRATOR);

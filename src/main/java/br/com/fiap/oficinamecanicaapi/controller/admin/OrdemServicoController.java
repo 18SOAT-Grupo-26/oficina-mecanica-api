@@ -71,4 +71,10 @@ public class OrdemServicoController implements OrdemServicoAPI {
     public ResponseEntity<TempoMedioExecucaoResponse> consultarTempoMedioExecucao() {
         return ResponseEntity.ok(useCase.consultarTempoMedioExecucao());
     }
+
+    @Override
+    public ResponseEntity<Void> cancelar(Long id) throws ApplicationException {
+        useCase.cancelar(id);
+        return ResponseEntity.noContent().build();
+    }
 }
