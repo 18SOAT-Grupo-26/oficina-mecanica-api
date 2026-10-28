@@ -45,7 +45,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             log.info("action=register_start username={}", request.nomeUsuario());
 
             usuarioService.cadastrar(new Usuario(request.nome(), request.email(), request.nomeUsuario(),
-                    request.senha(), request.trocaSenhaObrigatoria(), request.perfil()));
+                    request.senha(), request.trocaSenhaObrigatoria(), request.perfil(), request.clienteId()));
             meterRegistry.counter("oficina.auth.cadastro", "perfil", request.perfil().name()).increment();
 
             log.info("action=register_success username={}", request.nomeUsuario());

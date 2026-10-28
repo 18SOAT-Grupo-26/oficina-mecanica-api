@@ -27,7 +27,7 @@ class AdministradorInicialTest {
     private static final String EMAIL = "admin@oficina.com.br";
     private static final String USUARIO = "admin";
     private static final String SENHA = "Senha@Forte123";
-    private static final Usuario ADMINISTRADOR = new Usuario(NOME, EMAIL, USUARIO, SENHA, false, Perfil.ADMINISTRATOR);
+    private static final Usuario ADMINISTRADOR = new Usuario(NOME, EMAIL, USUARIO, SENHA, false, Perfil.ADMIN);
 
     @Mock
     private UsuarioUseCasePortIn usuarioUseCase;

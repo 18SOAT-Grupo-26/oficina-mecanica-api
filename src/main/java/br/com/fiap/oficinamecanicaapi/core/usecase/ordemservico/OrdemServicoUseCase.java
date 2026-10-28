@@ -113,6 +113,16 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
         return mapper.toResponseList(listarOrdens(idCliente));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public OrdemServicoResponse consultarDoCliente(Long id, Long idCliente) throws ApplicationException {
+        OrdemServico os = buscar(id);
+        if (!os.getIdCliente().equals(idCliente)) {
+            throw new ApplicationException(404, "Ordem de serviço não encontrada");
+        }
+        return mapper.toResponse(os);
+    }
+
     private List<OrdemServico> listarOrdens(Long idCliente) {
         return ordemServicoPortOut.listarOrdens(idCliente);
     }

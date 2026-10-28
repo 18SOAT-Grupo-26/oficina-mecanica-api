@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Cadastro de usuários: só ADMINISTRATOR logado; login continua público. */
+/** Cadastro de usuários: só ADMIN logado; login continua público. */
 @WebMvcTest(AuthController.class)
 @Import(SecurityConfig.class)
 class AuthControllerTest {
@@ -38,10 +38,10 @@ class AuthControllerTest {
     private static final String USERNAME = "admin";
     private static final String CADASTRO_JSON = """
             {"nome":"Bruno Operador","email":"bruno@oficina.com.br","nomeUsuario":"bruno",
-             "senha":"Senha@Forte123","trocaSenhaObrigatoria":false,"perfil":"OPERATOR"}
+             "senha":"Senha@Forte123","trocaSenhaObrigatoria":false,"perfil":"FUNCIONARIO"}
             """;
     private static final CadastroRequest CADASTRO = new CadastroRequest("Bruno Operador", "bruno@oficina.com.br",
-            "bruno", "Senha@Forte123", false, Perfil.OPERATOR);
+            "bruno", "Senha@Forte123", false, Perfil.FUNCIONARIO, null);
 
     @Autowired
     private MockMvc mockMvc;
@@ -65,9 +65,9 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Deve responder 403 quando quem cadastra não for ADMINISTRATOR")
+    @DisplayName("Deve responder 403 quando quem cadastra não for ADMIN")
     void deveRecusarCadastroDeQuemNaoEhAdministrador() throws Exception {
-        autenticarComo(Perfil.OPERATOR);
+        autenticarComo(Perfil.FUNCIONARIO);
 
         mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(CADASTRO_JSON))
@@ -77,9 +77,9 @@ class AuthControllerTest {
     }
 
     @Test
-    @DisplayName("Deve cadastrar quando quem cadastra for ADMINISTRATOR")
+    @DisplayName("Deve cadastrar quando quem cadastra for ADMIN")
     void deveCadastrarComoAdministrador() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(CADASTRO_JSON))

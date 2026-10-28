@@ -67,7 +67,7 @@ class ClienteControllerTest {
     @Test
     @DisplayName("Deve cadastrar cliente e responder 201 para administrador")
     void deveCadastrarCliente() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.criar(REQUEST)).thenReturn(RESPONSE);
 
         mockMvc.perform(post("/clientes").header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -80,7 +80,7 @@ class ClienteControllerTest {
     @Test
     @DisplayName("Deve responder 400 listando os campos inválidos sem chamar o caso de uso")
     void deveRejeitarCorpoInvalido() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         String corpoInvalido = """
                 {"nome":"","documento":"%s","email":"sem-arroba","telefone":"%s"}
                 """.formatted(CPF, TELEFONE);
@@ -97,7 +97,7 @@ class ClienteControllerTest {
     @Test
     @DisplayName("Deve responder 409 quando o documento já estiver cadastrado")
     void deveResponderConflito() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.criar(REQUEST)).thenThrow(
                 new ApplicationException(409, "Já existe um cliente cadastrado com este documento"));
 
@@ -110,7 +110,7 @@ class ClienteControllerTest {
     @Test
     @DisplayName("Deve listar clientes repassando página e tamanho")
     void deveListarClientes() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.listar(1, 5)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 5, 6));
 
         mockMvc.perform(get("/clientes").param("page", "1").param("size", "5")
@@ -123,7 +123,7 @@ class ClienteControllerTest {
     @Test
     @DisplayName("Deve buscar cliente por id")
     void deveBuscarPorId() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.buscarPorId(ID)).thenReturn(RESPONSE);
 
         mockMvc.perform(get("/clientes/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -134,7 +134,7 @@ class ClienteControllerTest {
     @Test
     @DisplayName("Deve responder 404 quando o cliente não existir")
     void deveResponderNaoEncontrado() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.buscarPorId(ID)).thenThrow(new ApplicationException(404, "Cliente não encontrado"));
 
         mockMvc.perform(get("/clientes/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -145,7 +145,7 @@ class ClienteControllerTest {
     @Test
     @DisplayName("Deve responder 400 quando o id não for numérico")
     void deveRejeitarIdNaoNumerico() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(get("/clientes/abc").header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isBadRequest())
@@ -155,7 +155,7 @@ class ClienteControllerTest {
     @Test
     @DisplayName("Deve buscar cliente por documento")
     void deveBuscarPorDocumento() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.buscarPorDocumento(CPF)).thenReturn(RESPONSE);
 
         mockMvc.perform(get("/clientes/documento/{documento}", CPF).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -166,7 +166,7 @@ class ClienteControllerTest {
     @Test
     @DisplayName("Deve atualizar cliente e responder 200")
     void deveAtualizarCliente() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.atualizar(ID, REQUEST)).thenReturn(RESPONSE);
 
         mockMvc.perform(put("/clientes/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -178,7 +178,7 @@ class ClienteControllerTest {
     @Test
     @DisplayName("Deve desativar cliente e responder 204")
     void deveDesativarCliente() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(delete("/clientes/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isNoContent());
@@ -196,13 +196,35 @@ class ClienteControllerTest {
     }
 
     @Test
-    @DisplayName("Deve responder 403 quando o usuário não tiver o perfil ADMINISTRATOR")
-    void deveResponderAcessoNegado() throws Exception {
-        autenticarComo(Perfil.OPERATOR);
+    @DisplayName("Deve permitir ao funcionário consultar cliente")
+    void devePermitirConsultaAoFuncionario() throws Exception {
+        autenticarComo(Perfil.FUNCIONARIO);
+        when(useCase.buscarPorId(ID)).thenReturn(RESPONSE);
 
-        mockMvc.perform(get("/clientes").header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(get("/clientes/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(ID));
+    }
+
+    @Test
+    @DisplayName("Deve responder 403 quando o funcionário tentar desativar cliente")
+    void deveNegarDesativacaoAoFuncionario() throws Exception {
+        autenticarComo(Perfil.FUNCIONARIO);
+
+        mockMvc.perform(delete("/clientes/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.errorCode").value(403));
+
+        verifyNoInteractions(useCase);
+    }
+
+    @Test
+    @DisplayName("Deve responder 403 quando o cliente tentar acessar o cadastro de clientes")
+    void deveNegarAcessoAoCliente() throws Exception {
+        autenticarComo(Perfil.CLIENTE);
+
+        mockMvc.perform(get("/clientes").header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isForbidden());
 
         verifyNoInteractions(useCase);
     }

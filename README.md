@@ -12,10 +12,11 @@ API para gestão de oficina mecânica.
 Funcionalidades disponíveis até o momento:
 
 - Autenticação de usuários com JWT (cadastro, login e validação de token)
-- CRUD de clientes, com validação de CPF/CNPJ e busca por documento (perfil `ADMINISTRATOR`)
-- CRUD de veículos, com validação de placa e busca por placa (perfil `ADMINISTRATOR`)
-- CRUD de serviços (perfil `ADMINISTRATOR`)
-- CRUD de peças e insumos (perfis `MANAGER` e `ADMINISTRATOR`)
+- CRUD de clientes, com validação de CPF/CNPJ e busca por documento (perfis `ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
+- CRUD de veículos, com validação de placa e busca por placa (perfis `ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
+- CRUD de serviços (perfis `ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
+- CRUD de peças e insumos (perfis `ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
+- Acompanhamento das próprias OS pelo cliente (perfil `CLIENTE`, em `/minhas-ordens`)
 - Em desenvolvimento: ordem de serviço e acompanhamento da OS pelo cliente
 
 ## Arquitetura utilizada
@@ -108,7 +109,8 @@ O schema é criado e evoluído pelo **Flyway**, que roda sozinho na subida da AP
 
 - o container `db` cria o banco `oficina` na primeira subida;
 - a API aplica as migrations de `src/main/resources/db/migration` que ainda não rodaram: tabelas
-  (`V1__schema_inicial.sql`) e perfis `ADMINISTRATOR`, `MANAGER` e `OPERATOR` (`V2__perfis_iniciais.sql`);
+  (`V1__schema_inicial.sql`), perfis (`V2__perfis_iniciais.sql`, trocados por `ADMIN`, `FUNCIONARIO` e `CLIENTE` na
+  `V10__perfis_fase_1.sql`) e as demais evoluções do schema;
 - o Hibernate roda com `ddl-auto: validate`: só confere se as entidades batem com as tabelas. A API não sobe se alguma
   entidade divergir do schema.
 
@@ -146,7 +148,7 @@ Possíveis problemas:
 | `DATASOURCE_PASSWORD`    | —                                          | sim         | senha do banco                                                    |
 | `API_SECRET`             | —                                          | sim         | chave de assinatura do JWT, em Base64 (`openssl rand -base64 64`) |
 | `CORS_ALLOWED_ORIGINS`   | vazio                                      | não         | origens do front que podem chamar a API pelo navegador, separadas por vírgula (ex.: `http://localhost:3000`); vazio = nenhuma |
-| `ADMIN_EMAIL`            | —                                          | para criar o admin | e-mail do administrador inicial, criado na subida se não existir nenhum `ADMINISTRATOR` |
+| `ADMIN_EMAIL`            | —                                          | para criar o admin | e-mail do administrador inicial, criado na subida se não existir nenhum `ADMIN` |
 | `ADMIN_USUARIO`          | —                                          | para criar o admin | nome de usuário (login) do administrador inicial |
 | `ADMIN_SENHA`            | —                                          | para criar o admin | senha do administrador inicial (segue a política de senha; nunca vai para o repositório) |
 | `ADMIN_NOME`             | `Administrador`                            | não         | nome do administrador inicial |
@@ -273,18 +275,17 @@ A autenticação usa JWT:
 |--------|--------------------------------|----------------------------------------|
 | `POST` | `/api/v1/auth/login`           | público                                |
 | `GET`  | `/api/v1/auth/validate`        | público (valida o token do header `Authorization`) |
-| `POST` | `/api/v1/auth/cadastro`        | `ADMINISTRATOR`                        |
-| `*`    | `/api/v1/clientes`             | `ADMINISTRATOR`                        |
-| `*`    | `/api/v1/veiculos`             | `ADMINISTRATOR`                        |
-| `*`    | `/api/v1/servico`              | `ADMINISTRATOR`                        |
-| `*`    | `/api/v1/insumos`              | `MANAGER`, `ADMINISTRATOR`             |
-| `*`    | `/api/v1/ordens-servico`       | `OPERATOR`, `MANAGER`, `ADMINISTRATOR` |
+| `POST` | `/api/v1/auth/cadastro`        | `ADMIN`                                |
+| `POST`, `GET`, `PUT` | `/api/v1/clientes`, `/veiculos`, `/servico`, `/insumos` | `ADMIN`, `FUNCIONARIO` |
+| `DELETE` | `/api/v1/clientes`, `/veiculos`, `/servico`, `/insumos` | `ADMIN`             |
+| `*`    | `/api/v1/ordens-servico`       | `ADMIN`, `FUNCIONARIO`                 |
+| `GET`  | `/api/v1/minhas-ordens`, `/api/v1/minhas-ordens/{id}` | `CLIENTE` (só as OS do próprio cliente) |
 
-Só um `ADMINISTRATOR` logado cadastra usuários. O primeiro administrador é criado pela própria API na subida, a partir
+Só um `ADMIN` logado cadastra usuários. O primeiro administrador é criado pela própria API na subida, a partir
 das variáveis do `.env` — nenhuma credencial fica no repositório:
 
 1. Defina no `.env` `ADMIN_EMAIL`, `ADMIN_USUARIO` e `ADMIN_SENHA` (opcional: `ADMIN_NOME`) e suba a API. Se ainda não
-   existir nenhum `ADMINISTRATOR`, ele é criado; se as variáveis faltarem, a API sobe sem administrador e avisa no log.
+   existir nenhum `ADMIN`, ele é criado; se as variáveis faltarem, a API sobe sem administrador e avisa no log.
    A senha precisa ter de 8 a 64 caracteres, com maiúscula, minúscula, dígito e um destes especiais:
    `!@#$%^&*()-_=+[]{}<>?/,.:|~` (senha fora da política impede a subida, com a mensagem no log).
 
@@ -296,18 +297,29 @@ TOKEN=$(curl -s -X POST http://localhost:8081/api/v1/auth/login -H "Content-Type
   -d "{\"identificador\": \"$ADMIN_USUARIO\", \"senha\": \"$ADMIN_SENHA\"}" | sed -E 's/.*"token":"([^"]+)".*/\1/')
 ```
 
-3. Cadastrar outros usuários enviando o token (perfil `ADMINISTRATOR`, `MANAGER` ou `OPERATOR`):
+3. Cadastrar outros usuários enviando o token (perfil `ADMIN`, `FUNCIONARIO` ou `CLIENTE`):
 
 ```bash
 curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -H "Authorization: $TOKEN" -d '{
-  "nome": "Bruno Operador", "email": "bruno@oficina.com.br",
-  "nomeUsuario": "bruno", "senha": "Bruno@123", "trocaSenhaObrigatoria": false, "perfil": "OPERATOR"
+  "nome": "Bruno Funcionário", "email": "bruno@oficina.com.br",
+  "nomeUsuario": "bruno", "senha": "Bruno@123", "trocaSenhaObrigatoria": false, "perfil": "FUNCIONARIO"
+}'
+```
+
+   O usuário `CLIENTE` é ligado a um cliente já cadastrado pelo `clienteId` (obrigatório para esse perfil e proibido
+   para os outros; um login por cliente). Ele só enxerga as OS desse cliente, em `/minhas-ordens`:
+
+```bash
+curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -H "Authorization: $TOKEN" -d '{
+  "nome": "Maria da Silva", "email": "maria@email.com",
+  "nomeUsuario": "maria", "senha": "Maria@123", "trocaSenhaObrigatoria": false, "perfil": "CLIENTE", "clienteId": 1
 }'
 ```
 
 4. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`.
 
-Perfis existentes: `ADMINISTRATOR`, `MANAGER` e `OPERATOR`, criados pela migration `V2__perfis_iniciais.sql`.
+Perfis existentes (migration `V10__perfis_fase_1.sql`): `ADMIN` (tudo, inclusive exclusões e cadastro de usuários),
+`FUNCIONARIO` (cadastros sem exclusão e ordens de serviço) e `CLIENTE` (consulta das próprias OS).
 Credenciais: as do administrador inicial definidas no seu `.env` (`ADMIN_USUARIO` / `ADMIN_SENHA`).
 
 ## Estrutura dos principais diretórios

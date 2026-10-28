@@ -95,7 +95,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"nome\": \"Operador de Teste\",\n  \"email\": \"{{username}}@oficina.com\",\n  \"nomeUsuario\": \"{{username}}\",\n  \"senha\": \"{{password}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"OPERATOR\"\n}",
+              "raw": "{\n  \"nome\": \"Funcionário de Teste\",\n  \"email\": \"{{username}}@oficina.com\",\n  \"nomeUsuario\": \"{{username}}\",\n  \"senha\": \"{{password}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"FUNCIONARIO\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -112,7 +112,7 @@
                 "cadastro"
               ]
             },
-            "description": "Cadastra um usuário de teste (perfil OPERATOR). Só ADMINISTRATOR cadastra usuários: usa o token do **Login administrador**. O script gera username e e-mail únicos a cada execução.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.",
+            "description": "Cadastra um usuário de teste (perfil FUNCIONARIO). Só ADMIN cadastra usuários: usa o token do **Login administrador**. O script gera username e e-mail únicos a cada execução.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.",
             "auth": {
               "type": "bearer",
               "bearer": [
@@ -358,7 +358,7 @@
           "response": []
         }
       ],
-      "description": "Perfis: `ADMINISTRATOR` ou `MANAGER`."
+      "description": "Perfis: `ADMIN` ou `FUNCIONARIO` (a exclusão, na pasta Exclusões, é só do `ADMIN`)."
     },
     {
       "name": "Serviços",
@@ -533,7 +533,7 @@
           "response": []
         }
       ],
-      "description": "Perfil: `ADMINISTRATOR`. Um serviço referencia as peças e insumos que usa."
+      "description": "Perfis: `ADMIN` ou `FUNCIONARIO` (a exclusão, na pasta Exclusões, é só do `ADMIN`). Um serviço referencia as peças e insumos que usa."
     },
     {
       "name": "Clientes",
@@ -750,7 +750,7 @@
           "response": []
         }
       ],
-      "description": "Perfil: `ADMINISTRATOR`. `documento` aceita CPF ou CNPJ (numérico ou alfanumérico), com ou sem máscara."
+      "description": "Perfis: `ADMIN` ou `FUNCIONARIO` (a exclusão, na pasta Exclusões, é só do `ADMIN`). `documento` aceita CPF ou CNPJ (numérico ou alfanumérico), com ou sem máscara."
     },
     {
       "name": "Veículos",
@@ -972,7 +972,7 @@
           "response": []
         }
       ],
-      "description": "Perfil: `ADMINISTRATOR`. Todo veículo pertence a um cliente ativo."
+      "description": "Perfis: `ADMIN` ou `FUNCIONARIO` (a exclusão, na pasta Exclusões, é só do `ADMIN`). Todo veículo pertence a um cliente ativo."
     },
     {
       "name": "Exclusões",
@@ -1104,7 +1104,7 @@
           "response": []
         }
       ],
-      "description": "Fica por último para o Runner: o veículo depende do cliente e o serviço depende da peça. Cliente e veículo são desativados (delete lógico)."
+      "description": "Fica por último para o Runner: o veículo depende do cliente e o serviço depende da peça. Cliente e veículo são desativados (delete lógico). Perfil: `ADMIN` (o funcionário recebe 403)."
     },
     {
       "name": "Observabilidade",
@@ -1176,45 +1176,6 @@
       "auth": {
         "type": "noauth"
       }
-    },
-    {
-      "name": "Acompanhar Ordem de Serviço",
-      "item": [
-        {
-          "name": "Consultar OS",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/acompanhamento-os/consultar/:ordemId",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "acompanhamento-os",
-                "consultar",
-                ":ordemId"
-              ],
-              "variable": [
-                {
-                  "key": "ordemId",
-                  "value": "{{ordemId}}"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
     },
     {
       "name": "Ordem de Serviço",
@@ -1573,6 +1534,166 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Acompanhar Ordem de Serviço",
+      "description": "Perfil: `CLIENTE`. O cliente vem do token, nunca da URL: ele só enxerga as próprias OS. Rode antes **Clientes → Cadastrar cliente** e **Ordem de Serviço → Criar OS** para esse cliente.",
+      "item": [
+        {
+          "name": "Cadastrar usuário cliente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"clienteUsuario\", \"cliente\" + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Cliente de Teste\",\n  \"email\": \"{{clienteUsuario}}@email.com\",\n  \"nomeUsuario\": \"{{clienteUsuario}}\",\n  \"senha\": \"{{clienteSenha}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"CLIENTE\",\n  \"clienteId\": {{clienteId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/cadastro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "cadastro"
+              ]
+            },
+            "description": "Cria o login do cliente cadastrado em **Clientes → Cadastrar cliente** (`{{clienteId}}`), com o token do **Login administrador**. O `clienteId` é obrigatório para o perfil CLIENTE; um segundo login para o mesmo cliente responde 409. O script gera um username único a cada execução."
+          },
+          "response": []
+        },
+        {
+          "name": "Login cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"tokenCliente\", token.replace(/^Bearer\\s+/, \"\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"{{clienteUsuario}}\",\n  \"senha\": \"{{clienteSenha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Guarda o token do cliente em `{{tokenCliente}}`, separado do token do administrador."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar minhas OS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/minhas-ordens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "minhas-ordens"
+              ]
+            },
+            "description": "OS do cliente logado, com status, itens e histórico."
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar minha OS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/minhas-ordens/:ordemId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "minhas-ordens",
+                ":ordemId"
+              ],
+              "variable": [
+                {
+                  "key": "ordemId",
+                  "value": "{{ordemId}}"
+                }
+              ]
+            },
+            "description": "A OS de outro cliente responde 404, como se não existisse."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {
@@ -1672,6 +1793,18 @@
       "value": "",
       "type": "string",
       "description": "ADMIN_SENHA do seu .env (não versionar o valor)"
+    },
+    {
+      "key": "clienteUsuario",
+      "value": ""
+    },
+    {
+      "key": "clienteSenha",
+      "value": "Cliente@123"
+    },
+    {
+      "key": "tokenCliente",
+      "value": ""
     }
   ]
 }

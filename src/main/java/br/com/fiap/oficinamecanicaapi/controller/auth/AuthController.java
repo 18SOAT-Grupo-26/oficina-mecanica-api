@@ -22,7 +22,7 @@ public class AuthController implements AuthAPI {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> cadastrarUsuario(CadastroRequest request) throws ApplicationException {
         authService.cadastrarUsuario(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
