@@ -56,6 +56,8 @@ class AuthenticationUseCaseTest {
 
     @Spy
     private MeterRegistry meterRegistry = new SimpleMeterRegistry();
+    @Mock
+    private LimiteTentativasLogin limiteTentativas;
 
     @InjectMocks
     private AuthenticationUseCase useCase;
@@ -74,6 +76,8 @@ class AuthenticationUseCaseTest {
 
         assertThat(authToken.token()).isEqualTo("Bearer " + TOKEN);
         assertThat(logins("sucesso")).isEqualTo(1);
+        verify(limiteTentativas).registrarSucesso(IDENTIFICADOR);
+        verify(limiteTentativas, never()).registrarFalha(IDENTIFICADOR);
     }
 
     @Test
@@ -89,6 +93,7 @@ class AuthenticationUseCaseTest {
         assertThat(ex.getMessage()).isEqualTo(MENSAGEM);
         assertThat(logins("senha_invalida")).isEqualTo(1);
         verifyNoInteractions(jwtTokenProvider);
+        verify(limiteTentativas).registrarFalha(IDENTIFICADOR);
     }
 
     @Test
@@ -105,6 +110,20 @@ class AuthenticationUseCaseTest {
         verify(passwordEncoder).encode(SENHA);
         assertThat(logins("usuario_inexistente")).isEqualTo(1);
         verifyNoInteractions(jwtTokenProvider);
+        // conta a falha também para quem não existe: o 429 não revela quais contas existem
+        verify(limiteTentativas).registrarFalha(IDENTIFICADOR);
+    }
+
+    @Test
+    @DisplayName("Deve responder 429 sem consultar usuário nem senha quando o identificador estiver bloqueado")
+    void deveResponder429QuandoBloqueado() {
+        doThrow(new ApplicationException(429, "Muitas tentativas de login. Tente novamente em alguns minutos."))
+                .when(limiteTentativas).verificarBloqueio(IDENTIFICADOR);
+
+        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.autenticar(REQUEST));
+
+        assertThat(ex.getErrorCode()).isEqualTo(429);
+        verifyNoInteractions(usuarioService, passwordEncoder, jwtTokenProvider);
     }
 
     @Test
