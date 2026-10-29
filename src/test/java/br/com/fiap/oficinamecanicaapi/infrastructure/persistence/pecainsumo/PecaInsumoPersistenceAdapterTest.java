@@ -1,7 +1,7 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecaInsumo;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecainsumo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumo;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecaInsumo.PecaInsumoRepository;
+import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecainsumo.PecaInsumoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

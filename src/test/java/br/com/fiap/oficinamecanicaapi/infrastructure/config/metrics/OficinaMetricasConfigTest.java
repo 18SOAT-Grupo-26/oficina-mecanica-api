@@ -2,7 +2,7 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.config.metrics;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico.OrdemServicoJpaRepository;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecaInsumo.PecaInsumoRepository;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecainsumo.PecaInsumoRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

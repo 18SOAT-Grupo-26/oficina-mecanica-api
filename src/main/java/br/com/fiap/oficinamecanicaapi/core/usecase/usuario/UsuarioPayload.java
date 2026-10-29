@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.shared.utils.helpers;
+package br.com.fiap.oficinamecanicaapi.core.usecase.usuario;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;

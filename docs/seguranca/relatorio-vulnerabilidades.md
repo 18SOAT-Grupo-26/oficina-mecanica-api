@@ -3,6 +3,7 @@
 - **Data:** 28/10/2026
 - **Responsável:** Alexandre Silveira (segurança)
 - **Commit analisado:** `develop` em `4663bd7` (merge do #114)
+- **Atualizado em 29/10/2026:** as correções que estavam em PR aberto foram mergeadas (#116, #117 e #119)
 - **Ambiente:** Docker Compose local, com banco descartável e segredos gerados só para o teste
 
 ## 1. Resumo
@@ -13,19 +14,19 @@ A análise combinou revisão manual guiada pelo OWASP Top 10 (2021) com três fe
 - **OWASP ZAP** para varredura dinâmica da API, autenticada;
 - **Trivy** para CVEs da imagem Docker.
 
-| Severidade | Encontrados | Corrigidos (mergeados) | Corrigidos (PR aberto) | Pendentes | Risco aceito |
-|------------|:-----------:|:----------------------:|:----------------------:|:---------:|:------------:|
-| Crítica    | 1           | —                      | 1                      | —         | —            |
-| Alta       | 6           | 3                      | 2                      | 1         | —            |
-| Média      | 4           | 3                      | 1                      | —         | —            |
-| Baixa      | 6           | —                      | 1                      | 1         | 4            |
+| Severidade | Encontrados | Corrigidos (mergeados) | Pendentes | Risco aceito |
+|------------|:-----------:|:----------------------:|:---------:|:------------:|
+| Crítica    | 1           | 1                      | —         | —            |
+| Alta       | 6           | 5                      | 1         | —            |
+| Média      | 4           | 4                      | —         | —            |
+| Baixa      | 6           | 1                      | 1         | 4            |
 
 As 18 CVEs do Trivy contam como **2 achados**: um crítico (Tomcat) e um alto (Jackson). A correção de ambos é a mesma
 atualização de versão, e a seção 4.3 detalha cada CVE.
 
-**Antes e depois** dos PRs ainda abertos (#116, `fix/respostas-404-e-corp` e `fix/atualiza-spring-boot-4.1.2`):
+**Antes e depois** dos PRs #116, #117 e #119 (o "depois" foi medido com os PRs aplicados, antes do merge):
 
-| Ferramenta | `develop` (`4663bd7`)                                        | Com os PRs abertos aplicados                     |
+| Ferramenta | `develop` (`4663bd7`)                                        | Com os #116, #117 e #119                         |
 |------------|--------------------------------------------------------------|--------------------------------------------------|
 | OWASP ZAP  | 5 alertas, 44 respostas 500, 112 verificações aprovadas      | 2 alertas informativos, 0 respostas 500, 114 aprovadas |
 | Trivy      | 4 críticas, 10 altas, 4 médias (Tomcat 11.0.24, Jackson)     | 0                                                |
@@ -54,14 +55,14 @@ e boas práticas).
 | A2  | A01 | Alta | `POST /auth/cadastro` público: qualquer pessoa criava um usuário, inclusive ADMIN. | Manual | Corrigido no #108: só ADMIN cadastra, e o admin inicial é criado na subida a partir do `.env` |
 | A3  | A01 | Alta | Rotas públicas com curinga (`/auth/**`) e token aceito como parâmetro de query/body. | Manual | Corrigido no #98 e no #99: lista explícita em `RotasPublicas` e `RotasProtegidasTest`, que exige 401 em toda rota não pública |
 | A4  | A07 | Alta | Enumeração de usuários no login: usuário inexistente e senha errada respondiam de forma diferente. | Manual | Corrigido no #103: 401 igual e o mesmo custo de bcrypt (60 ms × 61 ms medidos) |
-| A5  | A07 | Alta | Login de usuário inexistente com senha acima de 72 bytes respondia **500**, enquanto o usuário existente respondia 401. Isso reabria a enumeração do A4. | **ZAP** (Buffer Overflow / Format String no `/auth/login`) | Corrigido no PR #116, aguardando merge: comparação com um hash fictício gerado em tempo de execução |
-| A6  | — (dependência) | **Crítica** | Tomcat 11.0.24 com 4 CVEs críticas (seção 4.3). | Trivy | Corrigido no PR `fix/atualiza-spring-boot-4.1.2`, aguardando abertura: Spring Boot 4.1.2 traz o Tomcat 11.0.27 |
-| A7  | — (dependência) | Alta | Jackson 2.21.5 / 3.1.5 com 5 CVEs altas e 2 médias, de negação de serviço e desserialização (seção 4.3). | Trivy | Mesmo PR do A6: Jackson 2.21.7 / 3.1.7 |
+| A5  | A07 | Alta | Login de usuário inexistente com senha acima de 72 bytes respondia **500**, enquanto o usuário existente respondia 401. Isso reabria a enumeração do A4. | **ZAP** (Buffer Overflow / Format String no `/auth/login`) | Corrigido no #116: comparação com um hash fictício gerado em tempo de execução |
+| A6  | — (dependência) | **Crítica** | Tomcat 11.0.24 com 4 CVEs críticas (seção 4.3). | Trivy | Corrigido no #119: Spring Boot 4.1.2 traz o Tomcat 11.0.27 |
+| A7  | — (dependência) | Alta | Jackson 2.21.5 / 3.1.5 com 5 CVEs altas e 2 médias, de negação de serviço e desserialização (seção 4.3). | Trivy | Corrigido no #119, junto com o A6: Jackson 2.21.7 / 3.1.7 |
 | A8  | A07 | Média | Força bruta no login sem limite. | Manual | Corrigido no #114: 5 falhas em 15 min por identificador → 429. Identificadores inexistentes também contam |
 | A9  | A09 / LGPD | Média | E-mail e nome de usuário em texto puro nos logs de login. | Manual | Corrigido no #114: `MascaraDados` (`a***@dominio`) |
 | A10 | A05 | Média | CORS com `allowedOriginPatterns("*")` e `allowCredentials(true)`. | Manual | Corrigido no #102: só as origens de `CORS_ALLOWED_ORIGINS`, sem credenciais |
-| A11 | A05 | Média | Rota inexistente, método não suportado e query malformada (`?=x`) respondiam **500**, com 44 ocorrências no ZAP. | ZAP (Application Error Disclosure, Server Error) | Corrigido no PR `fix/respostas-404-e-corp`, aguardando merge: 404, 405 e 400 |
-| A12 | A05 | Baixa | Sem o header `Cross-Origin-Resource-Policy`. | ZAP (Insufficient Site Isolation Against Spectre) | Mesmo PR do A11: `same-origin` |
+| A11 | A05 | Média | Rota inexistente, método não suportado e query malformada (`?=x`) respondiam **500**, com 44 ocorrências no ZAP. | ZAP (Application Error Disclosure, Server Error) | Corrigido no #117: 404, 405 e 400 |
+| A12 | A05 | Baixa | Sem o header `Cross-Origin-Resource-Policy`. | ZAP (Insufficient Site Isolation Against Spectre) | Corrigido no #117, junto com o A11: `same-origin` |
 | A13 | A02 | Baixa | Uma terceira chave JWT (chave C), usada só no teste de integração (`IntegracaoBase`). Nenhum ambiente a usa. | Gitleaks | **Pendente**: gerar a chave em tempo de execução no teste, junto com o A1 |
 | A14 | A05 | Baixa | `/actuator/prometheus` público. As métricas não têm dados pessoais, mas revelam volume e comportamento da API. | Manual | Risco aceito nesta fase (ADR 004); num ambiente exposto, rede interna ou autenticação |
 | A15 | A07 | Baixa | Sem revogação de token: logout ou troca de perfil não invalidam um token já emitido (vale 1 h). | Manual | Risco aceito (ADR 004); versão do token no usuário fica para a fase 2 |

@@ -25,11 +25,14 @@ Funcionalidades disponíveis até o momento:
 
 ## Arquitetura utilizada
 
-Arquitetura hexagonal (ports and adapters):
+Monólito em camadas (ports & adapters):
 
-- `core` concentra o domínio, os casos de uso e as portas de entrada (`port/in`) e saída (`port/out`)
-- `controller` é o adapter de entrada (REST)
-- `infrastructure` é o adapter de saída (persistência com JPA) e as configurações de segurança e documentação
+- `core` concentra o domínio, os casos de uso e as portas de entrada (`port/in`) e saída (`port/out`), sem JPA nem
+  Spring Web
+- `controller` é o adapter de entrada (REST), separado em `admin`, `auth` e `cliente`
+- `infrastructure` é o adapter de saída (persistência com JPA, com as entidades em `persistence/<contexto>/`) e as
+  configurações de segurança, documentação e métricas
+- `shared` guarda as exceções, o tratamento global de erros e os utilitários
 
 A decisão, as camadas, a regra de dependência e as alternativas avaliadas estão
 na [ADR 001](docs/adr/0001-monolito-em-camadas.md). Todas as decisões de arquitetura estão
