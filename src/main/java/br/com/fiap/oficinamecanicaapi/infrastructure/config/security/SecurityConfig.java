@@ -17,6 +17,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -51,6 +52,10 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
+                // isolamento contra Spectre (alerta do OWASP ZAP): recurso só lido pela própria origem; chamadas
+                // CORS do front não são afetadas, só leituras no-cors (ex.: <img>, <script>) de outros sites
+                .headers(headers -> headers.crossOriginResourcePolicy(corp -> corp
+                        .policy(CrossOriginResourcePolicyHeaderWriter.CrossOriginResourcePolicy.SAME_ORIGIN)))
 
                 .authorizeHttpRequests(auth -> auth
                         // preflight de CORS não leva token

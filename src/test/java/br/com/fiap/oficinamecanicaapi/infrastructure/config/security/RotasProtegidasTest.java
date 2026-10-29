@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -114,6 +115,13 @@ class RotasProtegidasTest {
         mockMvc.perform(get("/auth/validate"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Header obrigatório ausente: Authorization"));
+    }
+
+    @Test
+    @DisplayName("Toda resposta deve enviar Cross-Origin-Resource-Policy same-origin (isolamento contra Spectre)")
+    void deveEnviarCrossOriginResourcePolicy() throws Exception {
+        mockMvc.perform(get("/auth/validate"))
+                .andExpect(header().string("Cross-Origin-Resource-Policy", "same-origin"));
     }
 
     private List<Rota> rotasProtegidas() {

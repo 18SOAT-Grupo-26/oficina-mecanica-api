@@ -4,6 +4,7 @@ import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import br.com.fiap.oficinamecanicaapi.shared.utils.GetLocalTime;
 import io.micrometer.core.instrument.Metrics;
+import org.apache.tomcat.util.http.InvalidParameterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -14,6 +15,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -90,6 +93,30 @@ public class HandlerException {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorTemplate> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
         return buildError(HttpStatus.BAD_REQUEST, "Parâmetro inválido: " + e.getName());
+    }
+
+    /**
+     * Rota inexistente (ex.: DELETE /clientes/ sem id); sem este handler o genérico devolveria 500.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorTemplate> handleRotaInexistente(NoResourceFoundException e) {
+        return buildError(HttpStatus.NOT_FOUND, "Recurso não encontrado");
+    }
+
+    /**
+     * Rota existe, mas não com este método (ex.: PATCH /clientes/{id}); sem este handler seria 500.
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorTemplate> handleMetodoNaoSuportado(HttpRequestMethodNotSupportedException e) {
+        return buildError(HttpStatus.METHOD_NOT_ALLOWED, "Método " + e.getMethod() + " não suportado nesta rota");
+    }
+
+    /**
+     * Query string malformada (ex.: parâmetro sem nome, ?=x): o Tomcat recusa ao ler os parâmetros; sem este handler seria 500.
+     */
+    @ExceptionHandler(InvalidParameterException.class)
+    public ResponseEntity<ErrorTemplate> handleParametroInvalido(InvalidParameterException e) {
+        return buildError(HttpStatus.BAD_REQUEST, "Parâmetros da requisição inválidos");
     }
 
     /**
