@@ -165,12 +165,23 @@ class ServicoControllerTest {
     }
 
     @Test
-    @DisplayName("Deve responder 403 para FUNCIONARIO: serviço é só do administrador")
-    void deveNegarFuncionario() throws Exception {
+    @DisplayName("Deve permitir FUNCIONARIO: serviço é do funcionário e do administrador")
+    void devePermitirFuncionario() throws Exception {
+        autenticarComo(Perfil.FUNCIONARIO);
+        when(useCase.buscarPorId(ID)).thenReturn(RESPONSE);
+
+        mockMvc.perform(get(ROTA + "/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Deve responder 403 quando FUNCIONARIO tenta excluir: exclusão é só do administrador")
+    void deveNegarExclusaoAoFuncionario() throws Exception {
         autenticarComo(Perfil.FUNCIONARIO);
 
-        mockMvc.perform(get(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(delete(ROTA + "/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value("Acesso negado"));
 
         verifyNoInteractions(useCase);
     }
