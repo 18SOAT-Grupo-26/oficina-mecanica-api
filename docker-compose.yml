@@ -30,7 +30,7 @@ services:
       DATASOURCE_HOST: jdbc:postgresql://db:5432/oficina
       DATASOURCE_USERNAME: ${DATASOURCE_USERNAME:-postgres}
       DATASOURCE_PASSWORD: ${DATASOURCE_PASSWORD:-postgres}
-      API_SECRET: ${API_SECRET}
+      API_SECRET: ${API_SECRET:-}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
       ADMIN_NOME: ${ADMIN_NOME:-Administrador}

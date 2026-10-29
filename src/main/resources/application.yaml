@@ -61,7 +61,7 @@ logging:
     br.com.fiap.oficinamecanicaapi: ${LOG_LEVEL:INFO}
 
 api:
-  secret: "${API_SECRET}"
+  secret: "${API_SECRET:}"
   jwt:
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
   cors:

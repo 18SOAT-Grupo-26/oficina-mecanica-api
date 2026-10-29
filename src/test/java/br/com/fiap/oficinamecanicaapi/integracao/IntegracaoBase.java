@@ -30,8 +30,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import(PostgresTestcontainersConfig.class)
 @EnabledIf("br.com.fiap.oficinamecanicaapi.integracao.IntegracaoBase#dockerDisponivel")
 @TestPropertySource(properties = {
-        // só para teste: 64 bytes em base64, exigência do HS512
-        "api.secret=dGVzdGUtaW50ZWdyYWNhby1vZmljaW5hLW1lY2FuaWNhLWFwaS1zZWdyZWRvLWNvbS02NC1ieXRlcy1vay0x",
+        // vazio de propósito: a SegredoJwtConfig gera uma chave aleatória, e o API_SECRET de um .env local não vaza
+        "api.secret=",
         "api.admin.nome=Administrador",
         "api.admin.email=" + IntegracaoBase.ADMIN + "@oficina.com.br",
         "api.admin.usuario=" + IntegracaoBase.ADMIN,
