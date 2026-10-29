@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.pecaInsumo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
+import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumo;
 import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumoRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
@@ -57,7 +57,7 @@ class PecaInsumoUseCaseTest {
     void criarPersisteInsumo() {
         when(pecaInsumoPortOut.existePorNomeNormalizado("oleo do motor")).thenReturn(false);
         when(pecaInsumoPortOut.salvar(any())).thenAnswer(inv -> {
-            PecaInsumoEntity e = inv.getArgument(0);
+            PecaInsumo e = inv.getArgument(0);
             e.setId(ID);
             return e;
         });
@@ -94,7 +94,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("listar aplica paginação padrão e limita o tamanho máximo")
     void listarAplicaLimites() {
-        PecaInsumoEntity entity = entidade(ID, "Filtro");
+        PecaInsumo entity = entidade(ID, "Filtro");
         when(pecaInsumoPortOut.listar(0, 20)).thenReturn(new Pagina<>(List.of(entity), 0, 20, 1));
         when(pecaInsumoPortOut.listar(0, 100)).thenReturn(new Pagina<>(List.of(), 0, 100, 0));
 
@@ -127,7 +127,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("atualizar mantém o próprio nome sem checar duplicidade")
     void atualizarMesmoNome() {
-        PecaInsumoEntity entity = entidade(ID, "Filtro de Ar");
+        PecaInsumo entity = entidade(ID, "Filtro de Ar");
         when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(entity));
         when(pecaInsumoPortOut.salvar(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -154,7 +154,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("excluir remove o insumo")
     void excluirRemoveInsumo() {
-        PecaInsumoEntity entity = entidade(ID, "Filtro");
+        PecaInsumo entity = entidade(ID, "Filtro");
         when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(entity));
 
         useCase.excluir(ID);
@@ -171,8 +171,8 @@ class PecaInsumoUseCaseTest {
         verify(pecaInsumoPortOut, never()).excluir(any());
     }
 
-    private static PecaInsumoEntity entidade(Long id, String nome) {
-        PecaInsumoEntity e = new PecaInsumoEntity();
+    private static PecaInsumo entidade(Long id, String nome) {
+        PecaInsumo e = new PecaInsumo();
         e.setId(id);
         e.setNome(nome);
         e.setNomeNormalizado(nome.toLowerCase());
@@ -224,7 +224,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("atualizar ajusta quantidade e preço e conta a operação")
     void atualizarQuantidadeEPreco() {
-        PecaInsumoEntity atual = peca("Filtro de óleo", "filtro de oleo", 10, 2, "30.00");
+        PecaInsumo atual = peca("Filtro de óleo", "filtro de oleo", 10, 2, "30.00");
         when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
         when(pecaInsumoPortOut.salvar(atual)).thenReturn(atual);
 
@@ -239,7 +239,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("atualizar trocando o nome confere a duplicidade do nome novo")
     void atualizarTrocandoNome() {
-        PecaInsumoEntity atual = peca("Filtro de óleo", "filtro de oleo", 10, 0, "30.00");
+        PecaInsumo atual = peca("Filtro de óleo", "filtro de oleo", 10, 0, "30.00");
         when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
         when(pecaInsumoPortOut.existePorNomeNormalizado("filtro de ar")).thenReturn(false);
         when(pecaInsumoPortOut.salvar(atual)).thenReturn(atual);
@@ -264,7 +264,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("excluir conta a operação")
     void excluirContaOperacao() {
-        PecaInsumoEntity atual = peca("Filtro de óleo", "filtro de oleo", 10, 0, "30.00");
+        PecaInsumo atual = peca("Filtro de óleo", "filtro de oleo", 10, 0, "30.00");
         when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
 
         useCase.excluir(ID);
@@ -277,9 +277,9 @@ class PecaInsumoUseCaseTest {
         return new PecaInsumoRequest(nome, null, quantidade, reservado, preco == null ? null : new BigDecimal(preco));
     }
 
-    private static PecaInsumoEntity peca(String nome, String nomeNormalizado, int quantidade, int reservado,
+    private static PecaInsumo peca(String nome, String nomeNormalizado, int quantidade, int reservado,
                                          String preco) {
-        PecaInsumoEntity peca = new PecaInsumoEntity();
+        PecaInsumo peca = new PecaInsumo();
         peca.setId(ID);
         peca.setNome(nome);
         peca.setNomeNormalizado(nomeNormalizado);

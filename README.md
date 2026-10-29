@@ -339,14 +339,14 @@ Para cada achado, ele traz a severidade, o PR da correção ou a justificativa d
 src/main/java/br/com/fiap/oficinamecanicaapi
 ├── controller          # endpoints REST: admin (APIs internas da oficina), auth, cliente (acompanhamento de OS pelo cliente final)
 ├── core
-│   ├── domain          # modelos e entidades de domínio
+│   ├── domain          # modelos de domínio, sem JPA
 │   ├── port
 │   │   ├── in          # portas de entrada (casos de uso)
 │   │   └── out         # portas de saída (persistência)
 │   └── usecase         # implementação dos casos de uso
 ├── infrastructure
 │   ├── config          # segurança (JWT) e documentação (OpenAPI)
-│   └── persistence     # repositórios e adapters JPA
+│   └── persistence     # entidades JPA, repositórios e adapters
 └── shared              # exceções, handler global e utilitários
 src/test/java           # testes unitários e de controller
 ```

@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.servico;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.entity.ServicoEntity;
+import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.servico.ServicoRepository;
@@ -16,27 +16,29 @@ import java.util.Optional;
 public class ServicoPersistenceAdapter implements ServicoPortOut {
 
     private final ServicoRepository repository;
+    private final ServicoPersistenceMapper mapper;
 
-    public ServicoPersistenceAdapter(ServicoRepository repository) {
+    public ServicoPersistenceAdapter(ServicoRepository repository, ServicoPersistenceMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     @Override
     @Transactional
-    public ServicoEntity salvar(ServicoEntity servico) {
-        return repository.save(servico);
+    public Servico salvar(Servico servico) {
+        return mapper.toDomain(repository.save(mapper.toEntity(servico)));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<ServicoEntity> buscarPorId(Long id) {
-        return repository.findById(id);
+    public Optional<Servico> buscarPorId(Long id) {
+        return repository.findById(id).map(mapper::toDomain);
     }
 
     @Override
     @Transactional
-    public void excluir(ServicoEntity servico) {
-        repository.delete(servico);
+    public void excluir(Servico servico) {
+        repository.deleteById(servico.getId());
     }
 
     @Override
@@ -47,8 +49,8 @@ public class ServicoPersistenceAdapter implements ServicoPortOut {
 
     @Override
     @Transactional(readOnly = true)
-    public Pagina<ServicoEntity> listar(int pagina, int tamanho) {
+    public Pagina<Servico> listar(int pagina, int tamanho) {
         Page<ServicoEntity> page = repository.findAll(PageRequest.of(pagina, tamanho, Sort.by("id")));
-        return new Pagina<>(page.getContent(), pagina, tamanho, page.getTotalElements());
+        return new Pagina<>(page.map(mapper::toDomain).getContent(), pagina, tamanho, page.getTotalElements());
     }
 }

@@ -1,10 +1,7 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.entity;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico.HistoricoStatusOsEntity;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico.ItemPecaOsEntity;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico.ItemServicoOsEntity;
-import br.com.fiap.oficinamecanicaapi.shared.persistence.EntidadeComDatas;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.EntidadeComDatas;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

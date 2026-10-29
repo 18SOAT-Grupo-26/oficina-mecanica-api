@@ -2,8 +2,8 @@ package br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.*;
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.entity.ServicoEntity;
+import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumo;
+import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Placa;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Veiculo;
@@ -932,8 +932,8 @@ class OrdemServicoUseCaseTest {
         when(clientePortOut.buscarAtivoPorDocumento(new Documento(DOCUMENTO))).thenReturn(Optional.of(CLIENTE));
     }
 
-    private static ServicoEntity servico(Long id, String nome, String preco) {
-        ServicoEntity servico = new ServicoEntity();
+    private static Servico servico(Long id, String nome, String preco) {
+        Servico servico = new Servico();
         servico.setId(id);
         servico.setNome(nome);
         servico.setPreco(new BigDecimal(preco));
@@ -943,8 +943,8 @@ class OrdemServicoUseCaseTest {
     /**
      * Filtro de óleo a R$30, com 3 unidades já reservadas por outras OS além do saldo pedido.
      */
-    private static PecaInsumoEntity filtroComSaldo(int saldo) {
-        PecaInsumoEntity peca = new PecaInsumoEntity();
+    private static PecaInsumo filtroComSaldo(int saldo) {
+        PecaInsumo peca = new PecaInsumo();
         peca.setId(ID_PECA);
         peca.setNome("Filtro de óleo");
         peca.setPreco(new BigDecimal("30"));

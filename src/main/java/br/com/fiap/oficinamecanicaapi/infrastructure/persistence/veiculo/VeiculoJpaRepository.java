@@ -1,6 +1,5 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.veiculo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.entity.VeiculoEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

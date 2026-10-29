@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.shared.persistence;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence;
 
 import br.com.fiap.oficinamecanicaapi.shared.utils.GetLocalTime;
 import jakarta.persistence.Column;

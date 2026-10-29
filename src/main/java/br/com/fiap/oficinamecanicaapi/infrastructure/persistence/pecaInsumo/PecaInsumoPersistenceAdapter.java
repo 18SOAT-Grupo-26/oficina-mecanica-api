@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecaInsumo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
+import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumo;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.out.pecaInsumo.PecaInsumoPortOut;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecaInsumo.PecaInsumoRepository;
@@ -18,15 +18,17 @@ import java.util.Optional;
 public class PecaInsumoPersistenceAdapter implements PecaInsumoPortOut {
 
     private final PecaInsumoRepository repository;
+    private final PecaInsumoPersistenceMapper mapper;
 
-    public PecaInsumoPersistenceAdapter(PecaInsumoRepository repository) {
+    public PecaInsumoPersistenceAdapter(PecaInsumoRepository repository, PecaInsumoPersistenceMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     @Override
     @Transactional
-    public PecaInsumoEntity salvar(PecaInsumoEntity pecaInsumo) {
-        return repository.save(pecaInsumo);
+    public PecaInsumo salvar(PecaInsumo pecaInsumo) {
+        return mapper.toDomain(repository.save(mapper.toEntity(pecaInsumo)));
     }
 
     @Override
@@ -49,20 +51,20 @@ public class PecaInsumoPersistenceAdapter implements PecaInsumoPortOut {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<PecaInsumoEntity> buscarPorId(Long id) {
-        return repository.findById(id);
+    public Optional<PecaInsumo> buscarPorId(Long id) {
+        return repository.findById(id).map(mapper::toDomain);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PecaInsumoEntity> buscarPorIds(Collection<Long> ids) {
-        return repository.findAllById(ids);
+    public List<PecaInsumo> buscarPorIds(Collection<Long> ids) {
+        return repository.findAllById(ids).stream().map(mapper::toDomain).toList();
     }
 
     @Override
     @Transactional
-    public void excluir(PecaInsumoEntity pecaInsumo) {
-        repository.delete(pecaInsumo);
+    public void excluir(PecaInsumo pecaInsumo) {
+        repository.deleteById(pecaInsumo.getId());
     }
 
     @Override
@@ -73,8 +75,8 @@ public class PecaInsumoPersistenceAdapter implements PecaInsumoPortOut {
 
     @Override
     @Transactional(readOnly = true)
-    public Pagina<PecaInsumoEntity> listar(int pagina, int tamanho) {
+    public Pagina<PecaInsumo> listar(int pagina, int tamanho) {
         Page<PecaInsumoEntity> page = repository.findAll(PageRequest.of(pagina, tamanho, Sort.by("id")));
-        return new Pagina<>(page.getContent(), pagina, tamanho, page.getTotalElements());
+        return new Pagina<>(page.map(mapper::toDomain).getContent(), pagina, tamanho, page.getTotalElements());
     }
 }

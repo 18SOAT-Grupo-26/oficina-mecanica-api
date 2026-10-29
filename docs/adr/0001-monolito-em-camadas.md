@@ -114,8 +114,9 @@ novos:
 
 **Entidades JPA nunca ficam no `core`.** Elas são detalhe do adapter de persistência e ficam em
 `infrastructure/persistence/<contexto>/`. O `core/domain` guarda só os modelos de domínio, que o `*PersistenceMapper`
-converte. As `*Entity` que hoje estão em `core/domain/*/entity` (`servico`, `pecaInsumo` e `usuario`) são dívida técnica,
-e não um segundo padrão.
+converte. As datas de criação e de alteração ficam numa superclasse só, a `EntidadeComDatas` (`@MappedSuperclass` em
+`infrastructure/persistence/`), herdada pelas entidades com `created_at`/`updated_at`. Isso evita repetir os campos e os
+callbacks em cada entidade sem levar JPA para o domínio.
 
 ### Exceções aceitas conscientemente
 
@@ -218,11 +219,12 @@ e não um segundo padrão.
   Grafana do compose) entraram antes do previsto em 21/10. A configuração fica em `infrastructure/config/metrics`, mas
   os casos de uso registram contadores direto no `MeterRegistry`, o que é mais uma dependência leve no `core`. A
   padronização de logs (`action=... chave=valor`) segue o mesmo caminho.
-- Parte do código atual ainda não segue esta decisão. Em `usuario`, `servico` e `pecaInsumo`, as entidades JPA ficam em
-  `core/domain/*/entity`, os repositórios em `infrastructure/persistence/repository/`, e o `UsuarioUseCase` importa
-  repositórios de `infrastructure`. Na segurança, `Perfil` implementa `GrantedAuthority` e o JWT é gerado em
-  `core/usecase/auth` ([ADR 004](0004-seguranca.md)). As correções são acompanhadas como issues de dívida técnica no
-  repositório, em PRs separados por contexto.
+- Nenhuma entidade JPA fica no `core`, e o `UsuarioUseCase` usa o `UsuarioPortOut` em vez dos repositórios. Ainda
+  ficam fora do padrão: os repositórios de `usuario`, `servico` e `pecaInsumo` em
+  `infrastructure/persistence/repository/` (e não em `persistence/<contexto>/`); `Servico` e `PecaInsumo`, que são
+  modelos anêmicos (getters e setters, com a validação no caso de uso, e não no modelo como em `Cliente`); e, na
+  segurança, `Perfil` implementa `GrantedAuthority` e o JWT é gerado em `core/usecase/auth`
+  ([ADR 004](0004-seguranca.md)). As correções são acompanhadas como issues de dívida técnica no repositório.
 
 ## Referências
 

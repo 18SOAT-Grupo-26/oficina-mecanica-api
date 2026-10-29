@@ -1,6 +1,5 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.entity.ClienteEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import org.junit.jupiter.api.DisplayName;
