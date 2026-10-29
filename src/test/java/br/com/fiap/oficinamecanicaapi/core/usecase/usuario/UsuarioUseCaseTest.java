@@ -7,7 +7,6 @@ import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.usuario.UsuarioPortOut;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.helpers.PoliticaSenha;
-import br.com.fiap.oficinamecanicaapi.shared.utils.helpers.UsuarioPayload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
