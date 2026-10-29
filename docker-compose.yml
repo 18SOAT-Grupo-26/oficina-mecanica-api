@@ -19,7 +19,7 @@ services:
       retries: 10
 
   api:
-    build: ../../../Users/Andre Luis/Downloads/BKP
+    build: .
     container_name: oficina-mecanica-api
     ports:
       - "${SERVER_PORT:-8081}:8081"

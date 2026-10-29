@@ -78,8 +78,8 @@ identidade foi removida e o usuário guarda só nome e e-mail (#100).
 
 | Arquivo | Commit | Data | Chave | Situação na `develop` |
 |---|---|---|---|---|
-| `../../src/main/resources/application.yaml` | `26fe9db` | 18/10 | A | só no histórico (também na `main`) |
-| `../../docker-compose.yml` | `2aeb199` | 22/10 | B | só no histórico |
+| `src/main/resources/application.yaml` | `26fe9db` | 18/10 | A | só no histórico (também na `main`) |
+| `docker-compose.yml` | `2aeb199` | 22/10 | B | só no histórico |
 | `.env.example` | `d4f2d60` | 27/10 | B | **presente** (A1) |
 | `src/test/.../integracao/IntegracaoBase.java` | `c716b4c` | 28/10 | C | presente, só em teste (A13) |
 

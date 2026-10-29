@@ -43,7 +43,7 @@ Restrições do projeto:
 Na reunião de 16/10, o André comentou que tem usado bastante o PostgreSQL. O Alexandre propôs usar uma solução open
 source e lembrou que, em sistemas corporativos, é comum encontrar Oracle, que é pago. Ninguém trouxe outra opção, e o
 time fechou com o PostgreSQL. Em 21/10, o André não conseguia subir a aplicação por causa do banco e testou com um
-PostgreSQL em Docker, que funcionou "redondo". Isso levou ao `../../docker-compose.yml` (PR #72).
+PostgreSQL em Docker, que funcionou "redondo". Isso levou ao `docker-compose.yml` (PR #72).
 
 Na mesma reunião, o André reconheceu que o time ainda não tinha visto como avaliar trade-offs de banco. Por isso,
 revisamos a escolha com os critérios abaixo.
@@ -90,7 +90,7 @@ dele é não ter sido feito para ambientes distribuídos: replicação baseada e
 manual. Essa limitação não nos afeta, porque rodamos um único nó. Em um único nó, ele entrega consistência forte com
 baixa latência, sem ter que escolher entre as duas.
 
-- **Execução:** container `postgres:18-alpine` no `../../docker-compose.yml`, com volume `pgdata` montado em
+- **Execução:** container `postgres:18-alpine` no `docker-compose.yml`, com volume `pgdata` montado em
   `/var/lib/postgresql` (caminho esperado pela imagem a partir da versão 18) para persistir os dados e healthcheck
   `pg_isready`. A API só sobe depois que o banco estiver saudável.
 - **Acesso:** Spring Data JPA (Hibernate) com o driver `org.postgresql:postgresql`. Todo o acesso ao banco fica em
