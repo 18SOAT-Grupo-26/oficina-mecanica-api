@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/servico")
-@PreAuthorize("hasRole('FUNCIONARIO') or hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'FUNCIONARIO')")
 public class ServicoController implements ServicoAPI {
 
     private final ServicoUseCasePortIn useCase;
@@ -43,6 +43,7 @@ public class ServicoController implements ServicoAPI {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> excluir(Long id) throws ApplicationException {
         useCase.excluir(id);
         return ResponseEntity.noContent().build();

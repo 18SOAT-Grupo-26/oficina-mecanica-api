@@ -56,6 +56,7 @@ class SegurancaIT extends IntegracaoBase {
     void funcionarioComPermissao() throws Exception {
         String funcionario = tokenDe("funcionario", "FUNCIONARIO");
 
+        mockMvc.perform(get("/servico").header(HttpHeaders.AUTHORIZATION, funcionario)).andExpect(status().isOk());
         mockMvc.perform(get("/clientes").header(HttpHeaders.AUTHORIZATION, funcionario)).andExpect(status().isOk());
         mockMvc.perform(get("/veiculos").header(HttpHeaders.AUTHORIZATION, funcionario)).andExpect(status().isOk());
         mockMvc.perform(get("/insumos").header(HttpHeaders.AUTHORIZATION, funcionario)).andExpect(status().isOk());
@@ -64,14 +65,14 @@ class SegurancaIT extends IntegracaoBase {
     }
 
     @Test
-    @DisplayName("FUNCIONARIO não deve excluir, mexer em serviços, cadastrar usuários nem ver /minhas-ordens")
+    @DisplayName("FUNCIONARIO não deve excluir, cadastrar usuários nem ver /minhas-ordens")
     void funcionarioSemPermissao() throws Exception {
         String funcionario = tokenDe("funcionario", "FUNCIONARIO");
 
         mockMvc.perform(delete("/clientes/1").header(HttpHeaders.AUTHORIZATION, funcionario))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message", is("Acesso negado")));
-        mockMvc.perform(get("/servico").header(HttpHeaders.AUTHORIZATION, funcionario))
+        mockMvc.perform(delete("/servico/1").header(HttpHeaders.AUTHORIZATION, funcionario))
                 .andExpect(status().isForbidden());
         mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, funcionario)
                         .contentType(MediaType.APPLICATION_JSON).content(cadastroJson("outro", "FUNCIONARIO")))
