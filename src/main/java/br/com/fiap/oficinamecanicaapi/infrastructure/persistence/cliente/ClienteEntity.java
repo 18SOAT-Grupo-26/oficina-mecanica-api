@@ -1,8 +1,7 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.cliente.entity;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.TipoDocumento;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente.EnderecoEmbeddable;
-import br.com.fiap.oficinamecanicaapi.shared.persistence.EntidadeComDatas;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.EntidadeComDatas;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

@@ -1,6 +1,5 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.entity.OrdemServicoEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

@@ -5,9 +5,7 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
-import br.com.fiap.oficinamecanicaapi.core.usecase.usuario.mapper.UsuarioMapper;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.PerfilRepository;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.UsuarioRepository;
+import br.com.fiap.oficinamecanicaapi.core.port.out.usuario.UsuarioPortOut;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.helpers.PoliticaSenha;
 import br.com.fiap.oficinamecanicaapi.shared.utils.helpers.UsuarioPayload;
@@ -23,24 +21,18 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     private static final Logger log = LoggerFactory.getLogger(UsuarioUseCase.class);
     private static final String MENSAGEM_NAO_ENCONTRADO = "Usuário não encontrado";
 
-    private final UsuarioRepository usuarioRepository;
-    private final PerfilRepository perfilRepository;
-    private final UsuarioMapper usuarioMapper;
+    private final UsuarioPortOut usuarioPortOut;
     private final UsuarioPayload usuarioPayload;
     private final PasswordEncoder passwordEncoder;
     private final PoliticaSenha politicaSenha;
     private final ClientePortOut clientePortOut;
 
-    public UsuarioUseCase(UsuarioRepository usuarioRepository,
-                          PerfilRepository perfilRepository,
-                          UsuarioMapper usuarioMapper,
+    public UsuarioUseCase(UsuarioPortOut usuarioPortOut,
                           UsuarioPayload usuarioPayload,
                           PasswordEncoder passwordEncoder,
                           PoliticaSenha politicaSenha,
                           ClientePortOut clientePortOut) {
-        this.usuarioRepository = usuarioRepository;
-        this.perfilRepository = perfilRepository;
-        this.usuarioMapper = usuarioMapper;
+        this.usuarioPortOut = usuarioPortOut;
         this.usuarioPayload = usuarioPayload;
         this.passwordEncoder = passwordEncoder;
         this.politicaSenha = politicaSenha;
@@ -58,10 +50,6 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
             validarNomeUsuarioDisponivel(usuario.nomeUsuario());
             validarCliente(usuario);
 
-            var perfilEntity = perfilRepository.findByNome(usuario.perfil().name())
-                    .orElseThrow(() -> new ApplicationException(400,
-                            "Perfil não encontrado: " + usuario.perfil().name()));
-
             var usuarioComSenhaCifrada = new Usuario(
                     usuario.nome(),
                     usuario.email(),
@@ -72,7 +60,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
                     usuario.clienteId()
             );
 
-            usuarioRepository.save(usuarioMapper.toEntityCadastro(usuarioComSenhaCifrada, perfilEntity));
+            usuarioPortOut.cadastrar(usuarioComSenhaCifrada);
             log.info("action=user_register_success username={}", usuario.nomeUsuario());
         } catch (ApplicationException e) {
             log.warn("action=user_register_rejected username={} status={} motivo={}",
@@ -87,7 +75,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     @Override
     @Transactional(readOnly = true)
     public boolean existeAdministrador() {
-        return usuarioRepository.existsByPerfil_Nome(Perfil.ADMIN.name());
+        return usuarioPortOut.existePorPerfil(Perfil.ADMIN);
     }
 
     @Override
@@ -95,13 +83,12 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     public DetalhesUsuario buscarPorIdentificador(String identificador) {
         var tipoIdentificador = usuarioPayload.isEmail(identificador) ? "email" : "username";
         try {
-            var entity = usuarioPayload.isEmail(identificador)
-                    ? usuarioRepository.findByEmail(identificador)
-                    .orElseThrow(() -> new ApplicationException(404, MENSAGEM_NAO_ENCONTRADO))
-                    : usuarioRepository.findByNomeUsuario(identificador)
+            var detalhes = (usuarioPayload.isEmail(identificador)
+                    ? usuarioPortOut.buscarPorEmail(identificador)
+                    : usuarioPortOut.buscarPorNomeUsuario(identificador))
                     .orElseThrow(() -> new ApplicationException(404, MENSAGEM_NAO_ENCONTRADO));
             log.debug("action=user_retrieve_success identifier_type={}", tipoIdentificador);
-            return usuarioMapper.toDetalhesUsuario(entity);
+            return detalhes;
         } catch (RuntimeException e) {
             if (e instanceof ApplicationException ex && ex.getErrorCode() == 404) {
                 log.warn("action=user_retrieve_not_found identifier_type={}", tipoIdentificador);
@@ -116,7 +103,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     }
 
     private void validarEmailDisponivel(String email) {
-        if (usuarioRepository.existsByEmail(email)) {
+        if (usuarioPortOut.existePorEmail(email)) {
             throw new ApplicationException(409, "Já existe um usuário cadastrado com este e-mail");
         }
     }
@@ -137,13 +124,13 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
         if (clientePortOut.buscarAtivoPorId(usuario.clienteId()).isEmpty()) {
             throw new ApplicationException(404, "Cliente não encontrado");
         }
-        if (usuarioRepository.existsByClienteId(usuario.clienteId())) {
+        if (usuarioPortOut.existePorClienteId(usuario.clienteId())) {
             throw new ApplicationException(409, "Já existe um usuário para este cliente");
         }
     }
 
     private void validarNomeUsuarioDisponivel(String nomeUsuario) {
-        if (usuarioRepository.existsByNomeUsuario(nomeUsuario)) {
+        if (usuarioPortOut.existePorNomeUsuario(nomeUsuario)) {
             throw new ApplicationException(409, "Já existe um usuário cadastrado com este nome de usuário");
         }
     }

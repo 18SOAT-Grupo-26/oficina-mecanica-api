@@ -1,6 +1,6 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.servico.entity;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecaInsumo;
 
-import br.com.fiap.oficinamecanicaapi.shared.persistence.EntidadeComDatas;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.EntidadeComDatas;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -8,10 +8,10 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "servico")
+@Table(name = "peca_insumo")
 @Getter
 @Setter
-public class ServicoEntity extends EntidadeComDatas {
+public class PecaInsumoEntity extends EntidadeComDatas {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,6 +24,12 @@ public class ServicoEntity extends EntidadeComDatas {
     private String nomeNormalizado;
 
     private String descricao;
+
+    @Column(nullable = false)
+    private Integer quantidade;
+
+    @Column(nullable = false)
+    private Integer reservado;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal preco;

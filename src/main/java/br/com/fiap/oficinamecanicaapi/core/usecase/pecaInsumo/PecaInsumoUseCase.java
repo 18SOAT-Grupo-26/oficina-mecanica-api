@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.pecaInsumo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
+import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumo;
 import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumoRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
@@ -49,11 +49,11 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
         String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
         validarNomeDisponivel(nomeNormalizado);
 
-        PecaInsumoEntity entity = new PecaInsumoEntity();
-        preencher(entity, request, nomeNormalizado);
+        PecaInsumo insumo = new PecaInsumo();
+        preencher(insumo, request, nomeNormalizado);
 
         contar("criado");
-        PecaInsumoEntity salvo = pecaInsumoPortOut.salvar(entity);
+        PecaInsumo salvo = pecaInsumoPortOut.salvar(insumo);
 
         log.info("action=insumo_criado id={}", salvo.getId());
         return pecaInsumoMapper.toResponse(salvo);
@@ -76,24 +76,24 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
     @Override
     @Transactional
     public PecaInsumoResponse atualizar(Long id, PecaInsumoRequest request) throws ApplicationException {
-        PecaInsumoEntity entity = buscarInsumo(id);
+        PecaInsumo insumo = buscarInsumo(id);
         validarCampos(request);
 
         String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
-        if (!nomeNormalizado.equals(entity.getNomeNormalizado())) {
+        if (!nomeNormalizado.equals(insumo.getNomeNormalizado())) {
             validarNomeDisponivel(nomeNormalizado);
         }
 
-        if (!Objects.equals(entity.getQuantidade(), request.quantidade())) {
+        if (!Objects.equals(insumo.getQuantidade(), request.quantidade())) {
             log.info("action=insumo_estoque_ajustado id={} quantidadeAnterior={} quantidadeNova={}",
-                    id, entity.getQuantidade(), request.quantidade());
+                    id, insumo.getQuantidade(), request.quantidade());
         }
-        if (entity.getPreco().compareTo(request.preco()) != 0) {
+        if (insumo.getPreco().compareTo(request.preco()) != 0) {
             log.info("action=insumo_preco_alterado id={} precoAnterior={} precoNovo={}",
-                    id, entity.getPreco(), request.preco());
+                    id, insumo.getPreco(), request.preco());
         }
-        preencher(entity, request, nomeNormalizado);
-        PecaInsumoEntity salvo = pecaInsumoPortOut.salvar(entity);
+        preencher(insumo, request, nomeNormalizado);
+        PecaInsumo salvo = pecaInsumoPortOut.salvar(insumo);
 
         contar("atualizado");
         log.info("action=insumo_atualizado id={}", salvo.getId());
@@ -103,14 +103,14 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
     @Override
     @Transactional
     public void excluir(Long id) throws ApplicationException {
-        PecaInsumoEntity entity = buscarInsumo(id);
-        pecaInsumoPortOut.excluir(entity);
+        PecaInsumo insumo = buscarInsumo(id);
+        pecaInsumoPortOut.excluir(insumo);
 
         contar("excluido");
         log.info("action=insumo_excluido id={}", id);
     }
 
-    private PecaInsumoEntity buscarInsumo(Long id) {
+    private PecaInsumo buscarInsumo(Long id) {
         return pecaInsumoPortOut.buscarPorId(id)
                 .orElseThrow(() -> new ApplicationException(404, "Insumo não encontrado"));
     }
@@ -156,13 +156,13 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
         }
     }
 
-    private static void preencher(PecaInsumoEntity entity, PecaInsumoRequest request, String nomeNormalizado) {
-        entity.setNome(request.nome().trim());
-        entity.setNomeNormalizado(nomeNormalizado);
-        entity.setDescricao(request.descricao());
-        entity.setQuantidade(request.quantidade());
-        entity.setReservado(request.reservado() == null ? 0 : request.reservado());
-        entity.setPreco(request.preco().setScale(PRECO_MAX_CASAS_DECIMAIS));
+    private static void preencher(PecaInsumo insumo, PecaInsumoRequest request, String nomeNormalizado) {
+        insumo.setNome(request.nome().trim());
+        insumo.setNomeNormalizado(nomeNormalizado);
+        insumo.setDescricao(request.descricao());
+        insumo.setQuantidade(request.quantidade());
+        insumo.setReservado(request.reservado() == null ? 0 : request.reservado());
+        insumo.setPreco(request.preco().setScale(PRECO_MAX_CASAS_DECIMAIS));
     }
 
     private void contar(String operacao) {

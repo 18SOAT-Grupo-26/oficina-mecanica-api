@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.servico;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.entity.ServicoEntity;
+import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
@@ -63,7 +63,7 @@ class ServicoUseCaseTest {
     void criarPersisteServico() {
         when(servicoPortOut.existePorNomeNormalizado("troca de oleo")).thenReturn(false);
         when(servicoPortOut.salvar(any())).thenAnswer(inv -> {
-            ServicoEntity e = inv.getArgument(0);
+            Servico e = inv.getArgument(0);
             e.setId(ID);
             return e;
         });
@@ -73,9 +73,9 @@ class ServicoUseCaseTest {
         ServicoResponse response = useCase.criar(request("  Troca de Óleo ", null, "80"));
 
         assertThat(response.id()).isEqualTo(ID);
-        ArgumentCaptor<ServicoEntity> captor = ArgumentCaptor.forClass(ServicoEntity.class);
+        ArgumentCaptor<Servico> captor = ArgumentCaptor.forClass(Servico.class);
         verify(servicoPortOut).salvar(captor.capture());
-        ServicoEntity salvo = captor.getValue();
+        Servico salvo = captor.getValue();
         assertThat(salvo.getNome()).isEqualTo("Troca de Óleo");
         assertThat(salvo.getNomeNormalizado()).isEqualTo("troca de oleo");
         assertThat(salvo.getPreco().scale()).isEqualTo(2);
@@ -180,7 +180,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("atualizar mantendo o nome não confere duplicidade, troca o preço e conta a operação")
     void atualizarMesmoNome() {
-        ServicoEntity atual = servico("Troca de óleo", "80.00");
+        Servico atual = servico("Troca de óleo", "80.00");
         when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
         when(servicoPortOut.salvar(atual)).thenReturn(atual);
 
@@ -216,7 +216,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("excluir remove o serviço e conta a operação")
     void excluir() {
-        ServicoEntity atual = servico("Troca de óleo", "80.00");
+        Servico atual = servico("Troca de óleo", "80.00");
         when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
 
         useCase.excluir(ID);
@@ -263,8 +263,8 @@ class ServicoUseCaseTest {
         verifyNoInteractions(servicoPortOut);
     }
 
-    private static ServicoEntity servico(String nome, String preco) {
-        ServicoEntity servico = new ServicoEntity();
+    private static Servico servico(String nome, String preco) {
+        Servico servico = new Servico();
         servico.setId(ID);
         servico.setNome(nome);
         servico.setNomeNormalizado("troca de oleo");

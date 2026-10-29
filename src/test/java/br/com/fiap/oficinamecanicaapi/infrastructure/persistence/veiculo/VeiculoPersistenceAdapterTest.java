@@ -1,10 +1,9 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.veiculo;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
-import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.entity.VeiculoEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Placa;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Veiculo;
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.entity.ClienteEntity;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente.ClienteEntity;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente.ClienteJpaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
