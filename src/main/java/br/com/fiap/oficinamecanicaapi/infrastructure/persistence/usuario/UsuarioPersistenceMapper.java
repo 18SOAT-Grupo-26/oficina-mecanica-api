@@ -1,7 +1,5 @@
-package br.com.fiap.oficinamecanicaapi.core.usecase.usuario.mapper;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.usuario;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity.PerfilEntity;
-import br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity.UsuarioEntity;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
@@ -16,15 +14,15 @@ import java.util.stream.Collectors;
         componentModel = "spring",
         imports = {GetLocalTime.class, Perfil.class, Set.class, Collectors.class}
 )
-public interface UsuarioMapper {
+public interface UsuarioPersistenceMapper {
 
     // Usuario não tem permissões — mapeamento apenas do perfil
     @Mapping(target = "perfil",
             expression = "java(Perfil.valueOf(entity.getPerfil().getNome()))")
-    Usuario toResponse(UsuarioEntity entity);
+    Usuario toDomain(UsuarioEntity entity);
 
     // DetalhesUsuario tem permissões — mapeamento aqui
-    @Mapping(target = "usuario", expression = "java(toResponse(entity))")
+    @Mapping(target = "usuario", expression = "java(toDomain(entity))")
     @Mapping(target = "permissoes",
             expression = "java(entity.getPerfil().getPermissoes().stream().map(p -> p.getNome()).collect(Collectors.toSet()))")
     DetalhesUsuario toDetalhesUsuario(UsuarioEntity entity);
