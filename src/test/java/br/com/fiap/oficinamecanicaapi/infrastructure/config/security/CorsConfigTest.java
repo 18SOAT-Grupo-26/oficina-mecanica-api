@@ -1,9 +1,9 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.config.security;
 
 import br.com.fiap.oficinamecanicaapi.controller.admin.ClienteController;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +44,7 @@ class CorsConfigTest {
     private ClienteUseCasePortIn clienteUseCase;
 
     @MockitoBean
-    private JwtTokenProviderUseCase jwtTokenProvider;
+    private JwtTokenUseCasePortIn jwtTokenProvider;
 
     @MockitoBean
     private UsuarioUseCasePortIn usuarioUseCase;

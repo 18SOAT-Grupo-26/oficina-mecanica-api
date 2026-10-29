@@ -3,8 +3,8 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.config.security;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +34,7 @@ class JwtAuthenticationFilterTest {
     private static final Usuario USUARIO = new Usuario("Ana", "ana@oficina.com.br", "ana", null, false, Perfil.FUNCIONARIO);
 
     @Mock
-    private JwtTokenProviderUseCase jwtTokenProvider;
+    private JwtTokenUseCasePortIn jwtTokenProvider;
 
     @Mock
     private UsuarioUseCasePortIn usuarioUseCase;

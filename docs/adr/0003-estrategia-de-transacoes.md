@@ -51,6 +51,7 @@ Fluxos cobertos por esta ADR:
 | Aprovar orçamento             | `PATCH /ordens-servico/{id}/aprovar-orcamento` | Status da OS, histórico, baixa de cada peça      |
 | Rejeitar orçamento            | `PATCH /ordens-servico/{id}/rejeitar-orcamento` | Status da OS (`CANCELADA`), liberação das peças |
 | Cancelar, finalizar, entregar | `PATCH /ordens-servico/{id}/status`            | Status da OS, histórico e, no cancelamento com orçamento pendente, liberação das peças |
+| Cancelar (só `ADMIN`)         | `DELETE /ordens-servico/{id}`                  | O mesmo cancelamento do `PATCH .../status`: a OS vira `CANCELADA` e não é apagada (#109) |
 | Cadastro de usuário           | `POST /auth/cadastro`                          | Usuário                                          |
 
 ## Decisão
@@ -307,6 +308,7 @@ Header `Idempotency-Key` com uma tabela de requisições já processadas, que de
 - [ADR 004 — Segurança: autenticação e autorização](0004-seguranca.md)
 - [ADR 005 — Estratégia de testes](0005-estrategia-de-testes.md)
 - PR #104: rotas de orçamento com reserva, baixa e liberação do estoque
+- PR #109: `DELETE /ordens-servico/{id}` como cancelamento, só para `ADMIN`
 - Event Storming do grupo (Miro) e a reunião de 16/10/2026
 - [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
 - [Spring Framework — Declarative transaction management](https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative.html)

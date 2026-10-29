@@ -2,14 +2,14 @@ package br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.*;
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumo;
+import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Placa;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Veiculo;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.ordemservico.OrdemServicoPortOut;
-import br.com.fiap.oficinamecanicaapi.core.port.out.pecaInsumo.PecaInsumoPortOut;
+import br.com.fiap.oficinamecanicaapi.core.port.out.pecainsumo.PecaInsumoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.veiculo.VeiculoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico.mapper.OrdemServicoMapper;

@@ -50,10 +50,11 @@ nos pacotes críticos.
 | Unitário de adapter e mapper   | Tradução entre domínio e entidade JPA, com o `JpaRepository` mockado                              | JUnit 5 e Mockito                                 | `VeiculoPersistenceAdapterTest`, `OrdemServicoPersistenceMapperTest`      |
 | Fatia web (controller)         | Contrato HTTP: status, JSON, validação, `HandlerException` e acesso por perfil (401, 403 e 2xx)   | `@WebMvcTest` + `MockMvc`, port in com `@MockitoBean` | `ClienteControllerTest`, `MinhasOrdensControllerTest`                     |
 | Guardas de segurança           | Nenhuma rota fora de `RotasPublicas` aceita requisição sem token. CORS só para as origens configuradas | `@WebMvcTest` com todos os controllers            | `RotasProtegidasTest`, `CorsConfigTest`                                   |
-| Integração (`*IT`)             | Migrations, `ddl-auto: validate`, `@Query` nativas de estoque, rollback e fluxos ponta a ponta    | `@SpringBootTest` + Testcontainers (`postgres:18-alpine`) | `MigracoesIT`, `PecaInsumoRepositoryIT`, `FluxoOrdemServicoIT`, `SegurancaIT` |
+| Integração (`*IT`)             | Migrations, `ddl-auto: validate`, `@Query` nativas de estoque, rollback e fluxos ponta a ponta    | `@SpringBootTest` + Testcontainers (`postgres:18-alpine`) | `MigracoesIT`, `PecaInsumoRepositoryIT`, `OrdemServicoJpaRepositoryIT`, `FluxoOrdemServicoIT`, `SegurancaIT` |
 | Manual e de aceite             | Fluxo completo como o avaliador vai usar                                                          | Collection do Postman e Swagger                   | `docs/postman/`                                                           |
 
-Hoje a `develop` tem **453 execuções de teste** (com os parametrizados), e nenhuma precisa de banco.
+Hoje (29/10) a `develop` tem **702 execuções de teste unitário** (com os parametrizados), que não precisam de banco, e
+**28 de integração** nos `*IT`.
 
 ### 2. Regras para escrever testes
 
@@ -96,11 +97,13 @@ Esses testes ficam no topo da pirâmide e são poucos. Eles cobrem o que só o b
 
 - todas as migrations aplicam do zero, e o Hibernate valida as entidades (`MigracoesIT`);
 - `reservar`, `liberar` e `baixar` recusam movimento sem saldo ou sem reserva (`PecaInsumoRepositoryIT`);
+- as consultas da OS (OS por cliente, contagem por status e períodos de execução para o tempo médio) rodam no
+  PostgreSQL (`OrdemServicoJpaRepositoryIT`);
 - o ciclo da OS até `ENTREGUE` movimenta o estoque, e uma OS com mais peças que o saldo responde 409 sem gravar nada
   (`FluxoOrdemServicoIT`);
 - login, token adulterado, 401 e 403 com a cadeia de segurança completa (`SegurancaIT`).
 
-Os testes de integração estão sendo incluídos pelo P5 (André) na branch `test/inserir-testes`, ainda não mergeada.
+Os testes de integração entraram na `develop` no #111, com o `maven-failsafe-plugin`.
 
 ## Alternativas consideradas
 
@@ -145,7 +148,8 @@ Os testes de integração estão sendo incluídos pelo P5 (André) na branch `te
 
 - **Prós:** uma regra só, que cobre tudo.
 - **Contras:** pune classes sem regra de negócio (configuração, DTOs, entidades JPA) e incentiva testes que só
-  aumentam o número. Também travaria o build agora: o projeto inteiro está em **79,9% de linhas**.
+  aumentam o número. Quando esta ADR foi escrita, também travaria o build: o projeto estava em **79,9% de linhas**.
+  Em 29/10, está em **97,6%**.
 - **Por que não, por enquanto:** a regra fica onde está o risco: domínio e casos de uso de `cliente`, `veiculo` e
   `ordemservico`. O total do projeto continua acompanhado no Sonar, com meta de 80% (RNF20).
 
@@ -183,15 +187,14 @@ Os testes de integração estão sendo incluídos pelo P5 (André) na branch `te
 - **Mocks podem esconder erro de integração.** Um teste de caso de uso passa mesmo que o adapter real se comporte
   diferente do mock. Por isso o comportamento do banco tem os `*IT`.
 - **Os `*IT` precisam de Docker.** Sem ele, são pulados em silêncio na máquina local. Só o CI garante que rodaram.
-- **Os `*IT` ainda não estão na `develop`.** Até o merge da branch `test/inserir-testes`, o rollback e os `UPDATE`s de
-  estoque só são cobertos por mocks e pelo teste manual.
 - **Concorrência sem teste automatizado.** Nenhum teste dispara duas reservas ou duas aprovações ao mesmo tempo. A
   garantia do RNF08 sob concorrência vem do desenho do SQL (ADR 003), e não de um teste. O próximo passo é um `*IT` com
   duas threads disputando a última unidade da mesma peça.
-- **Cobertura desigual.** Os pacotes fora da regra do JaCoCo têm cobertura baixa: `core/usecase/auth` (29%), os
-  adapters de `servico` e `pecaInsumo` (0%) e `infrastructure/config/metrics` (0%). Eles entram na regra quando
-  ganharem testes.
-- **Teste de controller depende do mock do filtro.** Os testes de controller mockam o `JwtTokenProviderUseCase` e o
+- **Cobertura fora da regra não trava o build.** Os pacotes que estavam baixos quando esta ADR foi escrita ganharam
+  testes (em 29/10: `core/usecase/auth` e `infrastructure/config/metrics` com 100%, adapters de `servico` e
+  `pecainsumo` com 94% e 95%), mas só os pacotes da regra do JaCoCo reprovam o build se caírem. Os outros são
+  acompanhados no Sonar e entram na regra conforme o time decidir.
+- **Teste de controller depende do mock do filtro.** Os testes de controller mockam o `JwtTokenUseCasePortIn` e o
   `UsuarioUseCasePortIn` para simular o login. A validação real do token só é coberta pelo `SegurancaIT`.
 
 ## Referências

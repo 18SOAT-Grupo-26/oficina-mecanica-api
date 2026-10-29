@@ -7,11 +7,11 @@ import br.com.fiap.oficinamecanicaapi.controller.admin.VeiculoController;
 import br.com.fiap.oficinamecanicaapi.controller.auth.AuthController;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.port.in.pecaInsumo.PecaInsumoUseCasePortIn;
+import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.RotasPublicas;
 import com.jayway.jsonpath.DocumentContext;
@@ -72,7 +72,7 @@ class OpenApiConfigTest {
     private AuthenticationUseCasePortIn authenticationUseCase;
 
     @MockitoBean
-    private JwtTokenProviderUseCase jwtTokenProvider;
+    private JwtTokenUseCasePortIn jwtTokenProvider;
 
     @MockitoBean
     private UsuarioUseCasePortIn usuarioUseCase;
