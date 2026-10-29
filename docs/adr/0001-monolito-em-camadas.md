@@ -146,8 +146,8 @@ callbacks em cada entidade sem levar JPA para o domínio.
   menor.
 - **Contras:** as entidades JPA viram o modelo de domínio, então regra de negócio e persistência ficam acopladas. Os
   services dependem direto dos repositórios, o que dificulta testar sem banco e trocar a persistência.
-- **Por que não:** perdemos o domínio testável e isolado. Parte do código atual (`servico`, `pecaInsumo`, `usuario`)
-  ainda segue esse formato e está registrada como dívida técnica nas issues do repositório.
+- **Por que não:** perdemos o domínio testável e isolado. Parte do código (`servico`, `pecainsumo`, `usuario`) seguiu
+  esse formato até o #121, que separou o modelo de domínio da entidade JPA.
 
 ### 3. Monólito modular com módulos isolados (Spring Modulith ou módulos Maven)
 
@@ -223,15 +223,15 @@ callbacks em cada entidade sem levar JPA para o domínio.
   os casos de uso registram contadores direto no `MeterRegistry`, o que é mais uma dependência leve no `core`. A
   padronização de logs (`action=... chave=valor`) segue o mesmo caminho.
 - Nenhuma entidade JPA fica no `core`, e o `UsuarioUseCase` usa o `UsuarioPortOut` em vez dos repositórios. Ainda
-  ficam fora do padrão: os repositórios de `usuario`, `servico` e `pecaInsumo` em
+  ficam fora do padrão: os repositórios de `usuario`, `servico` e `pecainsumo` em
   `infrastructure/persistence/repository/` (e não em `persistence/<contexto>/`); `Servico` e `PecaInsumo`, que são
   modelos anêmicos (getters e setters, com a validação no caso de uso, e não no modelo como em `Cliente`); e, na
   segurança, `Perfil` implementa `GrantedAuthority` e o JWT é gerado em `core/usecase/auth`
-  ([ADR 004](0004-seguranca.md)). O pente fino de 29/10 achou mais dois pontos: os DTOs `*Request`/`*Response` ficam
+  ([ADR 004](0004-seguranca.md)). O pente fino de 29/10 achou mais um ponto: os DTOs `*Request`/`*Response` ficam
   em `core/domain/<contexto>/model`, misturados aos modelos de domínio, quando o lugar de um contrato do port in é
-  `core/port/in/<contexto>/`; e o pacote `pecaInsumo` está em camelCase, diferente dos outros contextos. As duas
-  violações da regra de dependência que ele achou já foram corrigidas: o `JwtAuthenticationFilter` usa o port in (#122),
-  e o `UsuarioPayload` saiu de `shared` para `core/usecase/usuario` (#124). As correções são acompanhadas como issues de
+  `core/port/in/<contexto>/`. O resto do que ele achou já foi corrigido: o `JwtAuthenticationFilter` usa o port in
+  (#122), o `UsuarioPayload` saiu de `shared` para `core/usecase/usuario` (#124) e o pacote `pecaInsumo` passou a ser
+  `pecainsumo`, em minúsculas como os outros contextos. As correções são acompanhadas como issues de
   dívida técnica no repositório.
 
 ## Referências

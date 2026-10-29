@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model;
+package br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;

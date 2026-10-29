@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model;
+package br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model;
 
 import lombok.Getter;
 import lombok.Setter;

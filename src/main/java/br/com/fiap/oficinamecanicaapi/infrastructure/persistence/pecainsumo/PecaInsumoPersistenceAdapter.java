@@ -1,9 +1,9 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecaInsumo;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecainsumo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumo;
+import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
-import br.com.fiap.oficinamecanicaapi.core.port.out.pecaInsumo.PecaInsumoPortOut;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecaInsumo.PecaInsumoRepository;
+import br.com.fiap.oficinamecanicaapi.core.port.out.pecainsumo.PecaInsumoPortOut;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecainsumo.PecaInsumoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;

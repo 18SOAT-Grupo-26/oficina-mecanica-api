@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecaInsumo;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecainsumo;
 
 import br.com.fiap.oficinamecanicaapi.integracao.IntegracaoBase;
 import org.junit.jupiter.api.BeforeEach;
