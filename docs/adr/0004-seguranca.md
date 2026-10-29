@@ -114,6 +114,7 @@ perfil vira a authority `ROLE_<PERFIL>` (`Perfil implements GrantedAuthority`).
 | Clientes, veículos, serviços e peças: criar, ler, editar |   ✓   |      ✓      |          —           |
 | Clientes, veículos, serviços e peças: excluir           |   ✓   |      —      |          —           |
 | Ordens de serviço e orçamento (`/ordens-servico`)       |   ✓   |      ✓      |          —           |
+| Cancelar a OS pelo `DELETE /ordens-servico/{id}`        |   ✓   |      —      |          —           |
 | Acompanhar as próprias OS (`/minhas-ordens`)            |   —   |      —      | ✓ (só as próprias)   |
 
 - **O cliente só enxerga as próprias OS.** O usuário `CLIENTE` fica ligado ao cadastro do cliente (`usuarios.cliente_id`,
@@ -127,13 +128,17 @@ perfil vira a authority `ROLE_<PERFIL>` (`Perfil implements GrantedAuthority`).
 ### 5. Login sem enumeração de usuários
 
 - Usuário inexistente e senha errada recebem a **mesma resposta**: 401 com `"Credenciais inválidas"` (RNF14).
-- No usuário inexistente, a API calcula um BCrypt mesmo assim. O tempo de resposta fica parecido nos dois casos, e
-  também não revela quais logins existem.
+- No usuário inexistente, a API compara a senha com um **hash fictício** de uma senha aleatória, calculado uma vez e
+  reaproveitado. O custo do BCrypt é o mesmo nos dois casos, então o tempo de resposta também não revela quais logins
+  existem. Antes do #116, a API fazia um `encode`, que lança exceção com senha acima de 72 bytes: o usuário inexistente
+  respondia 500, e o existente, 401 (achado do OWASP ZAP).
 - Os resultados de login (`sucesso`, `senha_invalida`, `usuario_inexistente`), os tokens recusados e os acessos negados
   (401/403) viram métricas no Prometheus (`oficina.auth.login`, `oficina.auth.token.rejeitado`,
   `oficina.seguranca.acesso.negado`), o que permite alertar sobre um pico de falhas.
-- **Em andamento (#107):** limite de 5 falhas por identificador em 15 minutos, com **429** depois disso, e o
-  identificador mascarado nos logs do login. A contagem fica em memória.
+- **Limite de tentativas (#114):** depois de 5 falhas do mesmo identificador em 15 minutos, o login responde **429**
+  até a janela expirar, mesmo com a senha certa (`LOGIN_MAX_TENTATIVAS` e `LOGIN_JANELA_MINUTOS`). Identificador
+  inexistente também conta, para o 429 não revelar quais contas existem. Nos logs do login, o identificador aparece
+  mascarado (`a***@oficina.com.br`). A contagem fica em memória.
 
 ### 6. Demais proteções
 
@@ -142,7 +147,9 @@ perfil vira a authority `ROLE_<PERFIL>` (`Perfil implements GrantedAuthority`).
 | Chamadas de outros sites      | CORS só para as origens de `CORS_ALLOWED_ORIGINS` (vazio = nenhuma), sem `allowCredentials`. Métodos e headers listados.                                                  |
 | CSRF                          | Desligado: o token vai no header `Authorization`, e não em cookie, então o navegador não o envia sozinho.                                                                 |
 | Injeção de SQL (A03)          | Acesso pelo Spring Data JPA. As `@Query` nativas (estoque) usam só parâmetros nomeados (`:id`, `:quantidade`), sem concatenação.                                          |
-| Vazamento em erros            | `server.error.include-stacktrace: never` e o `HandlerException` responde com mensagem genérica e `traceId`. Erros de validação citam o nome do campo, nunca o valor enviado. |
+| Vazamento em erros            | `server.error.include-stacktrace: never` e o `HandlerException` responde com mensagem genérica e `traceId`. Erros de validação citam o nome do campo, nunca o valor enviado. Rota inexistente, método não suportado e query malformada respondem 404, 405 e 400, e não 500 (#117). |
+| Leitura entre origens         | Header `Cross-Origin-Resource-Policy: same-origin` em todas as respostas (#117). Não muda o CORS.                                                                      |
+| Dependências vulneráveis      | Trivy na imagem Docker (Alpine e os JARs do fat jar). O Spring Boot 4.1.2 (#119) corrigiu as CVEs críticas do Tomcat e as altas do Jackson ([relatório](../seguranca/relatorio-vulnerabilidades.md)). |
 | Dados pessoais (LGPD)         | O usuário guarda só nome e e-mail (V8 removeu identidade, contato e endereço do usuário). Clientes com delete lógico.                                                     |
 | Entrada inválida              | Bean Validation nos DTOs e value objects no domínio (`Documento`, `Placa`).                                                                                               |
 
@@ -256,14 +263,14 @@ como authorities.
   uso até a troca. Também não há senha provisória gerada pelo sistema (parte do RNF01).
 - **Uma consulta ao banco por requisição** para recarregar o usuário. Aceitável no volume atual. Se pesar, dá para usar
   um cache curto.
-- **Limite de tentativas em memória (#107).** Cada instância conta separado, e um reinício zera a contagem. Com mais de
+- **Limite de tentativas em memória (#114).** Cada instância conta separado, e um reinício zera a contagem. Com mais de
   uma instância, a contagem tem que ir para o banco ou para um Redis.
 - **`/actuator/prometheus` é público.** As métricas não têm dados pessoais, mas revelam volume e comportamento da API.
   Num ambiente exposto, deve ficar numa rede interna ou atrás de autenticação.
 - **Claims com dados pessoais.** O token leva nome e e-mail, e o payload de um JWT é só Base64, e não cifrado. Quem
   intercepta o token lê esses dados. Por isso o HTTPS é obrigatório fora do ambiente local (hoje o compose usa HTTP).
 - **Segurança no `core`.** `Perfil` implementa `GrantedAuthority` do Spring Security, e o `JwtTokenProviderUseCase` (com
-  `jjwt`) fica em `core/usecase`. As duas coisas contrariam a ADR 001, que coloca JWT e frameworks fora do `core`. Ficam
+  `jjwt`) fica em `core/usecase`. Desde o #122, o filtro depende só do `JwtTokenUseCasePortIn`. As duas coisas contrariam a ADR 001, que coloca JWT e frameworks fora do `core`. Ficam
   registradas como dívida técnica: o caminho é um `TokenPortOut` com a implementação em `infrastructure`.
 - **Segredo antigo no histórico.** O commit `26fe9db` tinha um valor padrão para o `API_SECRET` no `application.yaml`.
   Ele não é mais usado, mas está público no histórico e nunca deve voltar a ser usado. O valor de exemplo do
@@ -282,8 +289,9 @@ como authorities.
 - [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
 - Decisões registradas no grupo do time entre 16/10 e 27/10/2026 e reunião de 25/10/2026 (perfis da fase 1)
 - PRs #98 e #99 (token fora dos parâmetros e `RotasPublicas`), #100 (remoção da identidade), #102 (CORS), #103 (login
-  sem enumeração), #107 (limite de tentativas, em aberto), #108 (cadastro só pelo admin e admin inicial) e #110
-  (perfis da fase 1)
+  sem enumeração), #108 (cadastro só pelo admin e admin inicial), #109 (cancelamento da OS só pelo `ADMIN`), #110
+  (perfis da fase 1), #114 (limite de tentativas e logs mascarados), #116 (hash fictício no login), #117 (404/405/400
+  e `Cross-Origin-Resource-Policy`), #119 (Spring Boot 4.1.2) e #122 (filtro JWT pelo port in)
 - [OWASP Top 10 (2021)](https://owasp.org/Top10/)
 - [OWASP Password Storage Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
 - [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)

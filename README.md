@@ -17,15 +17,20 @@ Funcionalidades disponíveis até o momento:
 - CRUD de serviços (perfis `ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
 - CRUD de peças e insumos (perfis `ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
 - Acompanhamento das próprias OS pelo cliente (perfil `CLIENTE`, em `/minhas-ordens`)
-- Em desenvolvimento: ordem de serviço e acompanhamento da OS pelo cliente
+- Ordem de serviço: abertura, edição, orçamento com reserva de peças (gerar, aprovar com baixa ou rejeitar com
+  liberação), mudança de status com histórico, cancelamento (`DELETE` só `ADMIN`) e tempo médio de execução (perfis
+  `ADMIN` e `FUNCIONARIO`)
 
 ## Arquitetura utilizada
 
-Arquitetura hexagonal (ports and adapters):
+Monólito em camadas (ports & adapters):
 
-- `core` concentra o domínio, os casos de uso e as portas de entrada (`port/in`) e saída (`port/out`)
-- `controller` é o adapter de entrada (REST)
-- `infrastructure` é o adapter de saída (persistência com JPA) e as configurações de segurança e documentação
+- `core` concentra o domínio, os casos de uso e as portas de entrada (`port/in`) e saída (`port/out`), sem JPA nem
+  Spring Web
+- `controller` é o adapter de entrada (REST), separado em `admin`, `auth` e `cliente`
+- `infrastructure` é o adapter de saída (persistência com JPA, com as entidades em `persistence/<contexto>/`) e as
+  configurações de segurança, documentação e métricas
+- `shared` guarda as exceções, o tratamento global de erros e os utilitários
 
 A decisão, as camadas, a regra de dependência e as alternativas avaliadas estão
 na [ADR 001](docs/adr/0001-monolito-em-camadas.md). Todas as decisões de arquitetura estão
@@ -281,6 +286,7 @@ A autenticação usa JWT:
 | `POST`, `GET`, `PUT` | `/api/v1/clientes`, `/veiculos`, `/servico`, `/insumos` | `ADMIN`, `FUNCIONARIO` |
 | `DELETE` | `/api/v1/clientes`, `/veiculos`, `/servico`, `/insumos` | `ADMIN`             |
 | `*`    | `/api/v1/ordens-servico`       | `ADMIN`, `FUNCIONARIO`                 |
+| `DELETE` | `/api/v1/ordens-servico/{id}` (cancela a OS) | `ADMIN`                  |
 | `GET`  | `/api/v1/minhas-ordens`, `/api/v1/minhas-ordens/{id}` | `CLIENTE` (só as OS do próprio cliente) |
 
 Só um `ADMIN` logado cadastra usuários. O primeiro administrador é criado pela própria API na subida, a partir
