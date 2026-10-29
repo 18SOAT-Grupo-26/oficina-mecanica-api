@@ -96,6 +96,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
         PecaInsumo salvo = pecaInsumoPortOut.salvar(insumo);
 
         contar("atualizado");
+
         log.info("action=insumo_atualizado id={}", salvo.getId());
         return pecaInsumoMapper.toResponse(salvo);
     }

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Date;
 import java.util.Set;
 
@@ -24,7 +25,9 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
     private String SECRET;
 
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProviderUseCase.class);
-    private static final long EXPIRATION_TIME = 60 * 60 * 1000L;
+
+    @Value("${api.jwt.expiration-minutes:60}")
+    private long expiracaoMinutos = 60;
 
     private final MeterRegistry meterRegistry;
 
@@ -36,7 +39,7 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
     public String gerarToken(DetalhesUsuario detalhesUsuario) throws ApplicationException {
         try {
             Date now = new Date();
-            Date expirationDate = new Date(now.getTime() + EXPIRATION_TIME);
+            Date expirationDate = new Date(now.getTime() + Duration.ofMinutes(expiracaoMinutos).toMillis());
 
             Set<String> permissoes = detalhesUsuario.permissoes() != null
                     ? detalhesUsuario.permissoes()

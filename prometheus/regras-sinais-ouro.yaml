@@ -1,0 +1,58 @@
+# Regras de gravação dos 4 sinais de ouro. O Prometheus calcula cada expressão a cada 15 s e guarda o
+# resultado como uma série nova (ex.: oficina:latencia_p95:5m), usada pelos alertas e por consultas rápidas.
+# Todas ignoram /actuator, que é tráfego do próprio Prometheus e não de usuários.
+groups:
+  - name: sinais-de-ouro
+    interval: 15s
+    rules:
+      # ---- Latência ------------------------------------------------------------------------------
+      - record: oficina:latencia_p50:5m
+        expr: histogram_quantile(0.50, sum by (le) (rate(http_server_requests_seconds_bucket{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m])))
+      - record: oficina:latencia_p95:5m
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m])))
+      - record: oficina:latencia_p99:5m
+        expr: histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m])))
+      - record: oficina:latencia_p95_por_rota:5m
+        expr: histogram_quantile(0.95, sum by (le, method, uri) (rate(http_server_requests_seconds_bucket{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m])))
+
+      # ---- Tráfego -------------------------------------------------------------------------------
+      - record: oficina:requisicoes:rate5m
+        expr: sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m]))
+      - record: oficina:requisicoes_por_rota:rate5m
+        expr: sum by (method, uri) (rate(http_server_requests_seconds_count{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m]))
+
+      # ---- Erros ---------------------------------------------------------------------------------
+      - record: oficina:erros_5xx:ratio_rate5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api", uri!~"/actuator.*", status=~"5.."}[5m]))
+            / sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m]))
+      - record: oficina:erros_4xx:ratio_rate5m
+        expr: |
+          sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api", uri!~"/actuator.*", status=~"4.."}[5m]))
+            / sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m]))
+      # erro implícito: a requisição respondeu, mas acima de 1 s (bucket le="1.0" vem do slo no application.yaml)
+      - record: oficina:requisicoes_lentas:ratio_rate5m
+        expr: |
+          1 - (
+            sum(rate(http_server_requests_seconds_bucket{application="oficina-mecanica-api", uri!~"/actuator.*", le="1.0"}[5m]))
+              / sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m]))
+          )
+
+      # ---- Saturação -----------------------------------------------------------------------------
+      # "> 0" descarta as áreas sem limite (max = -1) da heap
+      - record: oficina:saturacao_heap:ratio
+        expr: |
+          sum(jvm_memory_used_bytes{application="oficina-mecanica-api", area="heap"})
+            / sum(jvm_memory_max_bytes{application="oficina-mecanica-api", area="heap"} > 0)
+      - record: oficina:saturacao_cpu:ratio
+        expr: max(process_cpu_usage{application="oficina-mecanica-api"})
+      - record: oficina:saturacao_pool_conexoes:ratio
+        expr: |
+          sum(hikaricp_connections_active{application="oficina-mecanica-api"})
+            / sum(hikaricp_connections_max{application="oficina-mecanica-api"})
+      - record: oficina:saturacao_threads_http:ratio
+        expr: |
+          sum(tomcat_threads_busy_threads{application="oficina-mecanica-api"})
+            / sum(tomcat_threads_config_max_threads{application="oficina-mecanica-api"})
+      - record: oficina:os_em_andamento
+        expr: sum(oficina_os_quantidade{application="oficina-mecanica-api", status=~"RECEBIDA|EM_DIAGNOSTICO|AGUARDANDO_APROVACAO|EM_EXECUCAO"})

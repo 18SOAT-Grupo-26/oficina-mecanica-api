@@ -1,37 +1,63 @@
+# Alertas por sinal de ouro (label "sinal"). Sem Alertmanager, eles aparecem em http://localhost:9090/alerts.
 groups:
   - name: oficina-mecanica-api
     rules:
+      # ---- Disponibilidade -----------------------------------------------------------------------
       - alert: ApiFora
         expr: max(up{job=~"oficina-mecanica-api.*"}) == 0
         for: 1m
         labels:
           severidade: critica
+          sinal: erros
         annotations:
           resumo: "A API não responde ao Prometheus há mais de 1 minuto"
 
-      - alert: TaxaDeErros5xxAlta
-        expr: |
-          sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api", status=~"5.."}[5m]))
-            / sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api"}[5m])) > 0.05
-        for: 5m
-        labels:
-          severidade: alta
-        annotations:
-          resumo: "Mais de 5% das requisições terminando em 5xx"
-
+      # ---- Latência ------------------------------------------------------------------------------
       - alert: LatenciaP95Alta
-        expr: |
-          histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m]))) > 1
+        expr: oficina:latencia_p95:5m > 1
         for: 5m
         labels:
           severidade: media
+          sinal: latencia
         annotations:
           resumo: "p95 das requisições acima de 1 segundo"
+          valor: "{{ $value | humanizeDuration }}"
+
+      - alert: RequisicoesLentasEmExcesso
+        expr: oficina:requisicoes_lentas:ratio_rate5m > 0.10
+        for: 10m
+        labels:
+          severidade: media
+          sinal: latencia
+        annotations:
+          resumo: "Mais de 10% das requisições acima de 1 segundo"
+          valor: "{{ $value | humanizePercentage }}"
+
+      - alert: EsperaPorConexaoDoBanco
+        expr: histogram_quantile(0.95, sum by (le) (rate(hikaricp_connections_acquire_seconds_bucket{application="oficina-mecanica-api"}[5m]))) > 0.5
+        for: 5m
+        labels:
+          severidade: media
+          sinal: latencia
+        annotations:
+          resumo: "p95 da espera por conexão do pool acima de 500 ms"
+
+      # ---- Erros ---------------------------------------------------------------------------------
+      - alert: TaxaDeErros5xxAlta
+        expr: oficina:erros_5xx:ratio_rate5m > 0.05
+        for: 5m
+        labels:
+          severidade: alta
+          sinal: erros
+        annotations:
+          resumo: "Mais de 5% das requisições terminando em 5xx"
+          valor: "{{ $value | humanizePercentage }}"
 
       - alert: BancoIndisponivel
         expr: sum(increase(oficina_banco_indisponivel_total[5m])) > 0
         labels:
           severidade: critica
+          sinal: erros
         annotations:
           resumo: "A API respondeu 503 por falha de banco nos últimos 5 minutos"
 
@@ -39,13 +65,54 @@ groups:
         expr: sum(increase(oficina_auth_login_total{resultado!="sucesso"}[5m])) > 20
         labels:
           severidade: media
+          sinal: erros
         annotations:
           resumo: "Mais de 20 logins recusados em 5 minutos (possível tentativa de força bruta)"
+
+      # ---- Saturação -----------------------------------------------------------------------------
+      - alert: MemoriaHeapAlta
+        expr: oficina:saturacao_heap:ratio > 0.90
+        for: 10m
+        labels:
+          severidade: alta
+          sinal: saturacao
+        annotations:
+          resumo: "Heap da JVM acima de 90% há 10 minutos"
+          valor: "{{ $value | humanizePercentage }}"
+
+      - alert: CpuAlta
+        expr: oficina:saturacao_cpu:ratio > 0.85
+        for: 10m
+        labels:
+          severidade: media
+          sinal: saturacao
+        annotations:
+          resumo: "CPU do processo acima de 85% há 10 minutos"
+          valor: "{{ $value | humanizePercentage }}"
+
+      - alert: PoolDeConexoesEsgotado
+        expr: sum(hikaricp_connections_pending{application="oficina-mecanica-api"}) > 0
+        for: 2m
+        labels:
+          severidade: alta
+          sinal: saturacao
+        annotations:
+          resumo: "Requisições aguardando conexão com o banco há 2 minutos"
+
+      - alert: ThreadsHttpSaturadas
+        expr: oficina:saturacao_threads_http:ratio > 0.80
+        for: 5m
+        labels:
+          severidade: media
+          sinal: saturacao
+        annotations:
+          resumo: "Mais de 80% das threads HTTP do Tomcat ocupadas"
 
       - alert: PecasSemSaldo
         expr: max(oficina_estoque_pecas_sem_saldo) > 0
         for: 10m
         labels:
           severidade: baixa
+          sinal: saturacao
         annotations:
           resumo: "Há peças sem saldo disponível em estoque"

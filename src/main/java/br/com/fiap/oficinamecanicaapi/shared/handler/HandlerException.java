@@ -45,13 +45,17 @@ public class HandlerException {
         }
 
         if (status.is5xxServerError()) {
+            contarErro(status, "aplicacao");
             if (log.isErrorEnabled()) {
                 log.error("action=erro_aplicacao status={} rota={} traceId={} mensagem={}",
                         status.value(), rota(), e.getTraceId(), e.getMessage(), e);
             }
-        } else if (log.isWarnEnabled()) {
-            log.warn("action=erro_negocio status={} rota={} traceId={} mensagem={}",
-                    status.value(), rota(), e.getTraceId(), e.getMessage());
+        } else {
+            contarErro(status, "negocio");
+            if (log.isWarnEnabled()) {
+                log.warn("action=erro_negocio status={} rota={} traceId={} mensagem={}",
+                        status.value(), rota(), e.getTraceId(), e.getMessage());
+            }
         }
 
         ErrorTemplate errorBody = ErrorTemplate.builder()
@@ -155,13 +159,17 @@ public class HandlerException {
     private static ResponseEntity<ErrorTemplate> buildError(HttpStatus status, String message, Exception causa) {
         String traceId = UUID.randomUUID().toString();
         if (causa != null) {
+            contarErro(status, "servidor");
             if (log.isErrorEnabled()) {
                 log.error("action=erro_servidor status={} rota={} traceId={} mensagem={}",
                         status.value(), rota(), traceId, message, causa);
             }
-        } else if (log.isWarnEnabled()) {
-            log.warn("action=erro_requisicao status={} rota={} traceId={} mensagem={}",
-                    status.value(), rota(), traceId, message);
+        } else {
+            contarErro(status, "requisicao");
+            if (log.isWarnEnabled()) {
+                log.warn("action=erro_requisicao status={} rota={} traceId={} mensagem={}",
+                        status.value(), rota(), traceId, message);
+            }
         }
 
         ErrorTemplate errorBody = ErrorTemplate.builder()
@@ -181,5 +189,12 @@ public class HandlerException {
             return atributos.getRequest().getMethod() + " " + atributos.getRequest().getRequestURI();
         }
         return "-";
+    }
+
+    /**
+     * oficina.erros{status, tipo}: negocio/requisicao = recusas esperadas (4xx); aplicacao/servidor = falhas (5xx).
+     */
+    private static void contarErro(HttpStatus status, String tipo) {
+        Metrics.counter("oficina.erros", "status", String.valueOf(status.value()), "tipo", tipo).increment();
     }
 }
