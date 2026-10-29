@@ -15,14 +15,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
 
     private static final Logger log = LoggerFactory.getLogger(AuthenticationUseCase.class);
     private static final String BEARER_PREFIX = "Bearer ";
-    /** Senha sem valor secreto, comparada quando o usuário não existe, para o login custar o mesmo bcrypt. */
-    static final String SENHA_FICTICIA = "senha-ficticia-para-igualar-o-tempo-do-login";
-
     private volatile String hashFicticio;
 
     private final UsuarioUseCasePortIn usuarioService;
@@ -134,9 +133,13 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
         meterRegistry.counter("oficina.auth.login", "resultado", resultado).increment();
     }
 
+    /**
+     * Hash comparado quando o usuário não existe, para o login custar o mesmo bcrypt. A senha é aleatória, gerada
+     * uma vez: ninguém a conhece e não há literal de senha no código (o Sonar trata literal no encode como vazada).
+     */
     private String hashFicticio() {
         if (hashFicticio == null) {
-            hashFicticio = passwordEncoder.encode(SENHA_FICTICIA);
+            hashFicticio = passwordEncoder.encode(UUID.randomUUID().toString());
         }
         return hashFicticio;
     }

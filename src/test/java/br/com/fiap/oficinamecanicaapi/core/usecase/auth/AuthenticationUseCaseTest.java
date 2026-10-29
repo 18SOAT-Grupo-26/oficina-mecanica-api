@@ -105,7 +105,8 @@ class AuthenticationUseCaseTest {
     void deveRecusarUsuarioInexistenteComoSenhaErrada() {
         when(usuarioService.buscarPorIdentificador(IDENTIFICADOR))
                 .thenThrow(new ApplicationException(404, "Usuário não encontrado"));
-        when(passwordEncoder.encode(AuthenticationUseCase.SENHA_FICTICIA)).thenReturn(HASH_FICTICIO);
+        // a senha fictícia é aleatória por desenho: não há valor conhecido para casar
+        when(passwordEncoder.encode(anyString())).thenReturn(HASH_FICTICIO);
 
         ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.autenticar(REQUEST));
 
