@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 public interface AuthAPI {
 
-    @Operation(summary = "Cadastrar usuário", tags = "Autenticação")
+    @Operation(summary = "Cadastrar usuário (somente ADMIN)", tags = "Autenticação")
     @ApiResponse(responseCode = "201", description = "Usuário cadastrado", content = @Content)
     @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "E-mail ou documento já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))

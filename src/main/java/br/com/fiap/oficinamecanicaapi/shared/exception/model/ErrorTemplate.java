@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Builder
 @Getter
@@ -13,7 +13,7 @@ public class ErrorTemplate {
 
     private Integer errorCode;
     private String message;
-    private LocalDateTime timestamp;
+    private OffsetDateTime timestamp;
     private String traceId;
 
 }

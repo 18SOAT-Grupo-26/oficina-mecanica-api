@@ -4,7 +4,7 @@ import br.com.fiap.oficinamecanicaapi.shared.utils.GetLocalTime;
 import lombok.Getter;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Getter
@@ -14,7 +14,7 @@ public class ApplicationException extends RuntimeException {
     private static final long serialVersionUID = 1L;
     private final Integer errorCode;
     private final String message;
-    private final LocalDateTime timestamp;
+    private final OffsetDateTime timestamp;
     private final String traceId;
 
     public ApplicationException(int errorCode, String message) {

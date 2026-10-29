@@ -34,6 +34,9 @@ public class UsuarioEntity {
     @JoinColumn(name = "perfil_id", nullable = false)
     private PerfilEntity perfil;
 
+    @Column(name = "cliente_id", unique = true)
+    private Long clienteId;
+
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 

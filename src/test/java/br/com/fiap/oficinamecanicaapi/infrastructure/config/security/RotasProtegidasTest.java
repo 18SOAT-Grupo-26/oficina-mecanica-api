@@ -16,7 +16,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -28,7 +27,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.startsWith;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -46,9 +44,9 @@ class RotasProtegidasTest {
     private static final String PACOTE_DA_APLICACAO = "br.com.fiap.oficinamecanicaapi";
     private static final String TOKEN_INVALIDO = "token-invalido";
     /**
-     * CRUDs de cliente, veículo, insumo e serviço e operações da OS na data do teste.
+     * CRUDs de cliente, veículo, insumo e serviço, operações da OS e as duas rotas do cliente na data do teste.
      */
-    private static final int ROTAS_PROTEGIDAS_MINIMO = 26;
+    private static final int ROTAS_PROTEGIDAS_MINIMO = 28;
 
     @Autowired
     private MockMvc mockMvc;
@@ -108,16 +106,6 @@ class RotasProtegidasTest {
                 () -> mockMvc.perform(request(rota.metodo(), rota.caminho())
                                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN_INVALIDO))
                         .andExpect(status().isUnauthorized())));
-    }
-
-    @Test
-    @DisplayName("Cadastro é público: sem header Authorization chega à validação do corpo, sem 401 nem 500")
-    void cadastroDeveSerPublicoSemHeader() throws Exception {
-        // trocaSenhaObrigatoria é boolean primitivo: sem ele o JSON nem chega à validação (422)
-        mockMvc.perform(post("/auth/cadastro").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"trocaSenhaObrigatoria\": false}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(startsWith("Campos inválidos")));
     }
 
     @Test

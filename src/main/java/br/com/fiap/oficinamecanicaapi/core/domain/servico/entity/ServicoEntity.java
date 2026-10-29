@@ -1,17 +1,17 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.servico.entity;
 
+import br.com.fiap.oficinamecanicaapi.shared.persistence.EntidadeComDatas;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "servico")
 @Getter
 @Setter
-public class ServicoEntity {
+public class ServicoEntity extends EntidadeComDatas {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,21 +28,4 @@ public class ServicoEntity {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal preco;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private OffsetDateTime updatedAt;
-
-    @PrePersist
-    void onCreate() {
-        OffsetDateTime now = OffsetDateTime.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        this.updatedAt = OffsetDateTime.now();
-    }
 }

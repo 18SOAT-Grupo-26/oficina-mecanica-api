@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -54,11 +55,30 @@ class UsuarioPayloadTest {
     }
 
     private static Usuario usuario(String nome, String email, String nomeUsuario) {
-        return new Usuario(nome, email, nomeUsuario, SENHA, false, Perfil.ADMINISTRATOR);
+        return new Usuario(nome, email, nomeUsuario, SENHA, false, Perfil.ADMIN);
     }
 
     private static void assertErro400(Executable chamada) {
         ApplicationException exception = assertThrows(ApplicationException.class, chamada);
         assertThat(exception.getErrorCode()).isEqualTo(400);
+    }
+
+    @Test
+    @DisplayName("Deve identificar como e-mail só o identificador que contém @")
+    void deveIdentificarEmail() {
+        assertThat(usuarioPayload.isEmail("ana@oficina.com.br")).isTrue();
+        assertThat(usuarioPayload.isEmail("ana")).isFalse();
+        assertThat(usuarioPayload.isEmail(null)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Deve recusar com 400 o cadastro com trocaSenhaObrigatoria verdadeiro")
+    void deveRecusarTrocaDeSenhaObrigatoria() {
+        Usuario usuario = new Usuario("Ana", "ana@oficina.com.br", "ana", "Admin@123", true, Perfil.FUNCIONARIO);
+
+        assertThatThrownBy(() -> usuarioPayload.validarUsuario(usuario))
+                .isInstanceOf(ApplicationException.class)
+                .hasMessage("O campo trocaSenhaObrigatoria é obrigatório")
+                .extracting("errorCode").isEqualTo(400);
     }
 }

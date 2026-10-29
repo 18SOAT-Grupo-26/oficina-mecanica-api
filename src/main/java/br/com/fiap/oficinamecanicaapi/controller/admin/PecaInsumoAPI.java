@@ -10,9 +10,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 public interface PecaInsumoAPI {
 
@@ -21,6 +19,7 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Insumo with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @PostMapping
     ResponseEntity<PecaInsumoResponse> criar(@RequestBody PecaInsumoRequest request) throws ApplicationException;
 
     @Operation(summary = "Listar insumos", tags = "Insumo")
@@ -28,12 +27,14 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Insumo with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @GetMapping
     ResponseEntity<Pagina<PecaInsumoResponse>> listar(@RequestParam(required = false) Integer page,
                                                       @RequestParam(required = false) Integer size) throws ApplicationException;
 
     @Operation(summary = "Buscar insumo por id", tags = "Insumo")
     @ApiResponse(responseCode = "200", description = "Insumo encontrado", content = @Content(schema = @Schema(implementation = PecaInsumoResponse.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @GetMapping("/{id}")
     ResponseEntity<PecaInsumoResponse> buscarPorId(@PathVariable Long id) throws ApplicationException;
 
 
@@ -42,10 +43,12 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Nome de insumo já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @PutMapping("/{id}")
     ResponseEntity<PecaInsumoResponse> atualizar(@PathVariable Long id, @RequestBody PecaInsumoRequest request) throws ApplicationException;
 
     @Operation(summary = "Excluir insumo", tags = "Insumo")
     @ApiResponse(responseCode = "204", description = "Insumo excluído")
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @DeleteMapping("/{id}")
     ResponseEntity<Void> excluir(@PathVariable Long id) throws ApplicationException;
 }

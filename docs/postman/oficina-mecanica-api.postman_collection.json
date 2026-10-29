@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "7ebc0463-1563-47a3-b17a-4fba01aa7ef6",
     "name": "Oficina Mecânica API",
-    "description": "Endpoints implementados da API da oficina mecânica.\n\n**Como usar**\n1. Suba a aplicação (`docker compose up`).\n2. Rode **Auth → Cadastrar usuário** e **Auth → Login**: o token fica salvo em `{{token}}` e é enviado como Bearer nas demais pastas.\n3. As requisições de cadastro salvam os ids (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`, `ordemId`) usados pelas seguintes.\n\nA collection inteira pode ser executada no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução para não violar as constraints UNIQUE.",
+    "description": "Endpoints implementados da API da oficina mecânica.\n\n**Como usar**\n1. Suba a aplicação (`docker compose up`).\n2. Preencha `adminUsuario` e `adminSenha` (variáveis da collection) com o `ADMIN_USUARIO`/`ADMIN_SENHA` do seu `.env` e rode **Auth → Login administrador**: o token fica salvo em `{{token}}` e é enviado como Bearer nas demais pastas.\n3. As requisições de cadastro salvam os ids (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`, `ordemId`) usados pelas seguintes.\n\nA collection inteira pode ser executada no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução para não violar as constraints UNIQUE.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "13807568"
   },
@@ -11,6 +11,55 @@
       "name": "Auth",
       "item": [
         {
+          "name": "Login administrador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"token\", token.replace(/^Bearer\\s+/, \"\"));\npm.test(\"Token recebido\", function () {\n    pm.expect(pm.collectionVariables.get(\"token\")).to.not.be.empty;\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"{{adminUsuario}}\",\n  \"senha\": \"{{adminSenha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login com o administrador inicial, criado pela API a partir de ADMIN_USUARIO/ADMIN_SENHA do .env. Preencha as variáveis da collection `adminUsuario` e `adminSenha` com esses valores (vão vazias no arquivo). O script guarda o token em `{{token}}`, usado pelas demais pastas."
+          },
+          "response": []
+        },
+        {
           "name": "Cadastrar usuário",
           "event": [
             {
@@ -18,7 +67,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.collectionVariables.set(\"username\", \"admin_\" + pm.variables.get(\"sufixo\"));"
+                  "pm.collectionVariables.set(\"username\", \"operador_\" + pm.variables.get(\"sufixo\"));"
                 ]
               }
             },
@@ -46,7 +95,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{   \n  \"nome\": \"Administrador da Oficina\",\n  \"email\": \"{{username}}@oficina.com\",\n  \"nomeUsuario\": \"{{username}}\",\n  \"senha\": \"{{password}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"ADMINISTRATOR\",\n    \"usuario\": {\n        \"nomeUsuario\": \"{{username}}\",\n        \"senha\": \"{{password}}\",\n        \"trocaSenhaObrigatoria\": false,\n        \"perfil\": \"ADMINISTRATOR\"\n    }\n}",
+              "raw": "{\n  \"nome\": \"Funcionário de Teste\",\n  \"email\": \"{{username}}@oficina.com\",\n  \"nomeUsuario\": \"{{username}}\",\n  \"senha\": \"{{password}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"FUNCIONARIO\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -63,56 +112,17 @@
                 "cadastro"
               ]
             },
-            "description": "Cadastra o usuário com nome, e-mail, nome de usuário, senha e perfil. O perfil (`perfil`) deve existir: `ADMINISTRATOR`, `MANAGER` ou `OPERATOR`. O script gera username e e-mail únicos e guarda as credenciais para o login.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial."
-          },
-          "response": []
-        },
-        {
-          "name": "Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"token\", token.replace(/^Bearer\\s+/, \"\"));\npm.test(\"Token recebido\", function () {\n    pm.expect(pm.collectionVariables.get(\"token\")).to.not.be.empty;\n});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "",
-                "value": "",
-                "disabled": true
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"identificador\": \"{{username}}\",\n  \"senha\": \"{{password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+            "description": "Cadastra um usuário de teste (perfil FUNCIONARIO). Só ADMIN cadastra usuários: usa o token do **Login administrador**. O script gera username e e-mail únicos a cada execução.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
                 }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
               ]
-            },
-            "description": "Gera o token JWT. `identificador` aceita nome de usuário ou e-mail. O script guarda o token em `{{token}}`, usado pelas demais pastas."
+            }
           },
           "response": []
         },
@@ -149,7 +159,17 @@
                 "validate"
               ]
             },
-            "description": "Retorna `true` se o token enviado no header `Authorization` for válido."
+            "description": "Retorna `true` se o token enviado no header `Authorization` for válido.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
           "response": []
         }
@@ -338,7 +358,7 @@
           "response": []
         }
       ],
-      "description": "Perfis: `ADMINISTRATOR` ou `MANAGER`."
+      "description": "Perfis: `ADMIN` ou `FUNCIONARIO` (a exclusão, na pasta Exclusões, é só do `ADMIN`)."
     },
     {
       "name": "Serviços",
@@ -513,7 +533,7 @@
           "response": []
         }
       ],
-      "description": "Perfil: `ADMINISTRATOR`. Um serviço referencia as peças e insumos que usa."
+      "description": "Perfis: `ADMIN` ou `FUNCIONARIO` (a exclusão, na pasta Exclusões, é só do `ADMIN`). Um serviço referencia as peças e insumos que usa."
     },
     {
       "name": "Clientes",
@@ -730,7 +750,7 @@
           "response": []
         }
       ],
-      "description": "Perfil: `ADMINISTRATOR`. `documento` aceita CPF ou CNPJ (numérico ou alfanumérico), com ou sem máscara."
+      "description": "Perfis: `ADMIN` ou `FUNCIONARIO` (a exclusão, na pasta Exclusões, é só do `ADMIN`). `documento` aceita CPF ou CNPJ (numérico ou alfanumérico), com ou sem máscara."
     },
     {
       "name": "Veículos",
@@ -952,7 +972,7 @@
           "response": []
         }
       ],
-      "description": "Perfil: `ADMINISTRATOR`. Todo veículo pertence a um cliente ativo."
+      "description": "Perfis: `ADMIN` ou `FUNCIONARIO` (a exclusão, na pasta Exclusões, é só do `ADMIN`). Todo veículo pertence a um cliente ativo."
     },
     {
       "name": "Exclusões",
@@ -1116,7 +1136,7 @@
           "response": []
         }
       ],
-      "description": "Fica por último para o Runner: o veículo depende do cliente e o serviço depende da peça. Cliente e veículo são desativados (delete lógico)."
+      "description": "Fica por último para o Runner: o veículo depende do cliente e o serviço depende da peça. Cliente e veículo são desativados (delete lógico). Perfil: `ADMIN` (o funcionário recebe 403)."
     },
     {
       "name": "Observabilidade",
@@ -1188,45 +1208,6 @@
       "auth": {
         "type": "noauth"
       }
-    },
-    {
-      "name": "Acompanhar Ordem de Serviço",
-      "item": [
-        {
-          "name": "Consultar OS",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/acompanhamento-os/consultar/:ordemId",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "acompanhamento-os",
-                "consultar",
-                ":ordemId"
-              ],
-              "variable": [
-                {
-                  "key": "ordemId",
-                  "value": "{{ordemId}}"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
     },
     {
       "name": "Ordem de Serviço",
@@ -1574,6 +1555,166 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "Acompanhar Ordem de Serviço",
+      "description": "Perfil: `CLIENTE`. O cliente vem do token, nunca da URL: ele só enxerga as próprias OS. Rode antes **Clientes → Cadastrar cliente** e **Ordem de Serviço → Criar OS** para esse cliente.",
+      "item": [
+        {
+          "name": "Cadastrar usuário cliente",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"clienteUsuario\", \"cliente\" + Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Cliente de Teste\",\n  \"email\": \"{{clienteUsuario}}@email.com\",\n  \"nomeUsuario\": \"{{clienteUsuario}}\",\n  \"senha\": \"{{clienteSenha}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"CLIENTE\",\n  \"clienteId\": {{clienteId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/cadastro",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "cadastro"
+              ]
+            },
+            "description": "Cria o login do cliente cadastrado em **Clientes → Cadastrar cliente** (`{{clienteId}}`), com o token do **Login administrador**. O `clienteId` é obrigatório para o perfil CLIENTE; um segundo login para o mesmo cliente responde 409. O script gera um username único a cada execução."
+          },
+          "response": []
+        },
+        {
+          "name": "Login cliente",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"tokenCliente\", token.replace(/^Bearer\\s+/, \"\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"identificador\": \"{{clienteUsuario}}\",\n  \"senha\": \"{{clienteSenha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Guarda o token do cliente em `{{tokenCliente}}`, separado do token do administrador."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar minhas OS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/minhas-ordens",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "minhas-ordens"
+              ]
+            },
+            "description": "OS do cliente logado, com status, itens e histórico."
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar minha OS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tokenCliente}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/minhas-ordens/:ordemId",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "minhas-ordens",
+                ":ordemId"
+              ],
+              "variable": [
+                {
+                  "key": "ordemId",
+                  "value": "{{ordemId}}"
+                }
+              ]
+            },
+            "description": "A OS de outro cliente responde 404, como se não existisse."
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "auth": {
@@ -1660,6 +1801,30 @@
     },
     {
       "key": "ordemId",
+      "value": ""
+    },
+    {
+      "key": "adminUsuario",
+      "value": "",
+      "type": "string",
+      "description": "ADMIN_USUARIO do seu .env (não versionar o valor)"
+    },
+    {
+      "key": "adminSenha",
+      "value": "",
+      "type": "string",
+      "description": "ADMIN_SENHA do seu .env (não versionar o valor)"
+    },
+    {
+      "key": "clienteUsuario",
+      "value": ""
+    },
+    {
+      "key": "clienteSenha",
+      "value": "Cliente@123"
+    },
+    {
+      "key": "tokenCliente",
       "value": ""
     }
   ]

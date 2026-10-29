@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * Papéis provisórios: todos os perfis até o grupo definir quem pode cada mudança.
+ * Rotas dos funcionários e do admin. O cliente acompanha as próprias OS pelo {@code MinhasOrdensController}.
  */
 @RestController
 @RequestMapping("/ordens-servico")
-@PreAuthorize("hasAnyRole('OPERATOR', 'MANAGER', 'ADMINISTRATOR')")
+@PreAuthorize("hasAnyRole('ADMIN', 'FUNCIONARIO')")
 public class OrdemServicoController implements OrdemServicoAPI {
 
     private final OrdemServicoUseCasePortIn useCase;

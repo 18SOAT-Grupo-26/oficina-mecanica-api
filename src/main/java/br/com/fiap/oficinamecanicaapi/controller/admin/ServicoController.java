@@ -8,11 +8,12 @@ import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/servico")
-@PreAuthorize("hasRole('ADMINISTRATOR')")
+@PreAuthorize("hasRole('ADMIN')")
 public class ServicoController implements ServicoAPI {
 
     private final ServicoUseCasePortIn useCase;
@@ -22,31 +23,26 @@ public class ServicoController implements ServicoAPI {
     }
 
     @Override
-    @PostMapping
     public ResponseEntity<ServicoResponse> criar(ServicoRequest request) throws ApplicationException {
         return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
     }
 
     @Override
-    @GetMapping
     public ResponseEntity<Pagina<ServicoResponse>> listar(Integer page, Integer size) {
         return ResponseEntity.ok(useCase.listar(page, size));
     }
 
     @Override
-    @GetMapping("/{id}")
     public ResponseEntity<ServicoResponse> buscarPorId(Long id) throws ApplicationException {
         return ResponseEntity.ok(useCase.buscarPorId(id));
     }
 
     @Override
-    @PutMapping("/{id}")
     public ResponseEntity<ServicoResponse> atualizar(Long id, ServicoRequest request) throws ApplicationException {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
-    @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(Long id) throws ApplicationException {
         useCase.excluir(id);
         return ResponseEntity.noContent().build();

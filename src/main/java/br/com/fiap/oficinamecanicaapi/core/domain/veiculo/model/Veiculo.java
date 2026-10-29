@@ -1,6 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model;
 
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.utils.GetLocalTime;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
@@ -62,7 +63,7 @@ public class Veiculo {
      * Aceita até o ano seguinte ao atual, pois modelos do próximo ano já são vendidos.
      */
     static int anoMaximo() {
-        return Year.now().getValue() + 1;
+        return Year.now(GetLocalTime.FUSO).getValue() + 1;
     }
 
     private void aplicarDados(Placa placa, String marca, String modelo, Integer ano, Long clienteId) {

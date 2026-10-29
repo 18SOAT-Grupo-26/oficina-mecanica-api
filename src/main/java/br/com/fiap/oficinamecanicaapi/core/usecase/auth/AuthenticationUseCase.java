@@ -7,6 +7,7 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.utils.MascaraDados;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,15 +25,18 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProviderUseCase jwtTokenProvider;
     private final MeterRegistry meterRegistry;
+    private final LimiteTentativasLogin limiteTentativas;
 
     public AuthenticationUseCase(UsuarioUseCasePortIn usuarioService,
                                  PasswordEncoder passwordEncoder,
                                  JwtTokenProviderUseCase jwtTokenProvider,
+                                 LimiteTentativasLogin limiteTentativas,
                                  MeterRegistry meterRegistry) {
         this.usuarioService = usuarioService;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
         this.meterRegistry = meterRegistry;
+        this.limiteTentativas = limiteTentativas;
     }
 
     /**
@@ -45,7 +49,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             log.info("action=register_start username={}", request.nomeUsuario());
 
             usuarioService.cadastrar(new Usuario(request.nome(), request.email(), request.nomeUsuario(),
-                    request.senha(), request.trocaSenhaObrigatoria(), request.perfil()));
+                    request.senha(), request.trocaSenhaObrigatoria(), request.perfil(), request.clienteId()));
             meterRegistry.counter("oficina.auth.cadastro", "perfil", request.perfil().name()).increment();
 
             log.info("action=register_success username={}", request.nomeUsuario());
@@ -59,21 +63,24 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
 
     @Override
     public AuthToken autenticar(SigninRequest request) throws ApplicationException {
-        log.info("action=signin_start identifier={}", request.identificador());
+        log.info("action=signin_start identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
+        limiteTentativas.verificarBloqueio(request.identificador());
 
         try {
             var detalhesUsuario = usuarioService.buscarPorIdentificador(request.identificador());
 
             if (!passwordEncoder.matches(request.senha(), detalhesUsuario.usuario().senha())) {
                 contarLogin("senha_invalida");
-                log.warn("action=signin_invalid_password identifier={}", request.identificador());
+                log.warn("action=signin_invalid_password identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
+                limiteTentativas.registrarFalha(request.identificador());
                 throw new ApplicationException(401, "Credenciais inválidas");
             }
 
             String token = BEARER_PREFIX + jwtTokenProvider.gerarToken(detalhesUsuario);
             contarLogin("sucesso");
+            limiteTentativas.registrarSucesso(request.identificador());
             log.info("action=signin_success identifier={} changeRequired={}",
-                    request.identificador(), detalhesUsuario.usuario().trocaSenhaObrigatoria());
+                    MascaraDados.mascararIdentificador(request.identificador()), detalhesUsuario.usuario().trocaSenhaObrigatoria());
 
             return AuthToken.builder()
                     .token(token)
@@ -86,8 +93,9 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             // Usuário inexistente: mesma resposta e mesmo custo de bcrypt da senha errada,
             // para nem o status nem o tempo revelarem quais logins existem.
             passwordEncoder.encode(request.senha());
-            log.warn("action=signin_user_not_found identifier={}", request.identificador());
+            log.warn("action=signin_user_not_found identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
             contarLogin("usuario_inexistente");
+            limiteTentativas.registrarFalha(request.identificador());
             throw new ApplicationException(401, "Credenciais inválidas");
         }
     }

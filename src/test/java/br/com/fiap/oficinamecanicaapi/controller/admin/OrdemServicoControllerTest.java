@@ -32,7 +32,9 @@ import java.util.Set;
 import static br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -45,6 +47,7 @@ class OrdemServicoControllerTest {
     private static final String USERNAME = "admin";
     private static final Long ID = 99L;
     private static final OffsetDateTime ABERTURA = OffsetDateTime.parse("2026-10-24T08:00:00-03:00");
+    private static final Long ID_CLIENTE = 10L;
 
     @Autowired
     private MockMvc mockMvc;
@@ -61,7 +64,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve criar a OS com cliente e veículo e responder 201")
     void deveCriarOs() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.criar(new OrdemServicoRequest("52998224725", 20L, List.of(), List.of()))).thenReturn(response(EM_DIAGNOSTICO));
 
         mockMvc.perform(post("/ordens-servico").header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -79,7 +82,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder 422 quando não há body, sem chamar o caso de uso")
     void deveRecusarCriarSemBody() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(post("/ordens-servico").header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isUnprocessableEntity());
@@ -90,7 +93,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder 400 quando falta cliente ou veículo, sem chamar o caso de uso")
     void deveRecusarCriarSemCamposObrigatorios() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(post("/ordens-servico").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content("""
@@ -111,7 +114,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve consultar a OS com status e histórico")
     void deveConsultarOs() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.consultar(ID)).thenReturn(response(AGUARDANDO_APROVACAO));
 
         mockMvc.perform(get("/ordens-servico/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -124,7 +127,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder 404 quando a OS não existe")
     void deveResponderOsNaoEncontrada() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.consultar(ID)).thenThrow(new ApplicationException(404, "Ordem de serviço não encontrada"));
 
         mockMvc.perform(get("/ordens-servico/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -135,7 +138,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder 400 quando faltam as listas de itens ou a quantidade é zero, sem chamar o caso de uso")
     void deveRecusarItensInvalidos() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(post("/ordens-servico").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content("""
@@ -157,7 +160,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve atualizar a OS com o PUT completo repassando-o ao caso de uso")
     void deveAtualizarOs() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         OrdemServicoRequest request = new OrdemServicoRequest("52998224725", 20L,
                 List.of(new OrdemServicoRequest.Servico(7L, 1)), List.of());
         when(useCase.atualizar(ID, request)).thenReturn(response(EM_DIAGNOSTICO));
@@ -174,7 +177,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder 400 no PUT sem serviços ou peças, sem chamar o caso de uso")
     void deveRecusarPutSemItens() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(put("/ordens-servico/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content("""
@@ -189,7 +192,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve mudar o status pelo PATCH repassando o status de destino ao caso de uso")
     void deveAlterarStatus() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.alterarStatus(ID, new OrdemServicoRequest.Status(FINALIZADA))).thenReturn(response(FINALIZADA));
 
         mockMvc.perform(patch("/ordens-servico/{id}/status", ID).header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -203,7 +206,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve gerar o orçamento pelo PATCH")
     void deveGerarOrcamento() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.registrarOrcamentoEnviado(ID)).thenReturn(response(AGUARDANDO_APROVACAO));
 
         mockMvc.perform(patch("/ordens-servico/{id}/gerar-orcamento", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -214,7 +217,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve aprovar o orçamento pelo PATCH")
     void deveAprovarOrcamento() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.registrarOrcamentoAprovado(ID)).thenReturn(response(EM_EXECUCAO));
 
         mockMvc.perform(patch("/ordens-servico/{id}/aprovar-orcamento", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -225,7 +228,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve rejeitar o orçamento pelo PATCH")
     void deveRejeitarOrcamento() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.registrarOrcamentoRejeitado(ID)).thenReturn(response(CANCELADA));
 
         mockMvc.perform(patch("/ordens-servico/{id}/rejeitar-orcamento", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -259,7 +262,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder 409 com a mensagem da transição inválida")
     void deveResponderTransicaoInvalida() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.alterarStatus(ID, new OrdemServicoRequest.Status(FINALIZADA)))
                 .thenThrow(new ApplicationException(409, "Transição inválida: AGUARDANDO_APROVACAO → FINALIZADA"));
 
@@ -274,7 +277,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder 400 quando o PATCH não traz o status de destino, sem chamar o caso de uso")
     void deveExigirStatusNoPatch() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(patch("/ordens-servico/{id}/status", ID).header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
@@ -287,7 +290,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder 422 para status desconhecido sem chamar o caso de uso")
     void deveRejeitarStatusDesconhecido() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(patch("/ordens-servico/{id}/status", ID).header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content("""
@@ -301,7 +304,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve consultar o tempo médio de execução")
     void deveConsultarTempoMedio() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.consultarTempoMedioExecucao()).thenReturn(new TempoMedioExecucaoResponse(120L, 3));
 
         mockMvc.perform(get("/ordens-servico/tempo-medio-execucao").header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -313,7 +316,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder 200 com média nula quando nenhuma OS foi finalizada")
     void deveConsultarTempoMedioSemOs() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         when(useCase.consultarTempoMedioExecucao()).thenReturn(new TempoMedioExecucaoResponse(null, 0));
 
         mockMvc.perform(get("/ordens-servico/tempo-medio-execucao").header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -323,9 +326,9 @@ class OrdemServicoControllerTest {
     }
 
     @ParameterizedTest
-    @EnumSource(Perfil.class)
-    @DisplayName("Deve aceitar todos os perfis (papéis provisórios)")
-    void deveAceitarTodosOsPerfis(Perfil perfil) throws Exception {
+    @EnumSource(value = Perfil.class, names = {"ADMIN", "FUNCIONARIO"})
+    @DisplayName("Deve aceitar o admin e o funcionário")
+    void deveAceitarAdminEFuncionario(Perfil perfil) throws Exception {
         autenticarComo(perfil);
         when(useCase.criar(any())).thenReturn(response(EM_DIAGNOSTICO));
 
@@ -345,6 +348,17 @@ class OrdemServicoControllerTest {
         verifyNoInteractions(useCase);
     }
 
+    @Test
+    @DisplayName("Deve responder 403 quando o cliente tentar usar as rotas dos funcionários")
+    void deveNegarAcessoAoCliente() throws Exception {
+        autenticarComo(Perfil.CLIENTE);
+
+        mockMvc.perform(get("/ordens-servico/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(useCase);
+    }
+
     private static OrdemServicoResponse response(StatusOrdemServico status) {
         return new OrdemServicoResponse(ID, 10L, 20L, status,
                 List.of(new OrdemServicoResponse.ItemServico(1L, 7L, "Troca de óleo",
@@ -359,5 +373,38 @@ class OrdemServicoControllerTest {
         when(jwtTokenProvider.extrairNomeUsuario(TOKEN)).thenReturn(USERNAME);
         when(usuarioUseCase.buscarPorIdentificador(USERNAME))
                 .thenReturn(new DetalhesUsuario(new Usuario(null, null, USERNAME, null, false, perfil), Set.of()));
+    }
+
+    @Test
+    @DisplayName("Deve listar as OS do cliente")
+    void deveListarOrdensDoCliente() throws Exception {
+        autenticarComo(Perfil.FUNCIONARIO);
+        when(useCase.listar(ID_CLIENTE)).thenReturn(List.of(
+                new OrdemServicoResponse(2L, ID_CLIENTE, 20L, StatusOrdemServico.EM_DIAGNOSTICO, List.of(), List.of(), List.of()),
+                new OrdemServicoResponse(1L, ID_CLIENTE, 20L, StatusOrdemServico.ENTREGUE, List.of(), List.of(), List.of())));
+
+        mockMvc.perform(get("/ordens-servico/listar/{idCliente}", ID_CLIENTE).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(2))
+                .andExpect(jsonPath("$[1].status").value("ENTREGUE"));
+    }
+
+    @Test
+    @DisplayName("Deve responder lista vazia quando o cliente não tem OS")
+    void deveResponderListaVazia() throws Exception {
+        autenticarComo(Perfil.FUNCIONARIO);
+        when(useCase.listar(ID_CLIENTE)).thenReturn(List.of());
+
+        mockMvc.perform(get("/ordens-servico/listar/{idCliente}", ID_CLIENTE).header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("Deve responder 401 sem token")
+    void deveExigirToken() throws Exception {
+        mockMvc.perform(get("/ordens-servico/listar/{idCliente}", ID_CLIENTE))
+                .andExpect(status().isUnauthorized());
     }
 }

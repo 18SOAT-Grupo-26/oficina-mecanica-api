@@ -28,9 +28,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ClienteUseCaseTest {
@@ -286,5 +288,53 @@ class ClienteUseCaseTest {
 
     private static Cliente clienteSalvo(Documento documento) {
         return Cliente.reconstituir(ID, NOME, documento, EMAIL, TELEFONE, ENDERECO, true, CRIADO_EM, CRIADO_EM);
+    }
+
+    @Test
+    @DisplayName("Deve contar criado, atualizado e desativado uma vez cada")
+    void deveContarOperacoesConcluidas() {
+        when(clientePortOut.existePorDocumento(new Documento(CPF))).thenReturn(false);
+        when(clientePortOut.salvar(any(Cliente.class))).thenReturn(clienteAtivo());
+        when(clientePortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(clienteAtivo()));
+
+        useCase.criar(REQUEST);
+        useCase.atualizar(ID, REQUEST);
+        useCase.desativar(ID);
+
+        assertThat(operacoes("criado")).isEqualTo(1);
+        assertThat(operacoes("atualizado")).isEqualTo(1);
+        assertThat(operacoes("desativado")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Não deve contar o cadastro recusado por documento duplicado")
+    void naoDeveContarCadastroRecusado() {
+        when(clientePortOut.existePorDocumento(new Documento(CPF))).thenReturn(true);
+
+        assertThatThrownBy(() -> useCase.criar(REQUEST)).isInstanceOf(ApplicationException.class);
+
+        assertThat(operacoes("criado")).isZero();
+    }
+
+    @Test
+    @DisplayName("Não deve contar a atualização recusada pela validação do agregado")
+    void naoDeveContarAtualizacaoInvalida() {
+        when(clientePortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(clienteAtivo()));
+        ClienteRequest emailInvalido = new ClienteRequest("Maria", CPF, "sem-arroba", "11999998888", null);
+
+        assertThatThrownBy(() -> useCase.atualizar(ID, emailInvalido)).isInstanceOf(ApplicationException.class);
+
+        assertThat(operacoes("atualizado")).isZero();
+    }
+
+    private static Cliente clienteAtivo() {
+        return Cliente.reconstituir(ID, "Maria da Silva", new Documento(CPF), "maria@email.com", "11999998888",
+                null, true, CRIADO_EM, CRIADO_EM);
+    }
+
+    private double operacoes(String operacao) {
+        var contador = meterRegistry.find("oficina.cadastro.operacoes")
+                .tags("entidade", "cliente", "operacao", operacao).counter();
+        return contador == null ? 0 : contador.count();
     }
 }

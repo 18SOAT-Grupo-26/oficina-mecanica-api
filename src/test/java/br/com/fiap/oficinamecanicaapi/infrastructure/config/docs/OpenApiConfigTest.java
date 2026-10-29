@@ -13,6 +13,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;
+import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.RotasPublicas;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
@@ -100,7 +101,7 @@ class OpenApiConfigTest {
         Map<String, Map<String, Map<String, Object>>> paths = documentacao.read("$.paths");
 
         List<Map<String, Object>> protegidas = paths.entrySet().stream()
-                .filter(path -> !path.getKey().startsWith("/auth/"))
+                .filter(path -> !RotasPublicas.isPublica(path.getKey()))
                 .flatMap(path -> path.getValue().values().stream())
                 .toList();
 
@@ -112,12 +113,12 @@ class OpenApiConfigTest {
     }
 
     @Test
-    @DisplayName("Rotas de autenticação devem continuar públicas e documentar 500")
-    void rotasDeAutenticacaoDevemSerPublicas() {
+    @DisplayName("Rotas públicas (RotasPublicas) não devem exigir Bearer e devem documentar 500")
+    void rotasPublicasNaoDevemExigirBearer() {
         Map<String, Map<String, Map<String, Object>>> paths = documentacao.read("$.paths");
 
         paths.entrySet().stream()
-                .filter(path -> path.getKey().startsWith("/auth/"))
+                .filter(path -> RotasPublicas.isPublica(path.getKey()))
                 .flatMap(path -> path.getValue().values().stream())
                 .forEach(operacao -> {
                     assertThat(operacao).doesNotContainKey("security");
@@ -130,7 +131,9 @@ class OpenApiConfigTest {
     void naoDeveDocumentarRespostasDeGateway() {
         List<Map<String, Object>> respostas = documentacao.read(OPERACOES + ".responses");
 
-        assertThat(respostas).allSatisfy(r -> assertThat(r).doesNotContainKeys("503", "504"));
+        assertThat(respostas)
+                .isNotEmpty()
+                .allSatisfy(r -> assertThat(r).doesNotContainKeys("503", "504"));
     }
 
     @Test
