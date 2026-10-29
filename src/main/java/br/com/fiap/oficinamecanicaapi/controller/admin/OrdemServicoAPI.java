@@ -110,4 +110,13 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "200", description = "Tempo médio calculado", content = @Content(schema = @Schema(implementation = TempoMedioExecucaoResponse.class)))
     @GetMapping("/tempo-medio-execucao")
     ResponseEntity<TempoMedioExecucaoResponse> consultarTempoMedioExecucao();
+
+    @Operation(summary = "Remover OS (soft delete)",
+            description = "Cancela a OS sem removê-la: ela vai para CANCELADA e fica no histórico. Com o orçamento pendente (AGUARDANDO_APROVACAO), a reserva de estoque das peças é liberada. Só vale até AGUARDANDO_APROVACAO.",
+            tags = "Ordem de Serviço")
+    @ApiResponse(responseCode = "204", description = "OS cancelada")
+    @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "OS a partir de EM_EXECUCAO ou já cancelada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @DeleteMapping("/{id}")
+    ResponseEntity<Void> cancelar(@PathVariable Long id) throws ApplicationException;
 }

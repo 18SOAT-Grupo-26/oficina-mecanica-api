@@ -188,6 +188,11 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
         return new TempoMedioExecucaoResponse(mediaMinutos, quantidadeOrdens);
     }
 
+    @Override
+    public void cancelar(Long id) {
+        alterarStatus(id, new OrdemServicoRequest.Status(StatusOrdemServico.CANCELADA));
+    }
+
     // ---- dados -----------------------------------------------------------------------------------
 
     /*

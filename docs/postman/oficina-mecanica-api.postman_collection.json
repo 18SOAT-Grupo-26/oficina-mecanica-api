@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "7ebc0463-1563-47a3-b17a-4fba01aa7ef6",
     "name": "Oficina Mecânica API",
-    "description": "Endpoints implementados da API da oficina mecânica.\n\n**Como usar**\n1. Suba a aplicação (`docker compose up`).\n2. Preencha `adminUsuario` e `adminSenha` (variáveis da collection) com o `ADMIN_USUARIO`/`ADMIN_SENHA` do seu `.env` e rode **Auth → Login administrador**: o token fica salvo em `{{token}}` e é enviado como Bearer nas demais pastas.\n3. As requisições de cadastro salvam os ids (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`) usados pelas seguintes.\n\nA collection inteira pode ser executada no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução para não violar as constraints UNIQUE.\n\nOrdem de serviço e acompanhamento da OS ainda não têm endpoints.",
+    "description": "Endpoints implementados da API da oficina mecânica.\n\n**Como usar**\n1. Suba a aplicação (`docker compose up`).\n2. Preencha `adminUsuario` e `adminSenha` (variáveis da collection) com o `ADMIN_USUARIO`/`ADMIN_SENHA` do seu `.env` e rode **Auth → Login administrador**: o token fica salvo em `{{token}}` e é enviado como Bearer nas demais pastas.\n3. As requisições de cadastro salvam os ids (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`, `ordemId`) usados pelas seguintes.\n\nA collection inteira pode ser executada no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução para não violar as constraints UNIQUE.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "13807568"
   },
@@ -978,6 +978,38 @@
       "name": "Exclusões",
       "item": [
         {
+          "name": "Cancelar OS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/ordens-servico/{{ordemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "ordens-servico",
+                "{{ordemId}}"
+              ]
+            },
+            "description": "Delete lógico. A OS vai para CANCELADA e continua no histórico; com o orçamento pendente, a reserva das peças é liberada. Só vale até AGUARDANDO_APROVACAO (depois disso, 409)."
+          },
+          "response": []
+        },
+        {
           "name": "Desativar veículo",
           "event": [
             {
@@ -1195,9 +1227,9 @@
               }
             ],
             "url": {
-              "raw": "{{BASE_URL}}/ordens-servico/:ordemId",
+              "raw": "{{baseUrl}}/ordens-servico/:ordemId",
               "host": [
-                "{{BASE_URL}}"
+                "{{baseUrl}}"
               ],
               "path": [
                 "ordens-servico",
@@ -1228,17 +1260,12 @@
               },
               {
                 "key": "Authorization",
-                "value": "Bearar {{token}}"
-              },
-              {
-                "key": "",
-                "value": "",
-                "disabled": true
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"documentoCliente\": {{clienteDocumento}},\n  \"idVeiculo\": {{veiculoId}},\n  \"servicos\": [\n    {\n      \"idServico\": {{servicoId}},\n      \"quantidade\": 2\n    }\n  ],\n  \"pecas\": [\n    {\n      \"idPeca\": {{servicoId}},\n      \"quantidade\": 2\n    }\n  ]\n}",
+              "raw": "{\n  \"documentoCliente\": \"{{clienteDocumento}}\",\n  \"idVeiculo\": {{veiculoId}},\n  \"servicos\": [\n    {\n      \"idServico\": {{servicoId}},\n      \"quantidade\": 2\n    }\n  ],\n  \"pecas\": [\n    {\n      \"idPeca\": {{pecaInsumoId}},\n      \"quantidade\": 2\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1246,15 +1273,11 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8081/api/v1/ordens-servico/:ordemId",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/ordens-servico/:ordemId",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "8081",
               "path": [
-                "api",
-                "v1",
                 "ordens-servico",
                 ":ordemId"
               ],
@@ -1270,6 +1293,20 @@
         },
         {
           "name": "Criar OS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.collectionVariables.set(\"ordemId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
@@ -1335,22 +1372,18 @@
               }
             },
             "url": {
-              "raw": "http://localhost:8081/api/v1/ordens-servico/:odermId/status",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/ordens-servico/:ordemId/status",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "8081",
               "path": [
-                "api",
-                "v1",
                 "ordens-servico",
-                ":odermId",
+                ":ordemId",
                 "status"
               ],
               "variable": [
                 {
-                  "key": "odermId",
+                  "key": "ordemId",
                   "value": "{{ordemId}}"
                 }
               ]
@@ -1373,15 +1406,11 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8081/api/v1/ordens-servico/:ordemId/rejeitar-orcamento",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/ordens-servico/:ordemId/rejeitar-orcamento",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "8081",
               "path": [
-                "api",
-                "v1",
                 "ordens-servico",
                 ":ordemId",
                 "rejeitar-orcamento"
@@ -1411,22 +1440,18 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8081/api/v1/ordens-servico/:ordemid/gerar-orcamento",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/ordens-servico/:ordemId/gerar-orcamento",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "8081",
               "path": [
-                "api",
-                "v1",
                 "ordens-servico",
-                ":ordemid",
+                ":ordemId",
                 "gerar-orcamento"
               ],
               "variable": [
                 {
-                  "key": "ordemid",
+                  "key": "ordemId",
                   "value": "{{ordemId}}"
                 }
               ]
@@ -1449,15 +1474,11 @@
               }
             ],
             "url": {
-              "raw": "http://localhost:8081/api/v1/ordens-servico/:ordemId/aprovar-orcamento",
-              "protocol": "http",
+              "raw": "{{baseUrl}}/ordens-servico/:ordemId/aprovar-orcamento",
               "host": [
-                "localhost"
+                "{{baseUrl}}"
               ],
-              "port": "8081",
               "path": [
-                "api",
-                "v1",
                 "ordens-servico",
                 ":ordemId",
                 "aprovar-orcamento"

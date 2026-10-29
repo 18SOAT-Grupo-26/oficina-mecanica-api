@@ -56,4 +56,9 @@ public interface OrdemServicoUseCasePortIn {
     OrdemServicoResponse registrarOrcamentoRejeitado(Long id) throws ApplicationException;
 
     TempoMedioExecucaoResponse consultarTempoMedioExecucao();
+
+    /**
+     * Soft delete da OS: leva a CANCELADA, como o {@link #alterarStatus} com CANCELADA, sem removê-la.
+     */
+    void cancelar(Long id) throws ApplicationException;
 }

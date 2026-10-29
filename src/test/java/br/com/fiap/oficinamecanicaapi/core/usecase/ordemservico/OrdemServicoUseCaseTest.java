@@ -514,6 +514,31 @@ class OrdemServicoUseCaseTest {
         }
 
         @Test
+        @DisplayName("Deve cancelar pelo soft delete, liberando a reserva com o orçamento pendente")
+        void deveCancelarPeloSoftDelete() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
+            when(pecaInsumoPortOut.liberar(ID_PECA, 2)).thenReturn(true);
+            when(pecaInsumoPortOut.liberar(ID_VELA, 4)).thenReturn(true);
+            retornarOsSalva();
+
+            useCase.cancelar(ID_OS);
+
+            verify(ordemServicoPortOut).salvar(argThat(os -> os.getStatus() == CANCELADA));
+            verify(pecaInsumoPortOut).liberar(ID_PECA, 2);
+            verify(pecaInsumoPortOut).liberar(ID_VELA, 4);
+        }
+
+        @Test
+        @DisplayName("Deve recusar o soft delete a partir de EM_EXECUCAO e responder 404 para OS inexistente")
+        void deveRecusarSoftDeleteInvalido() {
+            when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_EXECUCAO)), Optional.empty());
+
+            assertErro(409, "Transição inválida: EM_EXECUCAO → CANCELADA", () -> useCase.cancelar(ID_OS));
+            assertErro(404, "Ordem de serviço não encontrada", () -> useCase.cancelar(ID_OS));
+            verify(ordemServicoPortOut, never()).salvar(any());
+        }
+
+        @Test
         @DisplayName("Deve recusar cancelar a partir de EM_EXECUCAO sem gravar")
         void deveRecusarCancelarEmExecucao() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_EXECUCAO)));
