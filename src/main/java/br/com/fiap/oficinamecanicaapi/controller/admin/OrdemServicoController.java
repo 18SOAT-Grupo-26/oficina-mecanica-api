@@ -73,6 +73,7 @@ public class OrdemServicoController implements OrdemServicoAPI {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')") // funcionário não exclui cadastros
     public ResponseEntity<Void> cancelar(Long id) throws ApplicationException {
         useCase.cancelar(id);
         return ResponseEntity.noContent().build();
