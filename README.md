@@ -11,13 +11,17 @@ API para gestão de oficina mecânica.
 
 Funcionalidades disponíveis até o momento:
 
-- Autenticação de usuários com JWT (cadastro, login e validação de token)
-- CRUD de clientes, com validação de CPF/CNPJ e busca por documento (perfis `ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
-- CRUD de veículos, com validação de placa e busca por placa (perfis `ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
-- CRUD de serviços (perfis `ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
-- CRUD de peças e insumos (perfis `ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
+- Autenticação com JWT (login, validação de token e cadastro de usuários pelo `ADMIN`), com bloqueio temporário do
+  login após falhas seguidas (429)
+- CRUD de clientes, com validação de CPF/CNPJ e busca por documento (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
+- CRUD de veículos, com validação de placa e busca por placa (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
+- CRUD de peças e insumos, com saldo em estoque e quantidade reservada (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
+- CRUD de serviços (somente `ADMIN`)
+- Ordem de serviço (`ADMIN` e `FUNCIONARIO`; cancelamento só `ADMIN`): abertura com serviços e peças, envio,
+  aprovação e rejeição do orçamento (com reserva, baixa e devolução do estoque), mudança de status com histórico,
+  listagem por cliente e tempo médio de execução
 - Acompanhamento das próprias OS pelo cliente (perfil `CLIENTE`, em `/minhas-ordens`)
-- Em desenvolvimento: ordem de serviço e acompanhamento da OS pelo cliente
+- Observabilidade com Prometheus e Grafana (os 4 sinais de ouro e métricas de negócio)
 
 ## Arquitetura utilizada
 
@@ -36,15 +40,14 @@ no [índice de ADRs](docs/adr/README.md).
 - Java 25
 - Spring Boot 4 (Web MVC, Data JPA, Validation, Security, Actuator)
 - PostgreSQL 18
+- Flyway (migrations)
 - JWT (jjwt)
 - MapStruct e Lombok
 - springdoc-openapi (Swagger UI)
-- Micrometer com Prometheus
-- JUnit 5 e Mockito
-- Docker e Docker Compose
-- Flyway (migrations)
-- Prometheus e Grafana (observabilidade local)
+- Micrometer, Prometheus e Grafana (observabilidade)
+- JUnit 5, Mockito e Testcontainers (testes unitários e de integração)
 - JaCoCo, SonarCloud e SonarQube (qualidade e cobertura)
+- Docker e Docker Compose
 
 ## Pré-requisitos
 
@@ -60,44 +63,43 @@ no [índice de ADRs](docs/adr/README.md).
 git clone git@github.com:18SOAT-Grupo-26/oficina-mecanica-api.git
 # ou, sem chave SSH: git clone https://github.com/18SOAT-Grupo-26/oficina-mecanica-api.git
 cd oficina-mecanica-api
-cp .env.example.example .env.example          # PowerShell: Copy-Item .env.example.example .env.example
+
+cp .env.example .env              # PowerShell: Copy-Item .env.example .env
+# edite o .env e troque todos os <ALTERE_AQUI> (veja Variáveis de ambiente)
 docker compose up -d --build
 ```
 
-Isso sobe o Postgres e a API. A API só inicia depois que o banco estiver saudável. Os serviços de apoio sobem sob
-demanda, via *profiles*:
+O `docker compose up` sobe todos os serviços do [docker-compose.yml](docker-compose.yml). Para subir só a API e o
+banco (sem o SonarQube, que pesa mais): `docker compose up -d --build db api prometheus grafana`.
 
-```bash
-docker compose --profile observability up -d   # + Prometheus e Grafana
-docker compose --profile sonar up -d           # + SonarQube local
-```
+| Serviço      | Container                     | Porta na máquina                |
+|--------------|-------------------------------|---------------------------------|
+| `db`         | `oficina-mecanica-db`         | `DB_HOST_PORT` (padrão 5432)    |
+| `api`        | `oficina-mecanica-api`        | `SERVER_PORT` (padrão 8081)     |
+| `prometheus` | `oficina-mecanica-prometheus` | 9090                            |
+| `grafana`    | `oficina-mecanica-grafana`    | 3000                            |
+| `sonarqube`  | `oficina-mecanica-sonarqube`  | 9000                            |
 
-| Serviço      | Container                     | Porta | Profile         |
-|--------------|-------------------------------|-------|-----------------|
-| `db`         | `oficina-mecanica-db`         | 5432  | (padrão)        |
-| `api`        | `oficina-mecanica-api`        | 8081  | (padrão)        |
-| `prometheus` | `oficina-mecanica-prometheus` | 9090  | `observability` |
-| `grafana`    | `oficina-mecanica-grafana`    | 3000  | `observability` |
-| `sonarqube`  | `oficina-mecanica-sonarqube`  | 9000  | `sonar`         |
-
-Depois de alterar o código, rode `docker compose up -d --build` novamente para reconstruir a imagem.
+Dentro do Docker a API sempre escuta na 8081; `SERVER_PORT` muda só a porta publicada na sua máquina. Se mudar as
+portas, ajuste os endereços abaixo.
 
 Endereços:
 
 - API: http://localhost:8081/api/v1
 - Health check: http://localhost:8081/api/v1/actuator/health
 - Métricas (formato Prometheus): http://localhost:8081/api/v1/actuator/prometheus
-- Prometheus: http://localhost:9090 (profile `observability`)
-- Grafana: http://localhost:3000, login `admin` / valor de `GRAFANA_ADMIN_PASSWORD` (profile `observability`)
-- SonarQube: http://localhost:9000, login inicial `admin` / `admin`, com troca de senha no primeiro acesso (profile `sonar`)
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000, login `GRAFANA_ADMIN_USER` / `GRAFANA_ADMIN_PASSWORD` do `.env`
+- SonarQube: http://localhost:9000, login inicial `admin` / `admin`, com troca de senha no primeiro acesso
 
 Comandos úteis:
 
 ```bash
 docker compose logs -f api                 # acompanhar logs da API
 docker compose ps                          # status dos containers
-docker compose --profile "*" down          # parar todos os containers, inclusive os de profile
-docker compose --profile "*" down -v       # parar e APAGAR os volumes: banco, SonarQube, Prometheus e Grafana
+docker compose up -d --build api           # reconstruir a imagem da API depois de mudar o código ou o application.yaml
+docker compose down                        # parar todos os containers
+docker compose down -v                     # parar e APAGAR os volumes: banco, SonarQube, Prometheus e Grafana
 ```
 
 > Para apagar só os dados do banco: `docker compose down` e depois `docker volume rm oficina-mecanica-api_pgdata` (o
@@ -107,7 +109,7 @@ docker compose --profile "*" down -v       # parar e APAGAR os volumes: banco, S
 
 O schema é criado e evoluído pelo **Flyway**, que roda sozinho na subida da API:
 
-- o container `db` cria o banco `oficina` na primeira subida;
+- o container `db` cria o banco `oficina` e o usuário `DATASOURCE_USERNAME` na primeira subida (volume vazio);
 - a API aplica as migrations de `src/main/resources/db/migration` que ainda não rodaram: tabelas
   (`V1__schema_inicial.sql`), perfis (`V2__perfis_iniciais.sql`, trocados por `ADMIN`, `FUNCIONARIO` e `CLIENTE` na
   `V10__perfis_fase_1.sql`) e as demais evoluções do schema;
@@ -119,53 +121,60 @@ alteração da entidade. **Nunca edite uma migration já aplicada**: o Flyway va
 
 Possíveis problemas:
 
-- **"Found non-empty schema(s) ... without schema history table"**: o volume foi criado antes das migrations e já tem
-- **Portas 9000, 9090 ou 3000 em uso**: troque a porta publicada do serviço correspondente no `docker-compose.yml` (ex.:
-  `"9001:9000"`).
+- **`password authentication failed`**: o volume do banco foi criado com outro usuário ou senha. O PostgreSQL só lê
+  `DATASOURCE_USERNAME`/`DATASOURCE_PASSWORD` ao criar o volume; recrie com `docker compose down -v` (apaga os dados).
+  No Windows, confira também se não há um PostgreSQL instalado na máquina ocupando a 5432 (`netstat -ano | findstr :5432`);
+  se houver, troque `DB_HOST_PORT` e a porta em `DATASOURCE_HOST`.
+- **`Migration checksum mismatch`**: uma migration já aplicada foi alterada (inclusive por reformatação da IDE).
+  Restaure o arquivo original pelo git; não use `flyway repair` para esconder a diferença.
+- **A API sobe, mas o Prometheus não a encontra**: confira no log `Tomcat started on port 8081` e se não há duas
+  instâncias da API (Docker e IDE) disputando a porta.
+- **Portas 9000, 9090 ou 3000 em uso**: troque a porta publicada do serviço no `docker-compose.yml` (ex.: `"9001:9000"`).
 - **SonarQube reinicia ou não abre**: falta memória para o Docker; veja os pré-requisitos.
-- **`required variable API_SECRET is missing`**: falta o arquivo `.env`; rode `cp .env.example .env`.
-- **Rodando a API fora do Docker (IDE ou `mvn spring-boot:run`)**: suba só o banco com `docker compose up -d db` (ele já
-  cria o banco `oficina`) e defina as variáveis da seção [Variáveis de ambiente](#variáveis-de-ambiente):
-
-  ```powershell
-  # PowerShell
-  $env:DATASOURCE_USERNAME="postgres"; $env:DATASOURCE_PASSWORD="postgres"; $env:API_SECRET="<segredo>"
-  mvn spring-boot:run
+- **A API não sobe com erro de senha do administrador**: `ADMIN_SENHA` está fora da política de senha (veja
+  [Usuários](#usuários-credenciais-de-demonstração-e-autenticação)).
   ```
 
-  ```bash
-  # bash / Git Bash
-  export DATASOURCE_USERNAME=postgres DATASOURCE_PASSWORD=postgres API_SECRET="<segredo>"
-  mvn spring-boot:run
-  ```
+Todas ficam no `.env` (copiado do [`.env.example`](.env.example)). O Compose repassa à API as que estão no
+`environment` do serviço `api`; fora do Docker, a API lê o `.env` direto.
 
-## Variáveis de ambiente
-
-| Variável                 | Padrão                                     | Obrigatória | Descrição                                                         |
-|--------------------------|--------------------------------------------|-------------|-------------------------------------------------------------------|
-| `DATASOURCE_HOST`        | `jdbc:postgresql://localhost:5432/oficina` | não         | URL JDBC completa do banco                                        |
-| `DATASOURCE_USERNAME`    | vazio                                      | sim         | usuário do banco                                                  |
-| `DATASOURCE_PASSWORD`    | —                                          | sim         | senha do banco                                                    |
-| `API_SECRET`             | —                                          | sim         | chave de assinatura do JWT, em Base64 (`openssl rand -base64 64`) |
-| `CORS_ALLOWED_ORIGINS`   | vazio                                      | não         | origens do front que podem chamar a API pelo navegador, separadas por vírgula (ex.: `http://localhost:3000`); vazio = nenhuma |
-| `ADMIN_EMAIL`            | —                                          | para criar o admin | e-mail do administrador inicial, criado na subida se não existir nenhum `ADMIN` |
-| `ADMIN_USUARIO`          | —                                          | para criar o admin | nome de usuário (login) do administrador inicial |
-| `ADMIN_SENHA`            | —                                          | para criar o admin | senha do administrador inicial (segue a política de senha; nunca vai para o repositório) |
-| `ADMIN_NOME`             | `Administrador`                            | não         | nome do administrador inicial |
-| `LOGIN_MAX_TENTATIVAS`   | `5`                                        | não         | falhas de login seguidas de uma mesma conta antes do bloqueio temporário (429) |
-| `LOGIN_JANELA_MINUTOS`   | `15`                                       | não         | duração, em minutos, da janela de contagem e do bloqueio do login |
-| `SERVER_PORT`            | `8081`                                     | não         | porta HTTP da API                                                 |
-| `APPLICATION_PREFIX`     | `api/v1`                                   | não         | prefixo (context-path) das rotas                                  |
-| `APPLICATION_NAME`       | `oficina-mecanica-api`                     | não         | nome da aplicação                                                 |
-| `LOG_PATH`               | `/tmp/logs`                                | não         | diretório dos logs                                                |
-| `GRAFANA_ADMIN_PASSWORD` | `admin`                                    | não         | senha do admin do Grafana (só no compose)                         |
-
-No Docker Compose, as variáveis da API já estão no `docker-compose.yml`; vêm do `.env` o `API_SECRET`, o `GRAFANA_ADMIN_PASSWORD`, o `CORS_ALLOWED_ORIGINS` e as variáveis
-`ADMIN_*` do administrador inicial.
+| Variável                           | Padrão                                  | Obrigatória        | Descrição |
+|------------------------------------|-----------------------------------------|--------------------|-----------|
+| `API_SECRET`                       | —                                       | sim                | chave de assinatura do JWT (HS512, mínimo 64 bytes): `openssl rand -base64 64` |
+| `DATASOURCE_USERNAME`              | — (no Compose: `postgres`)              | sim                | usuário do banco (o mesmo cria o usuário do container `db`) |
+| `DATASOURCE_PASSWORD`              | — (no Compose: `postgres`)              | sim                | senha do banco |
+| `DATASOURCE_HOST`                  | `jdbc:postgresql://localhost:5432/oficina` | não             | URL JDBC usada fora do Docker (no Compose, a API usa o serviço `db`) |
+| `DB_HOST_PORT`                     | `5432`                                  | não                | porta do banco publicada na máquina |
+| `DATASOURCE_POOL_SIZE`             | `10`                                    | não                | tamanho máximo do pool de conexões (Hikari) |
+| `DATASOURCE_CONNECTION_TIMEOUT_MS` | `5000`                                  | não                | espera máxima por uma conexão do pool; depois disso a API responde 503 |
+| `DATASOURCE_QUERY_TIMEOUT_MS`      | `5000`                                  | não                | tempo máximo de uma consulta; depois disso a API responde 503 |
+| `ADMIN_EMAIL`                      | —                                       | para criar o admin | e-mail do administrador inicial, criado na subida se não existir nenhum `ADMIN` |
+| `ADMIN_USUARIO`                    | —                                       | para criar o admin | nome de usuário (login) do administrador inicial |
+| `ADMIN_SENHA`                      | —                                       | para criar o admin | senha do administrador inicial (segue a política de senha) |
+| `ADMIN_NOME`                       | `Administrador`                         | não                | nome do administrador inicial |
+| `JWT_EXPIRATION_MINUTES`           | `60`                                    | não                | validade do token de login, em minutos |
+| `LOGIN_MAX_TENTATIVAS`             | `5`                                     | não                | falhas de login seguidas de uma conta antes do bloqueio temporário (429) |
+| `LOGIN_JANELA_MINUTOS`             | `15`                                    | não                | janela de contagem e duração do bloqueio do login, em minutos |
+| `CORS_ALLOWED_ORIGINS`             | vazio                                   | não                | origens do front que podem chamar a API pelo navegador, separadas por vírgula; vazio = nenhuma |
+| `SERVER_PORT`                      | `8081`                                  | não                | porta HTTP da API (no Compose, só a porta publicada) |
+| `APPLICATION_PREFIX`               | `api/v1`                                | não                | prefixo (context-path) das rotas; se mudar, ajuste o healthcheck e o `prometheus.yaml` |
+| `APPLICATION_NAME`                 | `oficina-mecanica-api`                  | não                | nome da aplicação |
+| `LOG_LEVEL`                        | `INFO`                                  | não                | nível de log do pacote da aplicação |
+| `LOG_PATH`                         | `/tmp/logs`                             | não                | diretório dos logs |
+| `GRAFANA_ADMIN_USER`               | `admin`                                 | não                | usuário do admin do Grafana (só no Compose) |
+| `GRAFANA_ADMIN_PASSWORD`           | `admin`                                 | não                | senha do admin do Grafana (só no Compose) |
 
 ## Instruções para execução dos testes
 
-Os testes não dependem do banco. Para rodá-los sem instalar Java ou Maven localmente:
+| Comando      | O que roda | Precisa de |
+|--------------|------------|------------|
+| `mvn test`   | testes unitários (`*Test`): domínio, casos de uso, controllers, segurança | só Java e Maven |
+| `mvn verify` | unitários + testes de integração (`*IT`), cobertura JaCoCo e a meta de 80% | Docker aberto (Testcontainers sobe um PostgreSQL 18 só para o teste) |
+
+Os testes de integração ficam no pacote da classe que exercitam (ex.: `SegurancaIT`, `FluxoOrdemServicoIT`,
+`MigracoesIT`) e usam a base `src/test/java/.../integracao/IntegracaoBase.java`. Sem Docker, eles são pulados.
+
+Sem Java ou Maven instalados, os unitários rodam num container:
 
 ```bash
 # bash / Git Bash
@@ -177,7 +186,7 @@ docker run --rm -v "$PWD":/app -v "$HOME/.m2":/root/.m2 -w /app maven:3-amazonco
 docker run --rm -v "${PWD}:/app" -v "$env:USERPROFILE\.m2:/root/.m2" -w /app maven:3-amazoncorretto-25-alpine mvn test
 ```
 
-O volume `.m2` guarda as dependências entre execuções. Com Java 25 e Maven instalados, basta rodar `mvn test`.
+O volume `.m2` guarda as dependências entre execuções.
 
 ## Qualidade de código e cobertura (Sonar + JaCoCo)
 
@@ -186,15 +195,11 @@ O volume `.m2` guarda as dependências entre execuções. Com Java 25 e Maven in
 
 ### SonarCloud (automático)
 
-O workflow `.github/workflows/ci.yml` roda build e testes em todo push e PR para `main` e `develop`. Quando o secret
+O workflow `.github/workflows/ci.yml` roda `mvn verify` em todo push e PR para `main` e `develop`. Quando o secret
 `SONAR_TOKEN` está configurado no repositório, o workflow também envia a análise ao SonarCloud (organização
 `18soat-grupo-26`, projeto `18SOAT-Grupo-26_oficina-mecanica-api`). O resultado e o quality gate aparecem no próprio PR.
 
 ### SonarQube local (antes de abrir o PR)
-
-```bash
-docker compose --profile sonar up -d   # SonarQube em http://localhost:9000 (login inicial admin/admin)
-```
 
 No SonarQube, gere um token em *My Account > Security* e rode a análise:
 
@@ -202,14 +207,13 @@ No SonarQube, gere um token em *My Account > Security* e rode a análise:
 mvn verify sonar:sonar -Dsonar.host.url=http://localhost:9000 -Dsonar.token=<seu-token>
 ```
 
-Os dados do SonarQube (token, projeto) ficam em volumes e sobrevivem a `docker compose down`; só são apagados com
-`down -v`.
+Os dados do SonarQube (token, projeto, hotspots revisados) ficam em volumes e sobrevivem a `docker compose down`; só
+são apagados com `down -v`.
 
 ### Meta de cobertura nos domínios críticos
 
-O `mvn verify` falha se algum pacote de domínio ou de caso de uso de `cliente` ou `veiculo` ficar abaixo de **80% de
-linhas cobertas** (regra `check` do JaCoCo no `pom.xml`, propriedade `jacoco.minimo.linhas`). Novos domínios críticos
-(OS, orçamento, estoque) entram na regra conforme ganham testes.
+O `mvn verify` falha se algum pacote de domínio ou de caso de uso de `cliente`, `veiculo` ou `ordemservico` ficar
+abaixo de **80% de linhas cobertas** (regra `check` do JaCoCo no `pom.xml`, propriedade `jacoco.minimo.linhas`).
 
 ### Pré-validação antes do push
 
@@ -220,14 +224,13 @@ algo falhar. Ative uma vez por clone:
 git config core.hooksPath .githooks
 ```
 
-- Leva cerca de 10 a 60 segundos; o log completo fica em `.git/pre-push.log`.
+- O log completo fica em `.git/pre-push.log`.
 - Usa `mvn`; sem Maven instalado, usa a imagem Docker `maven:3-amazoncorretto-25-alpine`. No Windows, o hook roda pelo
   Git Bash (já incluído no Git for Windows).
 - Em emergência, `git push --no-verify` pula o hook (o CI roda a mesma validação no PR).
 
 Para ver os problemas do Sonar enquanto programa, instale a extensão **SonarQube for IDE** e conecte-a ao SonarCloud
-(*connected mode*, organização `18soat-grupo-26`, projeto `18SOAT-Grupo-26_oficina-mecanica-api`). Ela aplica as mesmas
-regras do quality gate direto no editor.
+(*connected mode*, organização `18soat-grupo-26`, projeto `18SOAT-Grupo-26_oficina-mecanica-api`).
 
 ## Acesso ao Swagger / documentação da API
 
@@ -236,29 +239,38 @@ regras do quality gate direto no editor.
 
 Para chamar endpoints protegidos pelo Swagger, faça login em `POST /auth/login`, clique em **Authorize** e cole o token.
 
-## Observabilidade (Prometheus e Grafana)
-
-```bash
-docker compose --profile observability up -d
-```
-
-- A API expõe métricas Micrometer em `/api/v1/actuator/prometheus` (sem autenticação).
-- O Prometheus (http://localhost:9090) coleta a API a cada 15 s; a configuração fica em `prometheus/prometheus.yaml`. Em
-  *Status > Targets*, o job `oficina-mecanica-api` deve aparecer como `UP`.
-- O Grafana (http://localhost:3000) já sobe com o Prometheus configurado como fonte de dados
-  (`grafana/provisioning/datasources`). Para um painel pronto de JVM/Spring, importe o dashboard de ID **4701** (*JVM
-  Micrometer*) em *Dashboards > New > Import*.
-
 ### Collection do Postman
 
-A collection [`docs/postman/oficina-mecanica-api.postman_collection.json`](docs/postman/oficina-mecanica-api.postman_collection.json) traz todos os endpoints implementados (auth, peças e insumos, serviços, clientes, veículos e actuator). Para usar:
+A collection [`docs/postman/oficina-mecanica-api.postman_collection.json`](docs/postman/oficina-mecanica-api.postman_collection.json)
+traz todos os endpoints: auth, peças e insumos, serviços, clientes, veículos, ordem de serviço, acompanhamento da OS
+pelo cliente (`/minhas-ordens`), exclusões e actuator. Para usar:
 
 1. No Postman, **Import** → selecione o arquivo.
-2. Preencha as variáveis da collection `adminUsuario` e `adminSenha` com o `ADMIN_USUARIO` e o `ADMIN_SENHA` do seu `.env` (elas vão vazias no arquivo).
-3. Rode **Auth → Login administrador**: o token fica salvo na variável `token` e é enviado como Bearer nas demais requisições. **Auth → Cadastrar usuário** usa esse token para criar um usuário de teste.
-4. Os cadastros salvam os ids criados (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`) para as requisições seguintes.
+2. Preencha as variáveis da collection `adminUsuario` e `adminSenha` com o `ADMIN_USUARIO` e o `ADMIN_SENHA` do seu
+   `.env` (elas vão vazias no arquivo).
+3. Rode **Auth → Login administrador**: o token fica salvo na variável `token` e é enviado como Bearer nas demais
+   requisições.
+4. Os cadastros salvam os ids criados (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`, `ordemId`) para as
+   requisições seguintes.
 
-Também dá para executar a collection inteira no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução, então ela pode ser rodada várias vezes sem violar as constraints `UNIQUE`. Para apontar para outro ambiente, altere a variável `baseUrl` (padrão: `http://localhost:8081/api/v1`).
+CPF, placa, nomes e username são gerados a cada execução, então a collection pode ser rodada várias vezes sem violar as
+constraints `UNIQUE`. Para apontar para outro ambiente, altere a variável `baseUrl` (padrão: `http://localhost:8081/api/v1`).
+
+## Observabilidade (Prometheus e Grafana)
+
+- A API expõe métricas Micrometer em `/api/v1/actuator/prometheus` (sem autenticação, como o `/actuator/health`).
+- O Prometheus (http://localhost:9090) coleta a API a cada 15 s (`prometheus/prometheus.yaml`). Em *Status > Targets*,
+  um dos jobs deve estar `UP`: `oficina-mecanica-api` (API no Docker) ou `oficina-mecanica-api-local` (API na IDE).
+- Regras de gravação dos 4 sinais de ouro em `prometheus/regras-sinais-ouro.yaml` e alertas em `prometheus/alertas.yaml`
+  (veja em *Alerts*; não há Alertmanager configurado).
+- O Grafana (http://localhost:3000) já sobe com o Prometheus como fonte de dados e com o dashboard **Oficina Mecânica
+  API** (pasta *Oficina Mecânica*, também a tela inicial), provisionados em `grafana/provisioning`. O dashboard é
+  organizado pelos 4 sinais de ouro:
+    - **Latência:** p50/p95/p99 das requisições, p95 por rota, % acima de 1 s, tempo das consultas e espera por conexão;
+    - **Tráfego:** requisições por segundo por rota e resultado, logins, OS abertas e cadastros;
+    - **Erros:** taxa de 5xx e 4xx, erros por tipo (negócio × falha), banco indisponível, acessos negados;
+    - **Saturação:** heap, CPU, pool de conexões, threads HTTP, GC e OS em andamento;
+    - mais as métricas de negócio da OS e do estoque.
 
 ## Decisão e justificativa do banco de dados escolhido
 
@@ -271,17 +283,22 @@ alternativas avaliadas estão na [ADR 002](docs/adr/0002-escolha-do-banco-de-dad
 
 ## Usuários, credenciais de demonstração e autenticação
 
-A autenticação usa JWT:
+A autenticação usa JWT. As regras de acesso estão em [ADR 004](docs/adr/0004-seguranca.md):
 
-| Método | Rota                           | Acesso                                 |
-|--------|--------------------------------|----------------------------------------|
-| `POST` | `/api/v1/auth/login`           | público                                |
-| `GET`  | `/api/v1/auth/validate`        | público (valida o token do header `Authorization`) |
-| `POST` | `/api/v1/auth/cadastro`        | `ADMIN`                                |
-| `POST`, `GET`, `PUT` | `/api/v1/clientes`, `/veiculos`, `/servico`, `/insumos` | `ADMIN`, `FUNCIONARIO` |
-| `DELETE` | `/api/v1/clientes`, `/veiculos`, `/servico`, `/insumos` | `ADMIN`             |
-| `*`    | `/api/v1/ordens-servico`       | `ADMIN`, `FUNCIONARIO`                 |
-| `GET`  | `/api/v1/minhas-ordens`, `/api/v1/minhas-ordens/{id}` | `CLIENTE` (só as OS do próprio cliente) |
+| Método | Rota | Acesso |
+|--------|------|--------|
+| `POST` | `/api/v1/auth/login` | público |
+| `GET`  | `/api/v1/auth/validate` | público (valida o token do header `Authorization`) |
+| `POST` | `/api/v1/auth/cadastro` | `ADMIN` |
+| `GET`, `POST`, `PUT` | `/api/v1/clientes`, `/veiculos`, `/insumos` | `ADMIN`, `FUNCIONARIO` |
+| `DELETE` | `/api/v1/clientes`, `/veiculos`, `/insumos` | `ADMIN` |
+| `*` | `/api/v1/servico` | `ADMIN` |
+| `GET`, `POST`, `PUT`, `PATCH` | `/api/v1/ordens-servico` | `ADMIN`, `FUNCIONARIO` |
+| `DELETE` | `/api/v1/ordens-servico/{id}` (cancelar OS) | `ADMIN` |
+| `GET` | `/api/v1/minhas-ordens`, `/api/v1/minhas-ordens/{id}` | `CLIENTE` (só as OS do próprio cliente) |
+| `GET` | `/api/v1/actuator/health`, `/api/v1/actuator/prometheus`, Swagger | público |
+
+Qualquer outra rota exige token (sem token: 401; perfil sem permissão: 403).
 
 Só um `ADMIN` logado cadastra usuários. O primeiro administrador é criado pela própria API na subida, a partir
 das variáveis do `.env` — nenhuma credencial fica no repositório:
@@ -291,7 +308,8 @@ das variáveis do `.env` — nenhuma credencial fica no repositório:
    A senha precisa ter de 8 a 64 caracteres, com maiúscula, minúscula, dígito e um destes especiais:
    `!@#$%^&*()-_=+[]{}<>?/,.:|~` (senha fora da política impede a subida, com a mensagem no log).
 
-2. Fazer login com esse administrador (o `identificador` aceita nome de usuário ou e-mail); a resposta traz o token:
+2. Faça login com esse administrador (o `identificador` aceita nome de usuário ou e-mail); a resposta traz o token já
+   com o prefixo `Bearer `:
 
 ```bash
 source .env   # carrega ADMIN_USUARIO e ADMIN_SENHA no terminal
@@ -299,7 +317,8 @@ TOKEN=$(curl -s -X POST http://localhost:8081/api/v1/auth/login -H "Content-Type
   -d "{\"identificador\": \"$ADMIN_USUARIO\", \"senha\": \"$ADMIN_SENHA\"}" | sed -E 's/.*"token":"([^"]+)".*/\1/')
 ```
 
-3. Cadastrar outros usuários enviando o token (perfil `ADMIN`, `FUNCIONARIO` ou `CLIENTE`):
+3. Cadastre outros usuários enviando o token (perfil `ADMIN`, `FUNCIONARIO` ou `CLIENTE`). Hoje
+   `trocaSenhaObrigatoria` precisa ser `false`:
 
 ```bash
 curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -H "Authorization: $TOKEN" -d '{
@@ -308,8 +327,8 @@ curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: applic
 }'
 ```
 
-   O usuário `CLIENTE` é ligado a um cliente já cadastrado pelo `clienteId` (obrigatório para esse perfil e proibido
-   para os outros; um login por cliente). Ele só enxerga as OS desse cliente, em `/minhas-ordens`:
+O usuário `CLIENTE` é ligado a um cliente já cadastrado pelo `clienteId` (obrigatório para esse perfil e proibido
+para os outros; um login por cliente). Ele só enxerga as OS desse cliente, em `/minhas-ordens`:
 
 ```bash
 curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -H "Authorization: $TOKEN" -d '{
@@ -318,26 +337,27 @@ curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: applic
 }'
 ```
 
-4. Enviar o token nas demais requisições no header `Authorization: Bearer <token>`.
+4. Envie o token nas demais requisições no header `Authorization` (o valor devolvido pelo login já inclui `Bearer `).
 
-Após 5 falhas de login de uma mesma conta em 15 minutos, o login dela responde **429** até a janela expirar (configurável por `LOGIN_MAX_TENTATIVAS` e `LOGIN_JANELA_MINUTOS`).
+O token vale `JWT_EXPIRATION_MINUTES` (padrão 60 min). Após `LOGIN_MAX_TENTATIVAS` (padrão 5) falhas de login de uma
+mesma conta em `LOGIN_JANELA_MINUTOS` (padrão 15), o login dela responde **429** até a janela expirar.
 
-Perfis existentes (migration `V10__perfis_fase_1.sql`): `ADMIN` (tudo, inclusive exclusões e cadastro de usuários),
-`FUNCIONARIO` (cadastros sem exclusão e ordens de serviço) e `CLIENTE` (consulta das próprias OS).
-Credenciais: as do administrador inicial definidas no seu `.env` (`ADMIN_USUARIO` / `ADMIN_SENHA`).
+Perfis existentes (migration `V10__perfis_fase_1.sql`): `ADMIN` (tudo, inclusive exclusões, serviços e cadastro de
+usuários), `FUNCIONARIO` (cadastros sem exclusão e ordens de serviço) e `CLIENTE` (consulta das próprias OS).
+Credenciais de demonstração: as do administrador inicial definidas no seu `.env` (`ADMIN_USUARIO` / `ADMIN_SENHA`).
 
 ## Análise de vulnerabilidades
 
 O [relatório de vulnerabilidades](docs/seguranca/relatorio-vulnerabilidades.md) reúne a revisão manual (OWASP Top 10)
 e as varreduras com Gitleaks (segredos no histórico), OWASP ZAP (API autenticada) e Trivy (CVEs da imagem Docker).
-Para cada achado, ele traz a severidade, o PR da correção ou a justificativa do risco aceito. As evidências brutas ficam em
-[`docs/seguranca/evidencias/`](docs/seguranca/evidencias/).
+Para cada achado, ele traz a severidade, o PR da correção ou a justificativa do risco aceito. As evidências brutas
+(antes e depois das correções) ficam em [`docs/seguranca/evidencias/`](docs/seguranca/evidencias/).
 
 ## Estrutura dos principais diretórios
 
 ```
 src/main/java/br/com/fiap/oficinamecanicaapi
-├── controller          # endpoints REST: admin (APIs internas da oficina), auth, cliente (acompanhamento de OS pelo cliente final)
+├── controller          # endpoints REST: admin (APIs da oficina), auth, cliente (acompanhamento de OS pelo cliente final)
 ├── core
 │   ├── domain          # modelos de domínio, sem JPA
 │   ├── port
@@ -345,10 +365,13 @@ src/main/java/br/com/fiap/oficinamecanicaapi
 │   │   └── out         # portas de saída (persistência)
 │   └── usecase         # implementação dos casos de uso
 ├── infrastructure
-│   ├── config          # segurança (JWT) e documentação (OpenAPI)
+│   ├── config          # segurança (JWT), documentação (OpenAPI), métricas e administrador inicial
 │   └── persistence     # entidades JPA, repositórios e adapters
 └── shared              # exceções, handler global e utilitários
-src/test/java           # testes unitários e de controller
+src/main/resources/db/migration   # migrations do Flyway
+src/test/java                     # testes unitários (*Test) e de integração (*IT)
+docs                              # ADRs, collection do Postman e relatório de segurança
+prometheus, grafana               # configuração da observabilidade
 ```
 
 ## Documentação DDD
@@ -358,3 +381,7 @@ _A definir._
 ## Vídeo da entrega
 
 _A definir._
+
+## Licença
+
+Distribuído sob a licença descrita em [LICENSE](LICENSE).
