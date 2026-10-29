@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.servico;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.entity.ServicoEntity;
+import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
@@ -47,9 +47,9 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
         String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
         validarNomeDisponivel(nomeNormalizado);
 
-        ServicoEntity entity = new ServicoEntity();
-        preencher(entity, request, nomeNormalizado);
-        ServicoEntity salvo = servicoPortOut.salvar(entity);
+        Servico servico = new Servico();
+        preencher(servico, request, nomeNormalizado);
+        Servico salvo = servicoPortOut.salvar(servico);
 
         contar("criado");
         log.info("action=servico_criado id={}", salvo.getId());
@@ -73,20 +73,20 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     @Override
     @Transactional
     public ServicoResponse atualizar(Long id, ServicoRequest request) throws ApplicationException {
-        ServicoEntity entity = buscarServico(id);
+        Servico servico = buscarServico(id);
         validarCampos(request);
 
         String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
-        if (!nomeNormalizado.equals(entity.getNomeNormalizado())) {
+        if (!nomeNormalizado.equals(servico.getNomeNormalizado())) {
             validarNomeDisponivel(nomeNormalizado);
         }
 
-        if (entity.getPreco().compareTo(request.preco()) != 0) {
+        if (servico.getPreco().compareTo(request.preco()) != 0) {
             log.info("action=servico_preco_alterado id={} precoAnterior={} precoNovo={}",
-                    id, entity.getPreco(), request.preco());
+                    id, servico.getPreco(), request.preco());
         }
-        preencher(entity, request, nomeNormalizado);
-        ServicoEntity salvo = servicoPortOut.salvar(entity);
+        preencher(servico, request, nomeNormalizado);
+        Servico salvo = servicoPortOut.salvar(servico);
 
         contar("atualizado");
         log.info("action=servico_atualizado id={}", salvo.getId());
@@ -96,14 +96,14 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     @Override
     @Transactional
     public void excluir(Long id) throws ApplicationException {
-        ServicoEntity entity = buscarServico(id);
-        servicoPortOut.excluir(entity);
+        Servico servico = buscarServico(id);
+        servicoPortOut.excluir(servico);
 
         contar("excluido");
         log.info("action=servico_excluido id={}", id);
     }
 
-    private ServicoEntity buscarServico(Long id) {
+    private Servico buscarServico(Long id) {
         return servicoPortOut.buscarPorId(id)
                 .orElseThrow(() -> new ApplicationException(404, "Serviço não encontrado"));
     }
@@ -136,11 +136,11 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
         }
     }
 
-    private void preencher(ServicoEntity entity, ServicoRequest request, String nomeNormalizado) {
-        entity.setNome(request.nome().trim());
-        entity.setNomeNormalizado(nomeNormalizado);
-        entity.setDescricao(request.descricao());
-        entity.setPreco(request.preco().setScale(PRECO_MAX_CASAS_DECIMAIS));
+    private void preencher(Servico servico, ServicoRequest request, String nomeNormalizado) {
+        servico.setNome(request.nome().trim());
+        servico.setNomeNormalizado(nomeNormalizado);
+        servico.setDescricao(request.descricao());
+        servico.setPreco(request.preco().setScale(PRECO_MAX_CASAS_DECIMAIS));
     }
 
     private void contar(String operacao) {

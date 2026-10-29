@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.usuario.entity;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.usuario;
 
 import jakarta.persistence.*;
 import lombok.Getter;

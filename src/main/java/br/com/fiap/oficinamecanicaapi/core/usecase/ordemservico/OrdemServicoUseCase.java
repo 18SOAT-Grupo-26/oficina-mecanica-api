@@ -3,8 +3,8 @@ package br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico;
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.*;
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.service.CalculadoraTempoMedioExecucao;
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.entity.ServicoEntity;
+import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumo;
+import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Veiculo;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoUseCasePortIn;
@@ -269,7 +269,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
             }
         }
         desejado.forEach((idServico, quantidade) -> {
-            ServicoEntity servico = servicoPortOut.buscarPorId(idServico)
+            Servico servico = servicoPortOut.buscarPorId(idServico)
                     .orElseThrow(() -> new ApplicationException(404, "Serviço não encontrado no catálogo"));
             os.incluirServico(servico.getId(), servico.getNome(), new ValorMonetario(servico.getPreco()), quantidade);
         });
@@ -293,13 +293,13 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
             }
         }
         desejado.forEach((idPeca, quantidade) -> {
-            PecaInsumoEntity peca = buscarPeca(idPeca);
+            PecaInsumo peca = buscarPeca(idPeca);
             exigirSaldo(peca, quantidade);
             os.incluirPeca(peca.getId(), peca.getNome(), new ValorMonetario(peca.getPreco()), quantidade);
         });
     }
 
-    private PecaInsumoEntity buscarPeca(Long idPeca) {
+    private PecaInsumo buscarPeca(Long idPeca) {
         return pecaInsumoPortOut.buscarPorId(idPeca)
                 .orElseThrow(() -> new ApplicationException(404, "Peça não encontrada no catálogo"));
     }
@@ -307,7 +307,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
     /**
      * Saldo disponível = quantidade em estoque menos a já reservada para orçamentos enviados.
      */
-    private static void exigirSaldo(PecaInsumoEntity peca, int quantidade) {
+    private static void exigirSaldo(PecaInsumo peca, int quantidade) {
         int saldo = valorOuZero(peca.getQuantidade()) - valorOuZero(peca.getReservado());
         if (quantidade > saldo) {
             throw new ApplicationException(409, "Saldo insuficiente para a peça " + peca.getNome()

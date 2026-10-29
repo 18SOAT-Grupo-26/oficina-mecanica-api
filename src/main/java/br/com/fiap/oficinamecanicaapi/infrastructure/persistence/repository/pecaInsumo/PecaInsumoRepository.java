@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecaInsumo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.entity.PecaInsumoEntity;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecaInsumo.PecaInsumoEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

@@ -1,7 +1,7 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.veiculo.entity;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.veiculo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.entity.ClienteEntity;
-import br.com.fiap.oficinamecanicaapi.shared.persistence.EntidadeComDatas;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.cliente.ClienteEntity;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.EntidadeComDatas;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
