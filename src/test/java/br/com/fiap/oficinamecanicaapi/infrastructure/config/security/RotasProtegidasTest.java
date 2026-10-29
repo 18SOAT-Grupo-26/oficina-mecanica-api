@@ -1,13 +1,13 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.config.security;
 
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePortIn;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecaInsumo.PecaInsumoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +75,7 @@ class RotasProtegidasTest {
     private AuthenticationUseCasePortIn authenticationUseCase;
 
     @MockitoBean
-    private JwtTokenProviderUseCase jwtTokenProvider;
+    private JwtTokenUseCasePortIn jwtTokenProvider;
 
     @MockitoBean
     private UsuarioUseCasePortIn usuarioUseCase;
