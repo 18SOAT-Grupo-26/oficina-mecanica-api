@@ -70,7 +70,7 @@ sequenceDiagram
 
 - `POST /auth/login` recebe `identificador` (nome de usuário ou e-mail) e `senha` e devolve `Bearer <token>`.
 - O token é assinado com **HMAC-SHA512** (`jjwt`) e expira em **1 hora**. A chave vem de `API_SECRET`, sem valor
-  padrão no `application.yaml`: sem a variável, a API não sobe. O `.env.example` orienta a gerar com
+  padrão no `application_bkp.yaml`: sem a variável, a API não sobe. O `.env.example` orienta a gerar com
   `openssl rand -base64 64`.
 - Sem sessão no servidor (`SessionCreationPolicy.STATELESS`), sem `httpBasic` e sem `formLogin`.
 - A cada requisição, o `JwtAuthenticationFilter` valida o token e **recarrega o usuário do banco**. O perfil vem do
@@ -265,7 +265,7 @@ como authorities.
 - **Segurança no `core`.** `Perfil` implementa `GrantedAuthority` do Spring Security, e o `JwtTokenProviderUseCase` (com
   `jjwt`) fica em `core/usecase`. As duas coisas contrariam a ADR 001, que coloca JWT e frameworks fora do `core`. Ficam
   registradas como dívida técnica: o caminho é um `TokenPortOut` com a implementação em `infrastructure`.
-- **Segredo antigo no histórico.** O commit `26fe9db` tinha um valor padrão para o `API_SECRET` no `application.yaml`.
+- **Segredo antigo no histórico.** O commit `26fe9db` tinha um valor padrão para o `API_SECRET` no `application_bkp.yaml`.
   Ele não é mais usado, mas está público no histórico e nunca deve voltar a ser usado. O valor de exemplo do
   `.env.example` também é público: cada ambiente deve gerar o próprio.
 - **RNF03 desatualizado no Miro.** O requisito ainda fala em todos os funcionários como Administrador e em aprovação e

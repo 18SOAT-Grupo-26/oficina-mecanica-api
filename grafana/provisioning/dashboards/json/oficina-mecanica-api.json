@@ -1,262 +1,64 @@
 {
   "uid": "oficina-mecanica-api",
   "title": "Oficina Mecânica API",
+  "description": "Os 4 sinais de ouro (latência, tráfego, erros, saturação) e as métricas de negócio da oficina.",
   "tags": [
     "oficina",
-    "spring-boot"
+    "spring-boot",
+    "sinais-de-ouro"
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 3,
   "refresh": "30s",
   "time": {
     "from": "now-6h",
     "to": "now"
   },
   "panels": [
-    {
-      "id": 1,
-      "type": "stat",
-      "title": "API no ar",
-      "gridPos": {
-        "x": 0,
-        "y": 0,
-        "w": 4,
-        "h": 4
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "max(up{job=~\"oficina-mecanica-api.*\"})"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "FORA"
-                },
-                "1": {
-                  "text": "OK"
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        }
-      }
-    },
-    {
-      "id": 2,
-      "type": "stat",
-      "title": "OS finalizadas",
-      "gridPos": {
-        "x": 4,
-        "y": 0,
-        "w": 4,
-        "h": 4
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(oficina_os_tempo_execucao_seconds_count{application=\"oficina-mecanica-api\"})"
-        }
-      ]
-    },
-    {
-      "id": 3,
-      "type": "stat",
-      "title": "Tempo médio de execução da OS",
-      "gridPos": {
-        "x": 8,
-        "y": 0,
-        "w": 4,
-        "h": 4
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(oficina_os_tempo_execucao_seconds_sum{application=\"oficina-mecanica-api\"}) / sum(oficina_os_tempo_execucao_seconds_count{application=\"oficina-mecanica-api\"})"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "decimals": 1
-        }
-      }
-    },
-    {
-      "id": 4,
-      "type": "stat",
-      "title": "Memória heap da JVM",
-      "gridPos": {
-        "x": 12,
-        "y": 0,
-        "w": 4,
-        "h": 4
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum(jvm_memory_used_bytes{application=\"oficina-mecanica-api\", area=\"heap\"})"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes"
-        }
-      }
-    },
-    {
-      "id": 5,
-      "type": "piechart",
-      "title": "Respostas por status HTTP",
-      "gridPos": {
-        "x": 16,
-        "y": 0,
-        "w": 8,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (status) (increase(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__range]))",
-          "legendFormat": "{{status}}",
-          "instant": true
-        }
-      ],
-      "options": {
-        "legend": {
-          "displayMode": "table",
-          "placement": "right",
-          "values": [
-            "value",
-            "percent"
-          ]
-        },
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ]
-        }
-      }
-    },
-    {
-      "id": 6,
-      "type": "timeseries",
-      "title": "Requisições por segundo, por rota",
-      "gridPos": {
-        "x": 0,
-        "y": 4,
-        "w": 16,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (method, uri) (rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[5m]))",
-          "legendFormat": "{{method}} {{uri}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps"
-        }
-      }
-    },
-    {
-      "id": 7,
-      "type": "timeseries",
-      "title": "Tempo médio de resposta, por rota",
-      "gridPos": {
-        "x": 0,
-        "y": 12,
-        "w": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (uri) (rate(http_server_requests_seconds_sum{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[5m])) / sum by (uri) (rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[5m]))",
-          "legendFormat": "{{uri}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s"
-        }
-      }
-    },
-    {
-      "id": 8,
-      "type": "timeseries",
-      "title": "Erros (4xx e 5xx) por segundo",
-      "gridPos": {
-        "x": 12,
-        "y": 12,
-        "w": 12,
-        "h": 8
-      },
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "expr": "sum by (status) (rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", status=~\"4..|5..\"}[5m]))",
-          "legendFormat": "{{status}}"
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "reqps"
-        }
-      }
-    }
+    {"id": 1, "type": "row", "title": "Visão geral", "collapsed": false, "gridPos": {"x": 0, "y": 0, "w": 24, "h": 1}, "panels": []},
+    {"id": 2, "type": "stat", "title": "API no ar", "gridPos": {"x": 0, "y": 1, "w": 3, "h": 4}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "max(up{job=~\"oficina-mecanica-api.*\"})"}], "fieldConfig": {"defaults": {"mappings": [{"type": "value", "options": {"0": {"text": "FORA"}, "1": {"text": "OK"}}}], "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]}}, "overrides": []}},
+    {"id": 3, "type": "stat", "title": "Latência p95", "gridPos": {"x": 3, "y": 1, "w": 4, "h": 4}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval])))"}], "description": "95% das requisições respondem abaixo deste tempo.", "fieldConfig": {"defaults": {"unit": "s", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 0.5}, {"color": "red", "value": 1}]}}, "overrides": []}},
+    {"id": 4, "type": "stat", "title": "Tráfego", "gridPos": {"x": 7, "y": 1, "w": 4, "h": 4}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval]))"}], "description": "Requisições por segundo na API (sem o actuator).", "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []}},
+    {"id": 5, "type": "stat", "title": "Erros 5xx", "gridPos": {"x": 11, "y": 1, "w": 4, "h": 4}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\", status=~\"5..\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval]))"}], "description": "Falhas do servidor sobre o total. 4xx (regra de negócio, validação) ficam no painel de erros.", "fieldConfig": {"defaults": {"unit": "percentunit", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 0.01}, {"color": "red", "value": 0.05}]}}, "overrides": []}},
+    {"id": 6, "type": "stat", "title": "Requisições lentas (> 1 s)", "gridPos": {"x": 15, "y": 1, "w": 4, "h": 4}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "1 - (sum(rate(http_server_requests_seconds_bucket{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\", le=\"1.0\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval])))"}], "description": "Erro implícito: respondeu, mas acima do limite de 1 s.", "fieldConfig": {"defaults": {"unit": "percentunit", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 0.05}, {"color": "red", "value": 0.1}]}}, "overrides": []}},
+    {"id": 7, "type": "gauge", "title": "Saturação", "gridPos": {"x": 19, "y": 1, "w": 5, "h": 4}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(jvm_memory_used_bytes{application=\"oficina-mecanica-api\", area=\"heap\"}) / sum(jvm_memory_max_bytes{application=\"oficina-mecanica-api\", area=\"heap\"} > 0)", "legendFormat": "heap"}, {"refId": "B", "expr": "sum(hikaricp_connections_active{application=\"oficina-mecanica-api\"}) / sum(hikaricp_connections_max{application=\"oficina-mecanica-api\"})", "legendFormat": "pool do banco"}, {"refId": "C", "expr": "sum(tomcat_threads_busy_threads{application=\"oficina-mecanica-api\"}) / sum(tomcat_threads_config_max_threads{application=\"oficina-mecanica-api\"})", "legendFormat": "threads HTTP"}, {"refId": "D", "expr": "max(process_cpu_usage{application=\"oficina-mecanica-api\"})", "legendFormat": "CPU"}], "description": "O recurso mais cheio indica a folga que resta antes de degradar.", "fieldConfig": {"defaults": {"unit": "percentunit", "max": 1, "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 0.7}, {"color": "red", "value": 0.9}]}}, "overrides": []}},
+    {"id": 8, "type": "row", "title": "Latência", "collapsed": false, "gridPos": {"x": 0, "y": 5, "w": 24, "h": 1}, "panels": []},
+    {"id": 9, "type": "timeseries", "title": "Latência p50, p95 e p99", "gridPos": {"x": 0, "y": 6, "w": 8, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "histogram_quantile(0.5, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval])))", "legendFormat": "p50"}, {"refId": "B", "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval])))", "legendFormat": "p95"}, {"refId": "C", "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_requests_seconds_bucket{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval])))", "legendFormat": "p99"}], "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}},
+    {"id": 10, "type": "timeseries", "title": "Latência p95, por rota", "gridPos": {"x": 8, "y": 6, "w": 8, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "histogram_quantile(0.95, sum by (le, method, uri) (rate(http_server_requests_seconds_bucket{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval])))", "legendFormat": "{{method}} {{uri}}"}], "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}},
+    {"id": 11, "type": "timeseries", "title": "Requisições acima de 100 ms, 500 ms e 1 s", "gridPos": {"x": 16, "y": 6, "w": 8, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "1 - (sum(rate(http_server_requests_seconds_bucket{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\", le=\"0.1\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval])))", "legendFormat": "> 100 ms"}, {"refId": "B", "expr": "1 - (sum(rate(http_server_requests_seconds_bucket{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\", le=\"0.5\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval])))", "legendFormat": "> 500 ms"}, {"refId": "C", "expr": "1 - (sum(rate(http_server_requests_seconds_bucket{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\", le=\"1.0\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval])))", "legendFormat": "> 1 s"}], "description": "Usa os limites de SLO de management.metrics.distribution.slo.", "fieldConfig": {"defaults": {"unit": "percentunit", "max": 1, "min": 0}, "overrides": []}},
+    {"id": 12, "type": "timeseries", "title": "Consultas ao banco p95, por repositório", "gridPos": {"x": 0, "y": 14, "w": 12, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "histogram_quantile(0.95, sum by (le, repository, method) (rate(spring_data_repository_invocations_seconds_bucket{application=\"oficina-mecanica-api\"}[$__rate_interval])))", "legendFormat": "{{repository}}.{{method}}"}], "description": "Tempo das chamadas aos repositórios Spring Data.", "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}},
+    {"id": 13, "type": "timeseries", "title": "Espera por conexão do pool (p95)", "gridPos": {"x": 12, "y": 14, "w": 12, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(hikaricp_connections_acquire_seconds_bucket{application=\"oficina-mecanica-api\"}[$__rate_interval])))", "legendFormat": "p95"}], "description": "Subindo, o pool de conexões está pequeno para a carga.", "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}},
+    {"id": 14, "type": "row", "title": "Tráfego", "collapsed": false, "gridPos": {"x": 0, "y": 22, "w": 24, "h": 1}, "panels": []},
+    {"id": 15, "type": "timeseries", "title": "Requisições por segundo, por rota", "gridPos": {"x": 0, "y": 23, "w": 12, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (method, uri) (rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval]))", "legendFormat": "{{method}} {{uri}}"}], "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []}},
+    {"id": 16, "type": "timeseries", "title": "Requisições por segundo, por resultado", "gridPos": {"x": 12, "y": 23, "w": 12, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (outcome) (rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval]))", "legendFormat": "{{outcome}}"}], "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []}},
+    {"id": 17, "type": "timeseries", "title": "Logins por resultado", "gridPos": {"x": 0, "y": 31, "w": 8, "h": 7}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (resultado) (increase(oficina_auth_login_total{application=\"oficina-mecanica-api\"}[$__rate_interval]))", "legendFormat": "{{resultado}}"}], "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}},
+    {"id": 18, "type": "timeseries", "title": "OS abertas", "gridPos": {"x": 8, "y": 31, "w": 8, "h": 7}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(increase(oficina_os_criadas_total{application=\"oficina-mecanica-api\"}[$__rate_interval]))", "legendFormat": "OS abertas"}], "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}},
+    {"id": 19, "type": "bargauge", "title": "Operações de cadastro (período)", "gridPos": {"x": 16, "y": 31, "w": 8, "h": 7}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (entidade, operacao) (increase(oficina_cadastro_operacoes_total{application=\"oficina-mecanica-api\"}[$__range]))", "legendFormat": "{{entidade}} {{operacao}}", "instant": true, "range": false}], "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}, "options": {"orientation": "horizontal", "displayMode": "basic", "reduceOptions": {"calcs": ["lastNotNull"]}}},
+    {"id": 20, "type": "row", "title": "Erros", "collapsed": false, "gridPos": {"x": 0, "y": 38, "w": 24, "h": 1}, "panels": []},
+    {"id": 21, "type": "timeseries", "title": "Taxa de erros 5xx e 4xx", "gridPos": {"x": 0, "y": 39, "w": 8, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\", status=~\"5..\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval]))", "legendFormat": "5xx"}, {"refId": "B", "expr": "sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\", status=~\"4..\"}[$__rate_interval])) / sum(rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__rate_interval]))", "legendFormat": "4xx"}], "fieldConfig": {"defaults": {"unit": "percentunit", "max": 1, "min": 0}, "overrides": []}},
+    {"id": 22, "type": "timeseries", "title": "Erros por tipo", "gridPos": {"x": 8, "y": 39, "w": 8, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (tipo, status) (increase(oficina_erros_total{application=\"oficina-mecanica-api\"}[$__rate_interval]))", "legendFormat": "{{tipo}} {{status}}"}], "description": "negocio/requisicao: recusas esperadas (4xx); aplicacao/servidor: falhas (5xx). Vem do HandlerException.", "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}},
+    {"id": 23, "type": "timeseries", "title": "Erros 5xx por rota", "gridPos": {"x": 16, "y": 39, "w": 8, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (method, uri) (rate(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\", status=~\"5..\"}[$__rate_interval]))", "legendFormat": "{{method}} {{uri}}"}], "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []}},
+    {"id": 24, "type": "piechart", "title": "Respostas por status HTTP (período)", "gridPos": {"x": 0, "y": 47, "w": 6, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (status) (increase(http_server_requests_seconds_count{application=\"oficina-mecanica-api\", uri!~\"/actuator.*\"}[$__range]))", "legendFormat": "{{status}}", "instant": true, "range": false}], "fieldConfig": {"defaults": {}, "overrides": []}, "options": {"legend": {"displayMode": "table", "placement": "right", "values": ["value", "percent"]}, "reduceOptions": {"calcs": ["lastNotNull"]}}},
+    {"id": 25, "type": "timeseries", "title": "Banco indisponível (503)", "gridPos": {"x": 6, "y": 47, "w": 6, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(increase(oficina_banco_indisponivel_total{application=\"oficina-mecanica-api\"}[$__rate_interval]))", "legendFormat": "503"}], "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}},
+    {"id": 26, "type": "timeseries", "title": "Acessos negados e tokens rejeitados", "gridPos": {"x": 12, "y": 47, "w": 6, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (status) (increase(oficina_seguranca_acesso_negado_total{application=\"oficina-mecanica-api\"}[$__rate_interval]))", "legendFormat": "negado {{status}}"}, {"refId": "B", "expr": "sum by (motivo) (increase(oficina_auth_token_rejeitado_total{application=\"oficina-mecanica-api\"}[$__rate_interval]))", "legendFormat": "token {{motivo}}"}], "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}},
+    {"id": 27, "type": "timeseries", "title": "Eventos de log WARN e ERROR", "gridPos": {"x": 18, "y": 47, "w": 6, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (level) (increase(logback_events_total{application=\"oficina-mecanica-api\", level=~\"warn|error\"}[$__rate_interval]))", "legendFormat": "{{level}}"}], "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}},
+    {"id": 28, "type": "row", "title": "Saturação", "collapsed": false, "gridPos": {"x": 0, "y": 55, "w": 24, "h": 1}, "panels": []},
+    {"id": 29, "type": "timeseries", "title": "Memória heap da JVM", "gridPos": {"x": 0, "y": 56, "w": 6, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(jvm_memory_used_bytes{application=\"oficina-mecanica-api\", area=\"heap\"})", "legendFormat": "usada"}, {"refId": "B", "expr": "sum(jvm_memory_max_bytes{application=\"oficina-mecanica-api\", area=\"heap\"} > 0)", "legendFormat": "máxima"}], "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []}},
+    {"id": 30, "type": "timeseries", "title": "CPU", "gridPos": {"x": 6, "y": 56, "w": 6, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "max(process_cpu_usage{application=\"oficina-mecanica-api\"})", "legendFormat": "processo"}, {"refId": "B", "expr": "max(system_cpu_usage{application=\"oficina-mecanica-api\"})", "legendFormat": "sistema"}], "fieldConfig": {"defaults": {"unit": "percentunit", "max": 1, "min": 0}, "overrides": []}},
+    {"id": 31, "type": "timeseries", "title": "Pool de conexões (Hikari)", "gridPos": {"x": 12, "y": 56, "w": 6, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(hikaricp_connections_active{application=\"oficina-mecanica-api\"})", "legendFormat": "ativas"}, {"refId": "B", "expr": "sum(hikaricp_connections_idle{application=\"oficina-mecanica-api\"})", "legendFormat": "ociosas"}, {"refId": "C", "expr": "sum(hikaricp_connections_pending{application=\"oficina-mecanica-api\"})", "legendFormat": "aguardando"}, {"refId": "D", "expr": "sum(hikaricp_connections_max{application=\"oficina-mecanica-api\"})", "legendFormat": "máximo"}], "description": "'aguardando' acima de 0 = requisições esperando conexão.", "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}},
+    {"id": 32, "type": "timeseries", "title": "Threads HTTP (Tomcat)", "gridPos": {"x": 18, "y": 56, "w": 6, "h": 8}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(tomcat_threads_busy_threads{application=\"oficina-mecanica-api\"})", "legendFormat": "ocupadas"}, {"refId": "B", "expr": "sum(tomcat_threads_current_threads{application=\"oficina-mecanica-api\"})", "legendFormat": "criadas"}, {"refId": "C", "expr": "sum(tomcat_threads_config_max_threads{application=\"oficina-mecanica-api\"})", "legendFormat": "máximo"}], "description": "Depende de server.tomcat.mbeanregistry.enabled=true.", "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}},
+    {"id": 33, "type": "timeseries", "title": "Pausas de GC (tempo por segundo)", "gridPos": {"x": 0, "y": 64, "w": 8, "h": 7}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(rate(jvm_gc_pause_seconds_sum{application=\"oficina-mecanica-api\"}[$__rate_interval]))", "legendFormat": "GC"}], "description": "Fração do tempo parada em coleta de lixo.", "fieldConfig": {"defaults": {"unit": "percentunit"}, "overrides": []}},
+    {"id": 34, "type": "timeseries", "title": "Threads da JVM", "gridPos": {"x": 8, "y": 64, "w": 8, "h": 7}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(jvm_threads_live_threads{application=\"oficina-mecanica-api\"})", "legendFormat": "vivas"}, {"refId": "B", "expr": "sum(jvm_threads_peak_threads{application=\"oficina-mecanica-api\"})", "legendFormat": "pico"}], "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}},
+    {"id": 35, "type": "timeseries", "title": "Fila de trabalho: OS em andamento", "gridPos": {"x": 16, "y": 64, "w": 8, "h": 7}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (status) (oficina_os_quantidade{application=\"oficina-mecanica-api\", status=~\"RECEBIDA|EM_DIAGNOSTICO|AGUARDANDO_APROVACAO|EM_EXECUCAO\"})", "legendFormat": "{{status}}"}], "description": "Saturação do negócio: OS abertas e ainda não finalizadas.", "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}},
+    {"id": 36, "type": "row", "title": "Ordens de serviço e estoque", "collapsed": false, "gridPos": {"x": 0, "y": 71, "w": 24, "h": 1}, "panels": []},
+    {"id": 37, "type": "piechart", "title": "OS por status (agora)", "gridPos": {"x": 0, "y": 72, "w": 8, "h": 9}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (status) (oficina_os_quantidade{application=\"oficina-mecanica-api\"})", "legendFormat": "{{status}}", "instant": true, "range": false}], "fieldConfig": {"defaults": {}, "overrides": []}, "options": {"legend": {"displayMode": "table", "placement": "right", "values": ["value", "percent"]}, "reduceOptions": {"calcs": ["lastNotNull"]}}},
+    {"id": 38, "type": "stat", "title": "Tempo médio de execução", "gridPos": {"x": 8, "y": 72, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(oficina_os_tempo_execucao_seconds_sum{application=\"oficina-mecanica-api\"}) / sum(oficina_os_tempo_execucao_seconds_count{application=\"oficina-mecanica-api\"})"}], "description": "De EM_EXECUCAO até FINALIZADA, desde a subida da API.", "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}},
+    {"id": 39, "type": "stat", "title": "Execução p95 (período)", "gridPos": {"x": 12, "y": 72, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (increase(oficina_os_tempo_execucao_seconds_bucket{application=\"oficina-mecanica-api\"}[$__range])))"}], "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}},
+    {"id": 40, "type": "stat", "title": "Abertura → entrega (média)", "gridPos": {"x": 16, "y": 72, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(oficina_os_tempo_total_seconds_sum{application=\"oficina-mecanica-api\"}) / sum(oficina_os_tempo_total_seconds_count{application=\"oficina-mecanica-api\"})"}], "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}},
+    {"id": 41, "type": "stat", "title": "Peças sem saldo", "gridPos": {"x": 20, "y": 72, "w": 4, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "max(oficina_estoque_pecas_sem_saldo{application=\"oficina-mecanica-api\"})"}], "fieldConfig": {"defaults": {"unit": "short", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}}, "overrides": []}},
+    {"id": 42, "type": "stat", "title": "Aprovação de orçamentos (período)", "gridPos": {"x": 8, "y": 75, "w": 8, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(increase(oficina_os_transicoes_total{application=\"oficina-mecanica-api\", de=\"AGUARDANDO_APROVACAO\", para=\"EM_EXECUCAO\"}[$__range])) / sum(increase(oficina_os_transicoes_total{application=\"oficina-mecanica-api\", de=\"AGUARDANDO_APROVACAO\"}[$__range]))"}], "fieldConfig": {"defaults": {"unit": "percentunit", "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "orange", "value": 0.5}, {"color": "green", "value": 0.7}]}}, "overrides": []}},
+    {"id": 43, "type": "stat", "title": "Valor médio do orçamento", "gridPos": {"x": 16, "y": 75, "w": 8, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum(oficina_os_orcamento_valor_sum{application=\"oficina-mecanica-api\"}) / sum(oficina_os_orcamento_valor_count{application=\"oficina-mecanica-api\"})"}], "fieldConfig": {"defaults": {"unit": "currencyBRL"}, "overrides": []}},
+    {"id": 44, "type": "timeseries", "title": "Movimentação de estoque (unidades)", "gridPos": {"x": 8, "y": 78, "w": 16, "h": 3}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"refId": "A", "expr": "sum by (tipo) (increase(oficina_estoque_movimentacao_unidades_total{application=\"oficina-mecanica-api\"}[$__rate_interval]))", "legendFormat": "{{tipo}}"}], "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}}
   ]
 }

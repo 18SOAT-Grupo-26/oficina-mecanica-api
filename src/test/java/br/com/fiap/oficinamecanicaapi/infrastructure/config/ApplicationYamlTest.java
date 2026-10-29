@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Sintaxe dos placeholders do application.yaml. No Spring o padrão é {@code ${VAR:padrão}}; o {@code ${VAR:-padrão}}
+ * Sintaxe dos placeholders do application_bkp.yaml. No Spring o padrão é {@code ${VAR:padrão}}; o {@code ${VAR:-padrão}}
  * do shell/Compose vira o valor "-padrão" (porta "-8081" → Tomcat sem porta; e-mail "-" → admin inicial recusado).
  */
 class ApplicationYamlTest {
@@ -25,7 +25,7 @@ class ApplicationYamlTest {
 
     @BeforeAll
     static void carregar() throws IOException {
-        yaml = new ClassPathResource("application.yaml").getContentAsString(StandardCharsets.UTF_8);
+        yaml = new ClassPathResource("application_bkp.yaml").getContentAsString(StandardCharsets.UTF_8);
     }
 
     @Test

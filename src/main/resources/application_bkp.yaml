@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: "${APPLICATION_NAME:oficina-mecanica-api}"
+  config:
+    # fora do Docker: lê as variáveis do .env na raiz; no container o arquivo não existe e é ignorado
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${DATASOURCE_HOST:jdbc:postgresql://localhost:5432/oficina}
+    username: ${DATASOURCE_USERNAME:}
+    password: ${DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      # o schema vem só das migrations do Flyway (src/main/resources/db/migration);
+      # o Hibernate apenas confere na subida se as entidades batem com as tabelas
+      ddl-auto: validate
+    # sessão do Hibernate fecha junto com a transação do caso de uso (ADR 003)
+    open-in-view: false
+
+server:
+  port: ${SERVER_PORT:8081}
+  servlet:
+    context-path: "/${APPLICATION_PREFIX:api/v1}"
+  error.include-stacktrace: never
+
+log:
+  file:
+    path: "${LOG_PATH:/tmp/logs}"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+  metrics:
+    tags:
+      application: oficina-mecanica-api
+    distribution:
+      # gera os buckets de histograma: permite p95/p99 no Grafana
+      percentiles-histogram:
+        http.server.requests: true
+        oficina.os.tempo.execucao: true
+        oficina.os.tempo.total: true
+
+logging:
+  level:
+    br.com.fiap.oficinamecanicaapi: ${LOG_LEVEL:INFO}
+
+api:
+  secret: "${API_SECRET}"
+  cors:
+    allowed-origins: "${CORS_ALLOWED_ORIGINS:}"
+  admin:
+    nome: "${ADMIN_NOME:Administrador}"
+    email: "${ADMIN_EMAIL:}"
+    usuario: "${ADMIN_USUARIO:}"
+    senha: "${ADMIN_SENHA:}"
+  login:
+    max-tentativas: ${LOGIN_MAX_TENTATIVAS:5}
+    janela-minutos: ${LOGIN_JANELA_MINUTOS:15}
+
+springdoc:
+  swagger-ui:
+    path: /documentation
+  api-docs:
+    path: /api-docs-personalized
+

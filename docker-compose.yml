@@ -5,30 +5,31 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: oficina
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${DATASOURCE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DATASOURCE_PASSWORD:-postgres}
     ports:
-      - "5432:5432"
+      - "${DB_HOST_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d oficina" ]
+      # $$ = variável lida dentro do container (o compose não substitui)
+      test: [ "CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d oficina" ]
       interval: 5s
       timeout: 3s
       retries: 10
 
   api:
-    build: .
+    build: ../../../Users/Andre Luis/Downloads/BKP
     container_name: oficina-mecanica-api
     ports:
-      - "8081:8081"
+      - "${SERVER_PORT:-8081}:8081"
     depends_on:
       db:
         condition: service_healthy
     environment:
       DATASOURCE_HOST: jdbc:postgresql://db:5432/oficina
-      DATASOURCE_USERNAME: postgres
-      DATASOURCE_PASSWORD: postgres
+      DATASOURCE_USERNAME: ${DATASOURCE_USERNAME:-postgres}
+      DATASOURCE_PASSWORD: ${DATASOURCE_PASSWORD:-postgres}
       API_SECRET: ${API_SECRET}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-}
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=75"
@@ -36,6 +37,11 @@ services:
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
       ADMIN_USUARIO: ${ADMIN_USUARIO:-}
       ADMIN_SENHA: ${ADMIN_SENHA:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-60}
+      DATASOURCE_POOL_SIZE: ${DATASOURCE_POOL_SIZE:-10}
+      DATASOURCE_CONNECTION_TIMEOUT_MS: ${DATASOURCE_CONNECTION_TIMEOUT_MS:-5000}
+      DATASOURCE_QUERY_TIMEOUT_MS: ${DATASOURCE_QUERY_TIMEOUT_MS:-5000}
     healthcheck:
       test: [ "CMD-SHELL", "wget -qO- http://localhost:8081/api/v1/actuator/health || exit 1" ]
       interval: 10s
@@ -63,6 +69,7 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/regras-sinais-ouro.yaml:/etc/prometheus/regras-sinais-ouro.yaml:ro
       - ./prometheus/alertas.yaml:/etc/prometheus/alertas.yaml:ro
       - prometheus_data:/prometheus
     extra_hosts:
@@ -75,7 +82,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
       # abre direto no dashboard da API
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/provisioning/dashboards/json/oficina-mecanica-api.json

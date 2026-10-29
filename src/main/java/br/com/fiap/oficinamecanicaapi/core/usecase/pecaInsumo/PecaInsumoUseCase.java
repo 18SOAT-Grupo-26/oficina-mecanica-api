@@ -52,8 +52,8 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
         PecaInsumoEntity entity = new PecaInsumoEntity();
         preencher(entity, request, nomeNormalizado);
 
-        contar("criado");
         PecaInsumoEntity salvo = pecaInsumoPortOut.salvar(entity);
+        contar("criado");
 
         log.info("action=insumo_criado id={}", salvo.getId());
         return pecaInsumoMapper.toResponse(salvo);
@@ -94,8 +94,8 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
         }
         preencher(entity, request, nomeNormalizado);
         PecaInsumoEntity salvo = pecaInsumoPortOut.salvar(entity);
-
         contar("atualizado");
+
         log.info("action=insumo_atualizado id={}", salvo.getId());
         return pecaInsumoMapper.toResponse(salvo);
     }

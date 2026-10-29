@@ -182,4 +182,11 @@ public class HandlerException {
         }
         return "-";
     }
+
+    /**
+     * oficina.erros{status, tipo}: negocio/requisicao = recusas esperadas (4xx); aplicacao/servidor = falhas (5xx).
+     */
+    private static void contarErro(HttpStatus status, String tipo) {
+        Metrics.counter("oficina.erros", "status", String.valueOf(status.value()), "tipo", tipo).increment();
+    }
 }

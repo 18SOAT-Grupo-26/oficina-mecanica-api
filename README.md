@@ -120,7 +120,7 @@ alteração da entidade. **Nunca edite uma migration já aplicada**: o Flyway va
 Possíveis problemas:
 
 - **"Found non-empty schema(s) ... without schema history table"**: o volume foi criado antes das migrations e já tem
-- **Portas 9000, 9090 ou 3000 em uso**: troque a porta publicada do serviço correspondente no `docker-compose.yml` (ex.:
+- **Portas 9000, 9090 ou 3000 em uso**: troque a porta publicada do serviço correspondente no `docker-compose_bkp.yml` (ex.:
   `"9001:9000"`).
 - **SonarQube reinicia ou não abre**: falta memória para o Docker; veja os pré-requisitos.
 - **`required variable API_SECRET is missing`**: falta o arquivo `.env`; rode `cp .env.example .env`.
@@ -160,7 +160,7 @@ Possíveis problemas:
 | `LOG_PATH`               | `/tmp/logs`                                | não         | diretório dos logs                                                |
 | `GRAFANA_ADMIN_PASSWORD` | `admin`                                    | não         | senha do admin do Grafana (só no compose)                         |
 
-No Docker Compose, as variáveis da API já estão no `docker-compose.yml`; vêm do `.env` o `API_SECRET`, o `GRAFANA_ADMIN_PASSWORD`, o `CORS_ALLOWED_ORIGINS` e as variáveis
+No Docker Compose, as variáveis da API já estão no `docker-compose_bkp.yml`; vêm do `.env` o `API_SECRET`, o `GRAFANA_ADMIN_PASSWORD`, o `CORS_ALLOWED_ORIGINS` e as variáveis
 `ADMIN_*` do administrador inicial.
 
 ## Instruções para execução dos testes
