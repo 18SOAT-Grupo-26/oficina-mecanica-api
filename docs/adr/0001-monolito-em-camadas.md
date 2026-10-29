@@ -50,12 +50,12 @@ Adotamos um **monólito**: uma única aplicação Spring Boot, um artefato impla
 
 | Camada                           | Pacote                          | Responsabilidade                                                                                                                                                                                                                                                                                                     |
 |----------------------------------|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Adapter de entrada               | `controller`                    | Endpoints REST, separados por público: `admin` (cadastros e OS), `auth` (login e cadastro de usuários) e `cliente` (acompanhamento da OS). Uma interface `*API` com as anotações OpenAPI e um `*Controller` que a implementa, declara o `@PreAuthorize` e chama o port in.                                         |
+| Adapter de entrada               | `controller`                    | Endpoints REST, separados por público: `admin` (cadastros e OS), `auth` (login e cadastro de usuários) e `cliente` (acompanhamento da OS). Uma interface `*API` com as anotações OpenAPI e as de rota (`@*Mapping`) e um `*Controller` que a implementa, declara o `@PreAuthorize` e chama o port in.                                         |
 | Domínio                          | `core/domain`                   | Modelos e value objects com regras de negócio (`Cliente`, `Documento`, `Veiculo`, `Placa`). Sem Spring e sem JPA.                                                                                                                                                                                                    |
 | Portas                           | `core/port/in`, `core/port/out` | Contratos. O `PortIn` descreve os casos de uso oferecidos e o `PortOut`, o que o core precisa do mundo externo (persistência etc.).                                                                                                                                                                                  |
 | Casos de uso                     | `core/usecase`                  | Orquestram o domínio. Implementam o `PortIn` e dependem só de `PortOut` e do domínio.                                                                                                                                                                                                                                |
 | Adapters de saída e configuração | `infrastructure`                | `persistence/<contexto>/`: entidade JPA, `*JpaRepository`, `*PersistenceMapper` e `*PersistenceAdapter`, que implementa o `PortOut`. `config/`: documentação (`docs`), segurança (`security`: filtro JWT, rotas públicas, CORS, ver [ADR 004](0004-seguranca.md)) e métricas (`metrics`). Esses aspectos nunca ficam no `core`. |
-| Transversal                      | `shared`                        | Exceções (`ApplicationException`, `ErrorCode`), handler global e utilitários puros (validação de CPF/CNPJ, normalização de nome).                                                                                                                                                                                    |
+| Transversal                      | `shared`                        | Exceções (`ApplicationException`, `ErrorTemplate`), handler global e utilitários puros (validação de CPF/CNPJ, normalização de nome).                                                                                                                                                                                    |
 
 Dentro de cada camada o código é **organizado por contexto** (`cliente`, `veiculo`, `servico`, `pecainsumo`,
 `ordemservico`...). Esses contextos seguem os agrupamentos do Event Storming:
@@ -91,14 +91,14 @@ flowchart LR
     infrastructure --> shared
 ```
 
-| Camada           | Pode depender de                                      | Não pode depender de                                         |
-|------------------|-------------------------------------------------------|--------------------------------------------------------------|
-| `controller`     | `core/port/in`, contratos (DTOs) do port in, `shared` | `core/usecase` (implementação), `infrastructure`             |
-| `core/domain`    | `shared/exception`                                    | Spring, JPA, `infrastructure`, `controller`                  |
-| `core/port`      | `core/domain`, DTOs dos casos de uso                  | entidades JPA, `infrastructure`                              |
-| `core/usecase`   | `core/domain`, `core/port`, `shared`                  | `infrastructure` (repositórios, entidades JPA), `controller` |
-| `infrastructure` | `core/domain`, `core/port`, `shared`                  | `core/usecase` (implementação concreta), `controller`        |
-| `shared`         | bibliotecas utilitárias                               | `core`, `infrastructure`, `controller`                       |
+| Camada           | Pode depender de                                        | Não pode depender de                                         |
+|------------------|---------------------------------------------------------|--------------------------------------------------------------|
+| `controller`     | `core/port/in`, contratos (DTOs) do port in, `shared`   | `core/usecase` (implementação), `infrastructure`             |
+| `core/domain`    | `shared/exception`, utilitários puros de `shared/utils` | Spring, JPA, `infrastructure`, `controller`                  |
+| `core/port`      | `core/domain`, DTOs dos casos de uso                    | entidades JPA, `infrastructure`                              |
+| `core/usecase`   | `core/domain`, `core/port`, `shared`                    | `infrastructure` (repositórios, entidades JPA), `controller` |
+| `infrastructure` | `core/domain`, `core/port`, `shared`                    | `core/usecase` (implementação concreta), `controller`        |
+| `shared`         | bibliotecas utilitárias                                 | `core`, `infrastructure`, `controller`                       |
 
 ### Implementação de referência
 
@@ -121,7 +121,10 @@ callbacks em cada entidade sem levar JPA para o domínio.
 ### Exceções aceitas conscientemente
 
 - **`@Service` nos casos de uso.** Evita uma configuração manual de beans para cada use case. O custo é uma dependência
-  leve do Spring no `core/usecase`.
+  leve do Spring no `core/usecase`. Pelo mesmo motivo, os casos de uso também usam o `@Transactional`
+  ([ADR 003](0003-estrategia-de-transacoes.md)), o `PasswordEncoder` do Spring Security no cadastro e no login, o
+  `@Value` para ler configuração (`LimiteTentativasLogin`, `JwtTokenProviderUseCase`) e mappers do MapStruct
+  (`core/usecase/<contexto>/mapper`) entre DTO e modelo de domínio. O domínio fica sem nenhuma delas.
 - **DTOs de request e response como contrato do port in.** Os controllers e os casos de uso trocam `*Request` e
   `*Response`, com anotações `jakarta.validation`, em vez de criar uma camada extra de comandos. Esses DTOs não são
   modelos de domínio e não devem carregar regra de negócio.
@@ -224,7 +227,12 @@ callbacks em cada entidade sem levar JPA para o domínio.
   `infrastructure/persistence/repository/` (e não em `persistence/<contexto>/`); `Servico` e `PecaInsumo`, que são
   modelos anêmicos (getters e setters, com a validação no caso de uso, e não no modelo como em `Cliente`); e, na
   segurança, `Perfil` implementa `GrantedAuthority` e o JWT é gerado em `core/usecase/auth`
-  ([ADR 004](0004-seguranca.md)). As correções são acompanhadas como issues de dívida técnica no repositório.
+  ([ADR 004](0004-seguranca.md)). O pente fino de 29/10 achou mais dois pontos: os DTOs `*Request`/`*Response` ficam
+  em `core/domain/<contexto>/model`, misturados aos modelos de domínio, quando o lugar de um contrato do port in é
+  `core/port/in/<contexto>/`; e o pacote `pecaInsumo` está em camelCase, diferente dos outros contextos. As duas
+  violações da regra de dependência que ele achou já foram corrigidas: o `JwtAuthenticationFilter` usa o port in (#122),
+  e o `UsuarioPayload` saiu de `shared` para `core/usecase/usuario` (#124). As correções são acompanhadas como issues de
+  dívida técnica no repositório.
 
 ## Referências
 
