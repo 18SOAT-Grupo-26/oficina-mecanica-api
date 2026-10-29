@@ -239,7 +239,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve cancelar a OS pelo DELETE e responder 204")
     void deveCancelarOs() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(delete("/ordens-servico/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isNoContent());
@@ -250,7 +250,7 @@ class OrdemServicoControllerTest {
     @Test
     @DisplayName("Deve responder 409 no DELETE quando a OS não pode mais ser cancelada")
     void deveResponderConflitoAoCancelar() throws Exception {
-        autenticarComo(Perfil.ADMINISTRATOR);
+        autenticarComo(Perfil.ADMIN);
         doThrow(new ApplicationException(409, "Transição inválida: EM_EXECUCAO → CANCELADA"))
                 .when(useCase).cancelar(ID);
 
