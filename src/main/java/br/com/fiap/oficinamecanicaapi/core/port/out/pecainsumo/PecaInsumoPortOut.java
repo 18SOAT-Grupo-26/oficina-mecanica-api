@@ -1,6 +1,6 @@
-package br.com.fiap.oficinamecanicaapi.core.port.out.pecaInsumo;
+package br.com.fiap.oficinamecanicaapi.core.port.out.pecainsumo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumo;
+import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 
 import java.util.Collection;

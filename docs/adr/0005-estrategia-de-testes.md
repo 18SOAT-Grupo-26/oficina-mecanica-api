@@ -192,7 +192,7 @@ Os testes de integração entraram na `develop` no #111, com o `maven-failsafe-p
   duas threads disputando a última unidade da mesma peça.
 - **Cobertura fora da regra não trava o build.** Os pacotes que estavam baixos quando esta ADR foi escrita ganharam
   testes (em 29/10: `core/usecase/auth` e `infrastructure/config/metrics` com 100%, adapters de `servico` e
-  `pecaInsumo` com 94% e 95%), mas só os pacotes da regra do JaCoCo reprovam o build se caírem. Os outros são
+  `pecainsumo` com 94% e 95%), mas só os pacotes da regra do JaCoCo reprovam o build se caírem. Os outros são
   acompanhados no Sonar e entram na regra conforme o time decidir.
 - **Teste de controller depende do mock do filtro.** Os testes de controller mockam o `JwtTokenUseCasePortIn` e o
   `UsuarioUseCasePortIn` para simular o login. A validação real do token só é coberta pelo `SegurancaIT`.

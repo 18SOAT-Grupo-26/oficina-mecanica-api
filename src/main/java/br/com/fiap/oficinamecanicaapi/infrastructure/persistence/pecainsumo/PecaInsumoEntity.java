@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecaInsumo;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecainsumo;
 
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.EntidadeComDatas;
 import jakarta.persistence.*;

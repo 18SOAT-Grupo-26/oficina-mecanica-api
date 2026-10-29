@@ -1,6 +1,6 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecaInsumo;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecainsumo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecaInsumo.model.PecaInsumo;
+import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
