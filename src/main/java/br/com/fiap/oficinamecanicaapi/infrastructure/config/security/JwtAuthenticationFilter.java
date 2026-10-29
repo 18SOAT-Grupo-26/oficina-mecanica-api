@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.config.security;
 
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,10 +27,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final JwtTokenProviderUseCase jwtTokenProvider;
+    private final JwtTokenUseCasePortIn jwtTokenProvider;
     private final UsuarioUseCasePortIn usuarioUseCase;
 
-    public JwtAuthenticationFilter(JwtTokenProviderUseCase jwtTokenProvider,
+    public JwtAuthenticationFilter(JwtTokenUseCasePortIn jwtTokenProvider,
                                    UsuarioUseCasePortIn usuarioUseCase) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.usuarioUseCase = usuarioUseCase;
