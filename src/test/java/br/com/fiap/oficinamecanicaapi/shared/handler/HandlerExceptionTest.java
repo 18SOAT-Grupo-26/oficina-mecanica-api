@@ -4,6 +4,7 @@ import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.apache.tomcat.util.http.InvalidParameterException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,17 +16,20 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Stream;
 
@@ -145,6 +149,34 @@ class HandlerExceptionTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getBody().getMessage()).isEqualTo("Parâmetro inválido: id");
+    }
+
+    @Test
+    @DisplayName("Rota inexistente deve responder 404, e não 500")
+    void rotaInexistente() {
+        var response = handler.handleRotaInexistente(
+                new NoResourceFoundException(HttpMethod.DELETE, "/api/v1/clientes/", "clientes"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        assertThat(response.getBody().getMessage()).isEqualTo("Recurso não encontrado");
+    }
+
+    @Test
+    @DisplayName("Método não suportado na rota deve responder 405, e não 500")
+    void metodoNaoSuportado() {
+        var response = handler.handleMetodoNaoSuportado(new HttpRequestMethodNotSupportedException("PATCH"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+        assertThat(response.getBody().getMessage()).isEqualTo("Método PATCH não suportado nesta rota");
+    }
+
+    @Test
+    @DisplayName("Query string malformada (parâmetro sem nome) deve responder 400, e não 500")
+    void parametroInvalido() {
+        var response = handler.handleParametroInvalido(new InvalidParameterException("Invalid chunk [=x] ignored"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getMessage()).isEqualTo("Parâmetros da requisição inválidos");
     }
 
     @Test
