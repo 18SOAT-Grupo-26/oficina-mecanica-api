@@ -9,4 +9,4 @@ prometheus/
 *.md
 .env.example
 .env.example
-docker-compose_bkp.yml
+docker-compose.yml

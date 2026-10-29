@@ -30,7 +30,7 @@ groups:
         expr: |
           sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api", uri!~"/actuator.*", status=~"4.."}[5m]))
             / sum(rate(http_server_requests_seconds_count{application="oficina-mecanica-api", uri!~"/actuator.*"}[5m]))
-      # erro implícito: a requisição respondeu, mas acima de 1 s (bucket le="1.0" vem do slo no application_bkp.yaml)
+      # erro implícito: a requisição respondeu, mas acima de 1 s (bucket le="1.0" vem do slo no application.yaml)
       - record: oficina:requisicoes_lentas:ratio_rate5m
         expr: |
           1 - (

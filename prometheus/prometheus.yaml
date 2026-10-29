@@ -17,7 +17,7 @@ scrape_configs:
 
   # API rodando no Docker (docker compose up)
   - job_name: oficina-mecanica-api
-    # o context-path /api/v1 (application_bkp.yaml) entra no caminho do actuator
+    # o context-path /api/v1 (application.yaml) entra no caminho do actuator
     metrics_path: /api/v1/actuator/prometheus
     static_configs:
       - targets: [ "api:8081" ]

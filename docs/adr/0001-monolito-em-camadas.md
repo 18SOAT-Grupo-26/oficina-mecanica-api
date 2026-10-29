@@ -15,7 +15,7 @@ Restrições do projeto:
 
 - Equipe pequena (grupo da pós-tech) e prazo curto por entrega.
 - Um único banco PostgreSQL (ver [ADR 002](0002-escolha-do-banco-de-dados.md)).
-- Execução local e avaliação via Docker Compose (`../../docker-compose_bkp.yml`).
+- Execução local e avaliação via Docker Compose (`../../docker-compose.yml`).
 - As regras de negócio precisam ser testadas sem subir o banco. Os testes de `core` usam JUnit e Mockito.
 - A stack já foi definida: Java 25, Spring Boot 4, Spring Data JPA, MapStruct e Lombok. A escolha foi feita na reunião
   de 16/10 porque Java é a linguagem que a maioria da equipe domina.

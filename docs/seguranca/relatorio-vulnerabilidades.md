@@ -68,7 +68,7 @@ e boas práticas).
 | A16 | A02 | Baixa | HTTP sem TLS no Compose. O JWT leva nome e e-mail em Base64. | Manual | Risco aceito: o HTTPS fica com o proxy ou ingress do deploy |
 | A17 | A04 | Baixa | Limite de tentativas em memória: com mais de uma instância, cada uma conta separado. | Manual | Risco aceito: a fase 1 roda numa instância só |
 
-Também corrigido, sem contar como vulnerabilidade: os placeholders do `application_bkp.yaml` usavam a sintaxe do shell
+Também corrigido, sem contar como vulnerabilidade: os placeholders do `application.yaml` usavam a sintaxe do shell
 (`${VAR:-padrão}`), e o Spring transformava o padrão em `-padrão` (#113). Na minimização de dados para a LGPD, a
 identidade foi removida e o usuário guarda só nome e e-mail (#100).
 
@@ -78,8 +78,8 @@ identidade foi removida e o usuário guarda só nome e e-mail (#100).
 
 | Arquivo | Commit | Data | Chave | Situação na `develop` |
 |---|---|---|---|---|
-| `../../src/main/resources/application_bkp.yaml` | `26fe9db` | 18/10 | A | só no histórico (também na `main`) |
-| `../../docker-compose_bkp.yml` | `2aeb199` | 22/10 | B | só no histórico |
+| `../../src/main/resources/application.yaml` | `26fe9db` | 18/10 | A | só no histórico (também na `main`) |
+| `../../docker-compose.yml` | `2aeb199` | 22/10 | B | só no histórico |
 | `.env.example` | `d4f2d60` | 27/10 | B | **presente** (A1) |
 | `src/test/.../integracao/IntegracaoBase.java` | `c716b4c` | 28/10 | C | presente, só em teste (A13) |
 
