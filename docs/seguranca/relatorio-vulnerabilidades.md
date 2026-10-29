@@ -3,7 +3,8 @@
 - **Data:** 28/10/2026
 - **Responsável:** Alexandre Silveira (segurança)
 - **Commit analisado:** `develop` em `4663bd7` (merge do #114)
-- **Atualizado em 29/10/2026:** as correções que estavam em PR aberto foram mergeadas (#116, #117 e #119)
+- **Atualizado em 29/10/2026:** as correções que estavam em PR aberto foram mergeadas (#116, #117 e #119). A1 e A13
+  (chaves JWT) corrigidos no PR `fix/remove-chaves-jwt`, com o Gitleaks no CI
 - **Ambiente:** Docker Compose local, com banco descartável e segredos gerados só para o teste
 
 ## 1. Resumo
@@ -14,12 +15,12 @@ A análise combinou revisão manual guiada pelo OWASP Top 10 (2021) com três fe
 - **OWASP ZAP** para varredura dinâmica da API, autenticada;
 - **Trivy** para CVEs da imagem Docker.
 
-| Severidade | Encontrados | Corrigidos (mergeados) | Pendentes | Risco aceito |
-|------------|:-----------:|:----------------------:|:---------:|:------------:|
-| Crítica    | 1           | 1                      | —         | —            |
-| Alta       | 6           | 5                      | 1         | —            |
-| Média      | 4           | 4                      | —         | —            |
-| Baixa      | 6           | 1                      | 1         | 4            |
+| Severidade | Encontrados | Corrigidos (mergeados) | Corrigidos (PR aberto) | Pendentes | Risco aceito |
+|------------|:-----------:|:----------------------:|:----------------------:|:---------:|:------------:|
+| Crítica    | 1           | 1                      | —                      | —         | —            |
+| Alta       | 6           | 5                      | 1                      | —         | —            |
+| Média      | 4           | 4                      | —                      | —         | —            |
+| Baixa      | 6           | 1                      | 1                      | —         | 4            |
 
 As 18 CVEs do Trivy contam como **2 achados**: um crítico (Tomcat) e um alto (Jackson). A correção de ambos é a mesma
 atualização de versão, e a seção 4.3 detalha cada CVE.
@@ -30,7 +31,7 @@ atualização de versão, e a seção 4.3 detalha cada CVE.
 |------------|--------------------------------------------------------------|--------------------------------------------------|
 | OWASP ZAP  | 5 alertas, 44 respostas 500, 112 verificações aprovadas      | 2 alertas informativos, 0 respostas 500, 114 aprovadas |
 | Trivy      | 4 críticas, 10 altas, 4 médias (Tomcat 11.0.24, Jackson)     | 0                                                |
-| Gitleaks   | 4 ocorrências de segredo JWT no histórico (3 chaves)         | sem mudança: depende do item A1 (seção 5)        |
+| Gitleaks   | 4 ocorrências de segredo JWT no histórico (3 chaves)         | com o `fix/remove-chaves-jwt`: 0 no código atual; as 5 do histórico (uma nova em 29/10) ficam no `.gitleaksignore`, e a API recusa as 3 chaves |
 
 ## 2. Escopo e metodologia
 
@@ -51,7 +52,7 @@ e boas práticas).
 
 | ID  | OWASP | Severidade | Achado | Origem | Status |
 |-----|-------|------------|--------|--------|--------|
-| A1  | A02 / A05 | Alta | Chave JWT real (chave B) no `.env.example`. Quem copia o exemplo usa uma chave pública, e qualquer pessoa consegue forjar um token de ADMIN. | Gitleaks + manual | **Pendente** (seção 5) |
+| A1  | A02 / A05 | Alta | Chave JWT real (chave B) no `.env.example`. Quem copia o exemplo usa uma chave pública, e qualquer pessoa consegue forjar um token de ADMIN. | Gitleaks + manual | Corrigido no PR `fix/remove-chaves-jwt`, aguardando merge: `API_SECRET` vazio no exemplo (a API gera uma chave aleatória local) e recusa na subida das chaves publicadas |
 | A2  | A01 | Alta | `POST /auth/cadastro` público: qualquer pessoa criava um usuário, inclusive ADMIN. | Manual | Corrigido no #108: só ADMIN cadastra, e o admin inicial é criado na subida a partir do `.env` |
 | A3  | A01 | Alta | Rotas públicas com curinga (`/auth/**`) e token aceito como parâmetro de query/body. | Manual | Corrigido no #98 e no #99: lista explícita em `RotasPublicas` e `RotasProtegidasTest`, que exige 401 em toda rota não pública |
 | A4  | A07 | Alta | Enumeração de usuários no login: usuário inexistente e senha errada respondiam de forma diferente. | Manual | Corrigido no #103: 401 igual e o mesmo custo de bcrypt (60 ms × 61 ms medidos) |
@@ -63,7 +64,7 @@ e boas práticas).
 | A10 | A05 | Média | CORS com `allowedOriginPatterns("*")` e `allowCredentials(true)`. | Manual | Corrigido no #102: só as origens de `CORS_ALLOWED_ORIGINS`, sem credenciais |
 | A11 | A05 | Média | Rota inexistente, método não suportado e query malformada (`?=x`) respondiam **500**, com 44 ocorrências no ZAP. | ZAP (Application Error Disclosure, Server Error) | Corrigido no #117: 404, 405 e 400 |
 | A12 | A05 | Baixa | Sem o header `Cross-Origin-Resource-Policy`. | ZAP (Insufficient Site Isolation Against Spectre) | Corrigido no #117, junto com o A11: `same-origin` |
-| A13 | A02 | Baixa | Uma terceira chave JWT (chave C), usada só no teste de integração (`IntegracaoBase`). Nenhum ambiente a usa. | Gitleaks | **Pendente**: gerar a chave em tempo de execução no teste, junto com o A1 |
+| A13 | A02 | Baixa | Uma terceira chave JWT (chave C), usada só no teste de integração (`IntegracaoBase`). Nenhum ambiente a usa. | Gitleaks | Corrigido no mesmo PR do A1: o teste usa a chave aleatória |
 | A14 | A05 | Baixa | `/actuator/prometheus` público. As métricas não têm dados pessoais, mas revelam volume e comportamento da API. | Manual | Risco aceito nesta fase (ADR 004); num ambiente exposto, rede interna ou autenticação |
 | A15 | A07 | Baixa | Sem revogação de token: logout ou troca de perfil não invalidam um token já emitido (vale 1 h). | Manual | Risco aceito (ADR 004); versão do token no usuário fica para a fase 2 |
 | A16 | A02 | Baixa | HTTP sem TLS no Compose. O JWT leva nome e e-mail em Base64. | Manual | Risco aceito: o HTTPS fica com o proxy ou ingress do deploy |
@@ -81,12 +82,16 @@ identidade foi removida e o usuário guarda só nome e e-mail (#100).
 |---|---|---|---|---|
 | `src/main/resources/application.yaml` | `26fe9db` | 18/10 | A | só no histórico (também na `main`) |
 | `docker-compose.yml` | `2aeb199` | 22/10 | B | só no histórico |
-| `.env.example` | `d4f2d60` | 27/10 | B | **presente** (A1) |
-| `src/test/.../integracao/IntegracaoBase.java` | `c716b4c` | 28/10 | C | presente, só em teste (A13) |
+| `.env.example` | `d4f2d60` | 27/10 | B | presente até o `fix/remove-chaves-jwt` (A1) |
+| `src/test/.../integracao/IntegracaoBase.java` | `c716b4c` | 28/10 | C | presente até o `fix/remove-chaves-jwt` (A13) |
+| `.env.example2` | `39cff49` | 29/10 | B | só no histórico (arquivo removido logo depois) |
 
-As chaves foram comparadas por hash, sem exibir os valores: A, B e C são diferentes entre si. **A e B devem ser tratadas
-como comprometidas**, porque removê-las do arquivo não as tira do histórico. Cada ambiente deve gerar a própria chave
-com `openssl rand -base64 64`.
+As chaves foram comparadas por hash, sem exibir os valores: A, B e C são diferentes entre si. **As três são tratadas
+como comprometidas**, porque removê-las do arquivo não as tira do histórico. A API se recusa a subir com elas
+(`SegredoJwtConfig`, pelo SHA-256), e cada ambiente deve gerar a própria chave com `openssl rand -base64 64`.
+
+**Prevenção:** o job `segredos` do CI roda o Gitleaks com a regra do projeto (`.gitleaks.toml`) em todo o histórico. As 5
+ocorrências antigas estão no `.gitleaksignore`, e um segredo novo faz o PR falhar (validado com um controle positivo).
 
 ### 4.2 OWASP ZAP
 
@@ -129,17 +134,15 @@ Mesmo onde a exploração não se aplica, a correção é barata: o Spring Boot 
 
 ## 5. Pendências
 
-1. **A1, alta:** trocar a chave do `.env.example` por um placeholder e orientar a geração com `openssl rand -base64 64`.
-   Versionar a regra num `.gitleaks.toml` e rodar o Gitleaks no CI, para um segredo novo barrar o PR. Na mesma mudança,
-   gerar a chave do teste de integração em tempo de execução (A13).
-2. **Prevenção de dependências:** ligar o Dependabot (ou o Trivy) no CI, para que CVEs como as do A6 e do A7 sejam
+1. **Prevenção de dependências:** ligar o Dependabot (ou o Trivy) no CI, para que CVEs como as do A6 e do A7 sejam
    apontadas no PR, e não só numa análise pontual.
-3. Repetir esta análise ao fim de cada fase, ou quando entrar uma dependência nova.
+2. Repetir esta análise ao fim de cada fase, ou quando entrar uma dependência nova.
 
 ## 6. Controles que já estavam corretos
 
-- **Autenticação:** JWT HS512 com expiração de 1 h. O `API_SECRET` é obrigatório (sem ele a API não sobe), e o perfil
-  vem do banco a cada requisição, não do token (ADR 004).
+- **Autenticação:** JWT HS512 com expiração de 1 h. O `API_SECRET` é validado na subida (vazio gera uma chave
+  aleatória só para uso local; curto ou publicado impede a subida), e o perfil vem do banco a cada requisição, não do
+  token (ADR 004).
 - **Autorização:** negar por padrão. `RotasPublicas` é uma lista explícita, a autorização usa `@PreAuthorize` por perfil
   (`ADMIN`, `FUNCIONARIO`, `CLIENTE`), e o `RotasProtegidasTest` verifica todas as rotas protegidas a cada build.
 - **IDOR:** o cliente só vê as próprias OS. O identificador vem do token, não da URL (testado com dois clientes).
@@ -166,6 +169,9 @@ Na raiz do repositório:
 docker run --rm -v "$PWD":/repo:ro -v "$PWD/docs/seguranca/evidencias/gitleaks":/cfg zricethezav/gitleaks:v8.21.2 \
   detect --source /repo --log-opts="--all" --config /cfg/regras.toml --redact \
   --report-format json --report-path /cfg/relatorio.json
+
+# Gitleaks como no CI: regra do projeto + .gitleaksignore (sai com erro se houver segredo novo)
+docker run --rm -v "$PWD":/repo zricethezav/gitleaks:v8.21.2 detect --source /repo --config /repo/.gitleaks.toml --redact
 
 # Trivy: imagem da aplicação
 docker build -t oficina-mecanica-api:scan .

@@ -1,5 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.auth;
 
+import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SegredoJwt;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Set;
@@ -21,18 +21,17 @@ import java.util.Set;
 @Service
 public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
 
-    @Value("${api.secret}")
-    private String SECRET;
-
     private static final Logger log = LoggerFactory.getLogger(JwtTokenProviderUseCase.class);
 
     @Value("${api.jwt.expiration-minutes:60}")
     private long expiracaoMinutos = 60;
 
     private final MeterRegistry meterRegistry;
+    private final SegredoJwt segredoJwt;
 
-    public JwtTokenProviderUseCase(MeterRegistry meterRegistry) {
+    public JwtTokenProviderUseCase(MeterRegistry meterRegistry, SegredoJwt segredoJwt) {
         this.meterRegistry = meterRegistry;
+        this.segredoJwt = segredoJwt;
     }
 
     @Override
@@ -106,6 +105,6 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
     }
 
     private byte[] getSigningKey() {
-        return SECRET.getBytes(StandardCharsets.UTF_8);
+        return segredoJwt.chave();
     }
 }

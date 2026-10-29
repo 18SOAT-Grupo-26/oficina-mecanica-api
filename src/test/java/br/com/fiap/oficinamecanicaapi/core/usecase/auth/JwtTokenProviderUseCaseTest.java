@@ -1,5 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.auth;
 
+import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SegredoJwt;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
@@ -12,7 +13,6 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -135,9 +135,7 @@ class JwtTokenProviderUseCaseTest {
     }
 
     private JwtTokenProviderUseCase comSegredo(String segredo) {
-        JwtTokenProviderUseCase instancia = new JwtTokenProviderUseCase(meterRegistry);
-        ReflectionTestUtils.setField(instancia, "SECRET", segredo);
-        return instancia;
+        return new JwtTokenProviderUseCase(meterRegistry, new SegredoJwt(segredo.getBytes(StandardCharsets.UTF_8)));
     }
 
     private double rejeitados(String motivo) {

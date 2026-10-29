@@ -35,9 +35,15 @@ class ApplicationYamlTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"API_SECRET", "DATASOURCE_PASSWORD"})
+    @ValueSource(strings = {"DATASOURCE_PASSWORD"})
     @DisplayName("Segredos obrigatórios não devem ter valor padrão: sem a variável, a API não deve subir")
     void segredosNaoDevemTerPadrao(String variavel) {
         assertThat(yaml).contains("${" + variavel + "}");
+    }
+
+    @Test
+    @DisplayName("API_SECRET só pode ter padrão vazio (chave aleatória local), nunca uma chave versionada")
+    void apiSecretSoPodeTerPadraoVazio() {
+        assertThat(yaml).contains("${API_SECRET:}");
     }
 }
