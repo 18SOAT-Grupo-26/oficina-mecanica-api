@@ -227,12 +227,12 @@ callbacks em cada entidade sem levar JPA para o domínio.
   `infrastructure/persistence/repository/` (e não em `persistence/<contexto>/`); `Servico` e `PecaInsumo`, que são
   modelos anêmicos (getters e setters, com a validação no caso de uso, e não no modelo como em `Cliente`); e, na
   segurança, `Perfil` implementa `GrantedAuthority` e o JWT é gerado em `core/usecase/auth`
-  ([ADR 004](0004-seguranca.md)). O pente fino de 29/10 achou mais três pontos: os DTOs `*Request`/`*Response` ficam
+  ([ADR 004](0004-seguranca.md)). O pente fino de 29/10 achou mais dois pontos: os DTOs `*Request`/`*Response` ficam
   em `core/domain/<contexto>/model`, misturados aos modelos de domínio, quando o lugar de um contrato do port in é
-  `core/port/in/<contexto>/`; o `UsuarioPayload`, em `shared/utils/helpers`, valida o `Usuario` do domínio, e
-  `shared` não pode depender do `core`; e o pacote `pecaInsumo` está em camelCase, diferente dos outros contextos.
-  O `JwtAuthenticationFilter`, que dependia do `JwtTokenProviderUseCase`, passou a usar o port in no #122. As correções
-  são acompanhadas como issues de dívida técnica no repositório.
+  `core/port/in/<contexto>/`; e o pacote `pecaInsumo` está em camelCase, diferente dos outros contextos. As duas
+  violações da regra de dependência que ele achou já foram corrigidas: o `JwtAuthenticationFilter` usa o port in (#122),
+  e o `UsuarioPayload` saiu de `shared` para `core/usecase/usuario` (#124). As correções são acompanhadas como issues de
+  dívida técnica no repositório.
 
 ## Referências
 
