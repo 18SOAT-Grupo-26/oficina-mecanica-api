@@ -277,6 +277,8 @@ como authorities.
 - [ADR 002 — Escolha do banco de dados](0002-escolha-do-banco-de-dados.md): migrations V8 (minimização dos dados do
   usuário) e V10 (perfis da fase 1)
 - [ADR 005 — Estratégia de testes](0005-estrategia-de-testes.md): testes de segurança
+- [Relatório de vulnerabilidades](../seguranca/relatorio-vulnerabilidades.md): análise manual, Gitleaks, OWASP ZAP e
+  Trivy, com o status de cada achado
 - [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
 - Decisões registradas no grupo do time entre 16/10 e 27/10/2026 e reunião de 25/10/2026 (perfis da fase 1)
 - PRs #98 e #99 (token fora dos parâmetros e `RotasPublicas`), #100 (remoção da identidade), #102 (CORS), #103 (login

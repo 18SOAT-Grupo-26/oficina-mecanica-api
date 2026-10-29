@@ -326,6 +326,13 @@ Perfis existentes (migration `V10__perfis_fase_1.sql`): `ADMIN` (tudo, inclusive
 `FUNCIONARIO` (cadastros sem exclusão e ordens de serviço) e `CLIENTE` (consulta das próprias OS).
 Credenciais: as do administrador inicial definidas no seu `.env` (`ADMIN_USUARIO` / `ADMIN_SENHA`).
 
+## Análise de vulnerabilidades
+
+O [relatório de vulnerabilidades](docs/seguranca/relatorio-vulnerabilidades.md) reúne a revisão manual (OWASP Top 10)
+e as varreduras com Gitleaks (segredos no histórico), OWASP ZAP (API autenticada) e Trivy (CVEs da imagem Docker).
+Para cada achado, ele traz a severidade, o PR da correção ou a justificativa do risco aceito. As evidências brutas ficam em
+[`docs/seguranca/evidencias/`](docs/seguranca/evidencias/).
+
 ## Estrutura dos principais diretórios
 
 ```
