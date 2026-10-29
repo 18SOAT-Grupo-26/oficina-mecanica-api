@@ -6,8 +6,8 @@ spring:
     import: optional:file:.env[.properties]
   datasource:
     url: ${DATASOURCE_HOST:jdbc:postgresql://localhost:5432/oficina}
-    username: ${DATASOURCE_USERNAME:}
-    password: ${DATASOURCE_PASSWORD:}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: ${DATASOURCE_POOL_SIZE:10}
@@ -61,7 +61,7 @@ logging:
     br.com.fiap.oficinamecanicaapi: ${LOG_LEVEL:INFO}
 
 api:
-  secret: "${API_SECRET:}"
+  secret: "${API_SECRET}"
   jwt:
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:60}
   cors:
