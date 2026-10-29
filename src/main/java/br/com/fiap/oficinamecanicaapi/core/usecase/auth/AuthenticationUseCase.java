@@ -20,6 +20,10 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
 
     private static final Logger log = LoggerFactory.getLogger(AuthenticationUseCase.class);
     private static final String BEARER_PREFIX = "Bearer ";
+    /** Senha sem valor secreto, comparada quando o usuário não existe, para o login custar o mesmo bcrypt. */
+    static final String SENHA_FICTICIA = "senha-ficticia-para-igualar-o-tempo-do-login";
+
+    private volatile String hashFicticio;
 
     private final UsuarioUseCasePortIn usuarioService;
     private final PasswordEncoder passwordEncoder;
@@ -90,9 +94,10 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             if (e.getErrorCode() != 404) {
                 throw e;
             }
-            // Usuário inexistente: mesma resposta e mesmo custo de bcrypt da senha errada,
-            // para nem o status nem o tempo revelarem quais logins existem.
-            passwordEncoder.encode(request.senha());
+            // Usuário inexistente: mesma resposta e mesmo custo de bcrypt da senha errada, para nem o status
+            // nem o tempo revelarem quais logins existem. Usa matches, e não encode: o bcrypt recusa no encode
+            // senha com mais de 72 bytes, e o 500 resultante voltaria a revelar que o usuário não existe.
+            passwordEncoder.matches(request.senha(), hashFicticio());
             log.warn("action=signin_user_not_found identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
             contarLogin("usuario_inexistente");
             limiteTentativas.registrarFalha(request.identificador());
@@ -127,5 +132,12 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
 
     private void contarLogin(String resultado) {
         meterRegistry.counter("oficina.auth.login", "resultado", resultado).increment();
+    }
+
+    private String hashFicticio() {
+        if (hashFicticio == null) {
+            hashFicticio = passwordEncoder.encode(SENHA_FICTICIA);
+        }
+        return hashFicticio;
     }
 }

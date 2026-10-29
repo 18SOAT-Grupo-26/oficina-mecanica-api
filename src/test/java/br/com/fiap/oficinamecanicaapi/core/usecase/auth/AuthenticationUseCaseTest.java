@@ -10,6 +10,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,6 +38,9 @@ class AuthenticationUseCaseTest {
     private static final String SENHA_CIFRADA = "{bcrypt}cifrada";
     private static final String TOKEN = "jwt";
     private static final String MENSAGEM = "Credenciais inválidas";
+    private static final String HASH_FICTICIO = "{bcrypt}ficticio";
+    /** Acima dos 72 bytes que o bcrypt aceita no encode. */
+    private static final String SENHA_LONGA = "A".repeat(100);
     private static final Long ID_CLIENTE = 10L;
     private static final SigninRequest REQUEST = new SigninRequest(IDENTIFICADOR, SENHA);
     // ADMIN não tem cliente ligado: clienteId nulo
@@ -101,13 +105,14 @@ class AuthenticationUseCaseTest {
     void deveRecusarUsuarioInexistenteComoSenhaErrada() {
         when(usuarioService.buscarPorIdentificador(IDENTIFICADOR))
                 .thenThrow(new ApplicationException(404, "Usuário não encontrado"));
+        when(passwordEncoder.encode(AuthenticationUseCase.SENHA_FICTICIA)).thenReturn(HASH_FICTICIO);
 
         ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.autenticar(REQUEST));
 
         assertThat(ex.getErrorCode()).isEqualTo(401);
         assertThat(ex.getMessage()).isEqualTo(MENSAGEM);
         // custo de bcrypt equivalente ao da senha errada: o tempo de resposta também não denuncia
-        verify(passwordEncoder).encode(SENHA);
+        verify(passwordEncoder).matches(SENHA, HASH_FICTICIO);
         assertThat(logins("usuario_inexistente")).isEqualTo(1);
         verifyNoInteractions(jwtTokenProvider);
         // conta a falha também para quem não existe: o 429 não revela quais contas existem
@@ -240,5 +245,28 @@ class AuthenticationUseCaseTest {
         DetalhesUsuario detalhes = mock(DetalhesUsuario.class);
         when(detalhes.usuario()).thenReturn(usuario);
         return detalhes;
+    }
+
+    @Test
+    @DisplayName("Senha acima de 72 bytes deve responder 401 igual para usuário inexistente e existente (bcrypt real)")
+    void senhaLongaNaoDeveRevelarUsuarioInexistente() {
+        PasswordEncoder bcrypt = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+        AuthenticationUseCase comBcryptReal = new AuthenticationUseCase(usuarioService, bcrypt, jwtTokenProvider,
+                limiteTentativas, new SimpleMeterRegistry());
+        SigninRequest inexistente = new SigninRequest("ninguem", SENHA_LONGA);
+        SigninRequest existente = new SigninRequest(IDENTIFICADOR, SENHA_LONGA);
+        when(usuarioService.buscarPorIdentificador("ninguem"))
+                .thenThrow(new ApplicationException(404, "Usuário não encontrado"));
+        var detalhes = detalhesComSenha(bcrypt.encode(SENHA));
+        when(usuarioService.buscarPorIdentificador(IDENTIFICADOR)).thenReturn(detalhes);
+
+        ApplicationException doInexistente = assertThrows(ApplicationException.class,
+                () -> comBcryptReal.autenticar(inexistente));
+        ApplicationException doExistente = assertThrows(ApplicationException.class,
+                () -> comBcryptReal.autenticar(existente));
+
+        assertThat(doInexistente.getErrorCode()).isEqualTo(401);
+        assertThat(doExistente.getErrorCode()).isEqualTo(401);
+        assertThat(doInexistente.getMessage()).isEqualTo(doExistente.getMessage());
     }
 }
