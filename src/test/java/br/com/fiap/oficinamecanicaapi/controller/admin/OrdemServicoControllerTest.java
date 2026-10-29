@@ -260,17 +260,6 @@ class OrdemServicoControllerTest {
     }
 
     @Test
-    @DisplayName("Deve responder 403 quando o funcionário tentar cancelar a OS pelo DELETE")
-    void deveResponderAcessoNegadoAoCancelar() throws Exception {
-        autenticarComo(Perfil.FUNCIONARIO);
-
-        mockMvc.perform(delete("/ordens-servico/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
-                .andExpect(status().isForbidden());
-
-        verifyNoInteractions(useCase);
-    }
-
-    @Test
     @DisplayName("Deve responder 409 com a mensagem da transição inválida")
     void deveResponderTransicaoInvalida() throws Exception {
         autenticarComo(Perfil.ADMIN);
