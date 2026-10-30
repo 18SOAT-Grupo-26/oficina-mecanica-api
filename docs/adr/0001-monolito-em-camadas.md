@@ -241,6 +241,7 @@ callbacks em cada entidade sem levar JPA para o domínio.
   orçamento e a liberação quando o orçamento é reprovado, discutidas no Event Storming.
 - [ADR 004 — Segurança: autenticação e autorização](0004-seguranca.md)
 - [ADR 005 — Estratégia de testes](0005-estrategia-de-testes.md)
+- [Modelo C4](../arquitetura/c4.md): o nível 3 mostra as camadas desta ADR como componentes da API
 - Event Storming do grupo (Miro) e a reunião de 16/10/2026
 - [Requisitos não funcionais (Miro)](https://miro.com/app/board/uXjVEYDydiQ=/?share_link_id=413287603523)
 - Decisões registradas no grupo do time entre 16/10 e 27/10/2026

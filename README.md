@@ -38,9 +38,12 @@ A decisão, as camadas, a regra de dependência e as alternativas avaliadas est�
 na [ADR 001](docs/adr/0001-monolito-em-camadas.md). Todas as decisões de arquitetura estão
 no [índice de ADRs](docs/adr/README.md).
 
-O fluxo da OS (abertura, orçamento e mudança de status) está nos
-[diagramas de sequência](docs/arquitetura/sequencia-ordem-servico.md), e as tabelas e os relacionamentos estão no
-[DER do banco de dados](docs/arquitetura/der-banco-de-dados.md).
+Os diagramas ficam em `docs/arquitetura/`:
+
+- [Modelo C4](docs/arquitetura/c4.md): contexto, contêineres e componentes da API
+- [Diagramas de sequência](docs/arquitetura/sequencia-ordem-servico.md): fluxo da OS (abertura, orçamento e mudança de
+  status)
+- [DER do banco de dados](docs/arquitetura/der-banco-de-dados.md): tabelas e relacionamentos
 
 ## Tecnologias utilizadas
 
