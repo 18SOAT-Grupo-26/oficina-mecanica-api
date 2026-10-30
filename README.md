@@ -43,6 +43,7 @@ Os diagramas ficam em `docs/arquitetura/`:
 - [Modelo C4](docs/arquitetura/c4.md): contexto, contêineres e componentes da API
 - [Diagramas de sequência](docs/arquitetura/sequencia-ordem-servico.md): fluxo da OS (abertura, orçamento e mudança de
   status)
+- [DER do banco de dados](docs/arquitetura/der-banco-de-dados.md): tabelas e relacionamentos
 
 ## Tecnologias utilizadas
 
