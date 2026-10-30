@@ -50,7 +50,7 @@ public class ClientePersistenceAdapter implements ClientePortOut {
     @Override
     @Transactional(readOnly = true)
     public Pagina<Cliente> listarAtivos(int pagina, int tamanho) {
-        Page<ClienteEntity> page = repository.findAllByAtivoTrue(PageRequest.of(pagina, tamanho, Sort.by("id")));
+        Page<ClienteEntity> page = repository.findAllByAtivoTrue(PageRequest.of(pagina - 1, tamanho, Sort.by("id")));
         return new Pagina<>(page.map(mapper::toDomain).getContent(), pagina, tamanho, page.getTotalElements());
     }
 }

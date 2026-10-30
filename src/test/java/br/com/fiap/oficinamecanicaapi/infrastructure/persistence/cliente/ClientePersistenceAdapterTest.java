@@ -80,16 +80,16 @@ class ClientePersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("listarAtivos deve paginar ordenando por id e devolver o total")
+    @DisplayName("listarAtivos deve converter a página 2 no índice 1 do Spring, ordenar por id e devolver o total")
     void listarAtivos() {
         Pageable esperado = PageRequest.of(1, 2, Sort.by("id"));
         when(repository.findAllByAtivoTrue(esperado)).thenReturn(new PageImpl<>(List.of(entity), esperado, 3));
         when(mapper.toDomain(entity)).thenReturn(cliente);
 
-        var pagina = adapter.listarAtivos(1, 2);
+        var pagina = adapter.listarAtivos(2, 2);
 
         assertThat(pagina.itens()).containsExactly(cliente);
-        assertThat(pagina.pagina()).isEqualTo(1);
+        assertThat(pagina.pagina()).isEqualTo(2);
         assertThat(pagina.tamanho()).isEqualTo(2);
         assertThat(pagina.total()).isEqualTo(3);
         verify(repository).findAllByAtivoTrue(esperado);

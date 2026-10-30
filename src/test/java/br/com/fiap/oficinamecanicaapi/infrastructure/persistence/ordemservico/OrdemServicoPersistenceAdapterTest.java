@@ -123,17 +123,17 @@ class OrdemServicoPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("Deve listar a página de OS da mais nova para a mais antiga, repassando os filtros")
+    @DisplayName("Deve listar a página de OS da mais nova para a mais antiga, repassando os filtros e convertendo a página no índice do Spring")
     void deveListarPaginaComFiltros() {
         PageRequest pageable = PageRequest.of(1, 5, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
         OrdemServicoEntity entity = new OrdemServicoPersistenceMapper().toEntity(OrdemServico.abrir(10L, 20L, T0));
         entity.setId(ID_OS);
         when(repository.listar(10L, EM_DIAGNOSTICO, pageable)).thenReturn(new PageImpl<>(List.of(entity), pageable, 6));
 
-        Pagina<OrdemServico> pagina = adapter.listar(10L, EM_DIAGNOSTICO, 1, 5);
+        Pagina<OrdemServico> pagina = adapter.listar(10L, EM_DIAGNOSTICO, 2, 5);
 
         assertThat(pagina.itens()).extracting(OrdemServico::getId).containsExactly(ID_OS);
-        assertThat(pagina.pagina()).isEqualTo(1);
+        assertThat(pagina.pagina()).isEqualTo(2);
         assertThat(pagina.tamanho()).isEqualTo(5);
         assertThat(pagina.total()).isEqualTo(6);
     }

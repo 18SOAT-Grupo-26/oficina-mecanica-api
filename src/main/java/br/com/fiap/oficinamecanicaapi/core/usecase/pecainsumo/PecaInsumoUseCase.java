@@ -22,10 +22,6 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
 
     private static final Logger log = LoggerFactory.getLogger(PecaInsumoUseCase.class);
 
-    static final int PAGINA_PADRAO = 0;
-    static final int TAMANHO_PADRAO = 20;
-    static final int TAMANHO_MAXIMO = 100;
-
     private static final int NOME_MIN_LENGTH = 3;
     private static final int DESCRICAO_MAX_LENGTH = 500;
     private static final int PRECO_MAX_CASAS_DECIMAIS = 2;
@@ -62,9 +58,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
     @Override
     @Transactional(readOnly = true)
     public Pagina<PecaInsumoResponse> listar(Integer page, Integer size) {
-        int paginaValida = page == null || page < 0 ? PAGINA_PADRAO : page;
-        int tamanhoValido = size == null || size < 1 ? TAMANHO_PADRAO : Math.min(size, TAMANHO_MAXIMO);
-        return pecaInsumoPortOut.listar(paginaValida, tamanhoValido).map(pecaInsumoMapper::toResponse);
+        return pecaInsumoPortOut.listar(Pagina.paginaValida(page), Pagina.tamanhoValido(size)).map(pecaInsumoMapper::toResponse);
     }
 
     @Override

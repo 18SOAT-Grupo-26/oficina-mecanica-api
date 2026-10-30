@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * Resultado paginado do domínio, sem depender do Spring Data.
+ * Resultado paginado do domínio, sem depender do Spring Data. A primeira página é a 1; os adapters
+ * convertem para o índice do Spring Data, que começa em 0.
  */
 public record Pagina<T>(
         List<T> itens,
@@ -13,7 +14,7 @@ public record Pagina<T>(
         long total
 ) {
 
-    public static final int PAGINA_PADRAO = 0;
+    public static final int PAGINA_PADRAO = 1;
     public static final int TAMANHO_PADRAO = 20;
     public static final int TAMANHO_MAXIMO = 100;
 
@@ -22,10 +23,10 @@ public record Pagina<T>(
     }
 
     /**
-     * Página ausente ou negativa vira a primeira.
+     * Página ausente, zero ou negativa vira a primeira.
      */
     public static int paginaValida(Integer pagina) {
-        return pagina == null || pagina < 0 ? PAGINA_PADRAO : pagina;
+        return pagina == null || pagina < 1 ? PAGINA_PADRAO : pagina;
     }
 
     /**

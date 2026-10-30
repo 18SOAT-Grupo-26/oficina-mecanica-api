@@ -95,15 +95,15 @@ class PecaInsumoUseCaseTest {
     @DisplayName("listar aplica paginação padrão e limita o tamanho máximo")
     void listarAplicaLimites() {
         PecaInsumo entity = entidade(ID, "Filtro");
-        when(pecaInsumoPortOut.listar(0, 20)).thenReturn(new Pagina<>(List.of(entity), 0, 20, 1));
-        when(pecaInsumoPortOut.listar(0, 100)).thenReturn(new Pagina<>(List.of(), 0, 100, 0));
+        when(pecaInsumoPortOut.listar(1, 20)).thenReturn(new Pagina<>(List.of(entity), 1, 20, 1));
+        when(pecaInsumoPortOut.listar(1, 100)).thenReturn(new Pagina<>(List.of(), 1, 100, 0));
 
         Pagina<PecaInsumoResponse> padrao = useCase.listar(null, null);
         useCase.listar(-1, 500);
 
         assertThat(padrao.itens()).hasSize(1);
         assertThat(padrao.itens().get(0).nome()).isEqualTo("Filtro");
-        verify(pecaInsumoPortOut).listar(0, 100);
+        verify(pecaInsumoPortOut).listar(1, 100);
     }
 
     @Test

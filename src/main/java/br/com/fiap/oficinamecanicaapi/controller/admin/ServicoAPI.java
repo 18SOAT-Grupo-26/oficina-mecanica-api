@@ -6,6 +6,7 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -26,7 +27,7 @@ public interface ServicoAPI {
     @ApiResponse(responseCode = "200", description = "Página de serviços")
     @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping
-    ResponseEntity<Pagina<ServicoResponse>> listar(@RequestParam(required = false) Integer page, @RequestParam(required = false) Integer size) throws ApplicationException;
+    ResponseEntity<Pagina<ServicoResponse>> listar(@Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer page, @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer size) throws ApplicationException;
 
     @Operation(summary = "Buscar serviço por id", tags = "Serviço")
     @ApiResponse(responseCode = "200", description = "Serviço encontrado", content = @Content(schema = @Schema(implementation = ServicoResponse.class)))

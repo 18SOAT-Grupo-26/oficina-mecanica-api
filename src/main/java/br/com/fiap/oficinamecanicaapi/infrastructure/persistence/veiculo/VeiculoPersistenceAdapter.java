@@ -58,7 +58,7 @@ public class VeiculoPersistenceAdapter implements VeiculoPortOut {
     @Override
     @Transactional(readOnly = true)
     public Pagina<Veiculo> listarAtivos(Long clienteId, int pagina, int tamanho) {
-        Pageable pageable = PageRequest.of(pagina, tamanho, Sort.by("id"));
+        Pageable pageable = PageRequest.of(pagina - 1, tamanho, Sort.by("id"));
         Page<VeiculoEntity> page = clienteId == null
                 ? repository.findAllByAtivoTrue(pageable)
                 : repository.findAllByClienteIdAndAtivoTrue(clienteId, pageable);

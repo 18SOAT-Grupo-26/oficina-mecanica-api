@@ -121,9 +121,9 @@ class VeiculoControllerTest {
     @DisplayName("Deve listar veículos filtrando por cliente e repassando a paginação")
     void deveListarVeiculosDoCliente() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.listar(CLIENTE_ID, 0, 10)).thenReturn(new Pagina<>(List.of(RESPONSE), 0, 10, 1));
+        when(useCase.listar(CLIENTE_ID, 1, 10)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 10, 1));
 
-        mockMvc.perform(get("/veiculos").param("clienteId", "1").param("page", "0").param("size", "10")
+        mockMvc.perform(get("/veiculos").param("clienteId", "1").param("page", "1").param("size", "10")
                         .header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.itens[0].clienteId").value(CLIENTE_ID))

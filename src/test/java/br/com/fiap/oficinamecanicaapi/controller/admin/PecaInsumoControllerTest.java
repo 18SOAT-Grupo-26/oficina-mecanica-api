@@ -100,7 +100,7 @@ class PecaInsumoControllerTest {
     @DisplayName("Deve listar sem paginação informada, repassando nulos ao caso de uso")
     void deveListarSemPaginacao() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.listar(null, null)).thenReturn(new Pagina<>(List.of(), 0, 20, 0));
+        when(useCase.listar(null, null)).thenReturn(new Pagina<>(List.of(), 1, 20, 0));
 
         mockMvc.perform(get(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())

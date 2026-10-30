@@ -66,7 +66,7 @@ public class OrdemServicoPersistenceAdapter implements OrdemServicoPortOut {
     @Override
     @Transactional(readOnly = true)
     public Pagina<OrdemServico> listar(Long idCliente, StatusOrdemServico status, int pagina, int tamanho) {
-        PageRequest pageable = PageRequest.of(pagina, tamanho, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
+        PageRequest pageable = PageRequest.of(pagina - 1, tamanho, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
         Page<OrdemServicoEntity> page = repository.listar(idCliente, status, pageable);
         return new Pagina<>(page.map(mapper::toDomain).getContent(), pagina, tamanho, page.getTotalElements());
     }

@@ -92,7 +92,7 @@ class VeiculoPersistenceAdapterTest {
         when(repository.findAllByAtivoTrue(PRIMEIRA_PAGINA))
                 .thenReturn(new PageImpl<>(List.of(veiculoEntity(clienteEntity())), PRIMEIRA_PAGINA, 1));
 
-        Pagina<Veiculo> pagina = adapter.listarAtivos(null, 0, 20);
+        Pagina<Veiculo> pagina = adapter.listarAtivos(null, 1, 20);
 
         assertThat(pagina.itens()).extracting(Veiculo::getId).containsExactly(ID);
         assertThat(pagina.total()).isEqualTo(1);
@@ -104,7 +104,7 @@ class VeiculoPersistenceAdapterTest {
         when(repository.findAllByClienteIdAndAtivoTrue(CLIENTE_ID, PRIMEIRA_PAGINA))
                 .thenReturn(new PageImpl<>(List.of(), PRIMEIRA_PAGINA, 0));
 
-        Pagina<Veiculo> pagina = adapter.listarAtivos(CLIENTE_ID, 0, 20);
+        Pagina<Veiculo> pagina = adapter.listarAtivos(CLIENTE_ID, 1, 20);
 
         assertThat(pagina.itens()).isEmpty();
         verify(repository).findAllByClienteIdAndAtivoTrue(CLIENTE_ID, PRIMEIRA_PAGINA);

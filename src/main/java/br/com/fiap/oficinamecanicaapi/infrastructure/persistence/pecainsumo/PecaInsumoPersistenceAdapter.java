@@ -76,7 +76,7 @@ public class PecaInsumoPersistenceAdapter implements PecaInsumoPortOut {
     @Override
     @Transactional(readOnly = true)
     public Pagina<PecaInsumo> listar(int pagina, int tamanho) {
-        Page<PecaInsumoEntity> page = repository.findAll(PageRequest.of(pagina, tamanho, Sort.by("id")));
+        Page<PecaInsumoEntity> page = repository.findAll(PageRequest.of(pagina - 1, tamanho, Sort.by("id")));
         return new Pagina<>(page.map(mapper::toDomain).getContent(), pagina, tamanho, page.getTotalElements());
     }
 }

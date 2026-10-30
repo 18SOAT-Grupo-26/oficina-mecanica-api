@@ -8,6 +8,7 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -45,8 +46,8 @@ public interface OrdemServicoAPI {
     @GetMapping
     ResponseEntity<Pagina<OrdemServicoResponse>> listar(@RequestParam(required = false) Long clienteId,
                                                         @RequestParam(required = false) StatusOrdemServico status,
-                                                        @RequestParam(required = false) Integer page,
-                                                        @RequestParam(required = false) Integer size);
+                                                        @Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer page,
+                                                        @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer size);
 
     @Operation(summary = "Atualizar dados da OS",
             description = """
