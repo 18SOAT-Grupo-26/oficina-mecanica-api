@@ -1,6 +1,6 @@
 # ADR 004 — Segurança: autenticação e autorização
 
-- **Status:** Proposto
+- **Status:** Aceito
 - **Data:** 2026-10-23
 - **Responsável:** Ana Albuquerque
 

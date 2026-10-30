@@ -29,6 +29,15 @@ jobs:
       - name: Build, testes e cobertura (JaCoCo)
         run: mvn -B verify
 
+      # Evidência de cobertura: o relatório HTML fica para download na página da execução, mesmo se o build falhar
+      - name: Relatório de cobertura (JaCoCo)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-cobertura-jacoco
+          path: target/site/jacoco/
+          if-no-files-found: ignore
+
       # PRs de fork e repositórios sem o secret pulam a análise, mas mantêm build e testes
       - name: Análise SonarCloud
         if: env.SONAR_TOKEN != ''
