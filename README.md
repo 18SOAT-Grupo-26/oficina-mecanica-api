@@ -5,7 +5,20 @@
 
 ## Objetivo do projeto
 
-API para gestão de oficina mecânica.
+MVP do back-end do Sistema Integrado de Atendimento e Execução de Serviços de uma oficina mecânica de médio porte, que
+hoje controla o atendimento com anotações manuais e planilhas. A API substitui esse controle e ataca os problemas
+levantados pela oficina:
+
+| Problema da oficina | Como a API resolve |
+|---|---|
+| Erros na priorização dos atendimentos | cada atendimento vira uma ordem de serviço com status, data de abertura e histórico, acompanhada pela equipe |
+| Falhas no controle de peças e insumos | estoque com quantidade e reservado: o orçamento enviado reserva as peças, a aprovação dá baixa e a rejeição devolve |
+| Dificuldade em acompanhar o status dos serviços | status com transições controladas e consulta do andamento pelo próprio cliente, em `/minhas-ordens` |
+| Perda de histórico de clientes e veículos | cadastro de clientes (CPF/CNPJ validado) e veículos (placa validada), com o histórico de status de cada OS |
+| Ineficiência no fluxo de orçamentos e autorizações | orçamento gerado a partir dos serviços e peças da OS, com envio, aprovação e rejeição registrados |
+
+O projeto aplica Domain-Driven Design e segue boas práticas de qualidade de software (testes, cobertura mínima de 80% nos
+domínios críticos, análise estática) e de segurança (JWT, perfis de acesso, análise de vulnerabilidades).
 
 ## Descrição resumida da solução
 
@@ -43,6 +56,7 @@ Os diagramas ficam em `docs/arquitetura/`:
 - [Modelo C4](docs/arquitetura/c4.md): contexto, contêineres e componentes da API
 - [Diagramas de sequência](docs/arquitetura/sequencia-ordem-servico.md): fluxo da OS (abertura, orçamento e mudança de
   status)
+- [Diagrama de estados](docs/arquitetura/estados-ordem-servico.md): status da OS e transições permitidas
 - [DER do banco de dados](docs/arquitetura/der-banco-de-dados.md): tabelas e relacionamentos
 
 ## Tecnologias utilizadas
@@ -134,7 +148,7 @@ Possíveis problemas:
 - **`password authentication failed`**: o volume do banco foi criado com outro usuário ou senha. O PostgreSQL só lê
   `DATASOURCE_USERNAME`/`DATASOURCE_PASSWORD` ao criar o volume; recrie com `docker compose down -v` (apaga os dados).
   No Windows, confira também se não há um PostgreSQL instalado na máquina ocupando a 5432 (`netstat -ano | findstr :5432`);
-  se houver, troque `DB_HOST_PORT` e a porta em `DATASOURCE_HOST`.
+  se houver, troque `DB_HOST_PORT` (o `DATASOURCE_HOST` do `.env.example` já usa essa porta).
 - **`Migration checksum mismatch`**: uma migration já aplicada foi alterada (inclusive por reformatação da IDE).
   Restaure o arquivo original pelo git; não use `flyway repair` para esconder a diferença.
 - **A API sobe, mas o Prometheus não a encontra**: confira no log `Tomcat started on port 8081` e se não há duas
@@ -150,7 +164,7 @@ Todas ficam no `.env` (copiado do [`.env.example`](.env.example)). O Compose rep
 
 | Variável                           | Padrão                                  | Obrigatória        | Descrição |
 |------------------------------------|-----------------------------------------|--------------------|-----------|
-| `API_SECRET`                       | —                                       | sim                | chave de assinatura do JWT (HS512, mínimo 64 bytes): `openssl rand -base64 64` |
+| `API_SECRET`                       | vazio (chave aleatória a cada subida)   | fora do ambiente local | chave de assinatura do JWT (HS512, mínimo 64 bytes): `openssl rand -base64 64`. Vazia, a API gera uma chave aleatória e os tokens deixam de valer a cada reinício |
 | `DATASOURCE_USERNAME`              | — (no Compose: `postgres`)              | sim                | usuário do banco (o mesmo cria o usuário do container `db`) |
 | `DATASOURCE_PASSWORD`              | — (no Compose: `postgres`)              | sim                | senha do banco |
 | `DATASOURCE_HOST`                  | `jdbc:postgresql://localhost:5432/oficina` | não             | URL JDBC usada fora do Docker (no Compose, a API usa o serviço `db`) |
@@ -380,13 +394,17 @@ src/main/java/br/com/fiap/oficinamecanicaapi
 └── shared              # exceções, handler global e utilitários
 src/main/resources/db/migration   # migrations do Flyway
 src/test/java                     # testes unitários (*Test) e de integração (*IT)
-docs                              # ADRs, collection do Postman e relatório de segurança
+docs                              # ADRs, diagramas, DDD, collection do Postman e relatório de segurança
 prometheus, grafana               # configuração da observabilidade
 ```
 
 ## Documentação DDD
 
-_A definir._
+- [Event Storming no Miro](https://miro.com/app/board/uXjVEYmxgDM=/): board original
+- [Event Storming (PDF)](docs/ddd/Event%20Storming.pdf): criação da OS, acompanhamento da OS e peças e insumos
+- [Agregados e contextos delimitados (PDF)](docs/ddd/Agregados%20e%20Contextos%20Delimitadores.pdf): agregados e os
+  contextos Atendimento, Ordem de Serviço e Catálogo e Estoque
+- [Linguagem ubíqua](docs/ddd/linguagem-ubiqua.md): glossário e relação entre a documentação e o código
 
 ## Vídeo da entrega
 

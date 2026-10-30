@@ -1,6 +1,6 @@
 # ADR 001 — Monólito em camadas (ports & adapters)
 
-- **Status:** Proposto
+- **Status:** Aceito
 - **Data:** 2026-10-23
 - **Responsável:** Ana Albuquerque
 

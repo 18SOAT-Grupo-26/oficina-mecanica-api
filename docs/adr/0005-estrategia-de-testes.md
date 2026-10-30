@@ -1,6 +1,6 @@
 # ADR 005 — Estratégia de testes
 
-- **Status:** Proposto
+- **Status:** Aceito
 - **Data:** 2026-10-23
 - **Responsável:** Ana Albuquerque
 

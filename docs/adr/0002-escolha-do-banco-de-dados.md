@@ -1,6 +1,6 @@
 # ADR 002 — Escolha do banco de dados
 
-- **Status:** Proposto
+- **Status:** Aceito
 - **Data:** 2026-10-23
 - **Responsável:** Ana Albuquerque
 
