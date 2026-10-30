@@ -123,7 +123,7 @@ class VeiculoControllerTest {
         autenticarComo(Perfil.ADMIN);
         when(useCase.listar(CLIENTE_ID, 1, 10)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 10, 1));
 
-        mockMvc.perform(get("/veiculos").param("clienteId", "1").param("page", "1").param("size", "10")
+        mockMvc.perform(get("/veiculos").param("clienteId", "1").param("pagina", "1").param("tamanho", "10")
                         .header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.itens[0].clienteId").value(CLIENTE_ID))

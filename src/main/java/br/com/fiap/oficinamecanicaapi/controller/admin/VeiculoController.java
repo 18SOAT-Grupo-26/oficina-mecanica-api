@@ -28,8 +28,8 @@ public class VeiculoController implements VeiculoAPI {
     }
 
     @Override
-    public ResponseEntity<Pagina<VeiculoResponse>> listar(Long clienteId, Integer page, Integer size) {
-        return ResponseEntity.ok(useCase.listar(clienteId, page, size));
+    public ResponseEntity<Pagina<VeiculoResponse>> listar(Long clienteId, Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(clienteId, pagina, tamanho));
     }
 
     @Override

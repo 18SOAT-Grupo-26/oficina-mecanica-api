@@ -395,7 +395,7 @@ class OrdemServicoControllerTest {
                 new OrdemServicoResponse(1L, ID_CLIENTE, 20L, ENTREGUE, List.of(), List.of(), List.of())), 1, 5, 6));
 
         mockMvc.perform(get("/ordens-servico").header(HttpHeaders.AUTHORIZATION, BEARER)
-                        .param("clienteId", "10").param("status", "ENTREGUE").param("page", "1").param("size", "5"))
+                        .param("clienteId", "10").param("status", "ENTREGUE").param("pagina", "1").param("tamanho", "5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.itens.length()").value(1))
                 .andExpect(jsonPath("$.itens[0].status").value("ENTREGUE"))

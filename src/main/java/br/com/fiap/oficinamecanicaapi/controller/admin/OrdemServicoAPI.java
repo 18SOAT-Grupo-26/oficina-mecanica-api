@@ -46,8 +46,8 @@ public interface OrdemServicoAPI {
     @GetMapping
     ResponseEntity<Pagina<OrdemServicoResponse>> listar(@RequestParam(required = false) Long clienteId,
                                                         @RequestParam(required = false) StatusOrdemServico status,
-                                                        @Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer page,
-                                                        @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer size);
+                                                        @Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer pagina,
+                                                        @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer tamanho);
 
     @Operation(summary = "Atualizar dados da OS",
             description = """

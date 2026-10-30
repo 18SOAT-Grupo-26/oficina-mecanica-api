@@ -9,7 +9,7 @@ public interface PecaInsumoUseCasePortIn {
 
     PecaInsumoResponse criar(PecaInsumoRequest request) throws ApplicationException;
 
-    Pagina<PecaInsumoResponse> listar(Integer page, Integer size);
+    Pagina<PecaInsumoResponse> listar(Integer pagina, Integer tamanho);
 
     PecaInsumoResponse buscarPorId(Long id) throws ApplicationException;
 

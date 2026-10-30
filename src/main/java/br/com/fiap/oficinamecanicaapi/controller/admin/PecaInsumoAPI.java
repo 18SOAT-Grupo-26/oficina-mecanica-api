@@ -29,8 +29,8 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "409", description = "Insumo with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping
-    ResponseEntity<Pagina<PecaInsumoResponse>> listar(@Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer page,
-                                                      @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer size) throws ApplicationException;
+    ResponseEntity<Pagina<PecaInsumoResponse>> listar(@Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer pagina,
+                                                      @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer tamanho) throws ApplicationException;
 
     @Operation(summary = "Buscar insumo por id", tags = "Insumo")
     @ApiResponse(responseCode = "200", description = "Insumo encontrado", content = @Content(schema = @Schema(implementation = PecaInsumoResponse.class)))

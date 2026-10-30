@@ -27,7 +27,7 @@ public interface ServicoAPI {
     @ApiResponse(responseCode = "200", description = "Página de serviços")
     @ApiResponse(responseCode = "400", description = "Requisição inválida", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping
-    ResponseEntity<Pagina<ServicoResponse>> listar(@Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer page, @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer size) throws ApplicationException;
+    ResponseEntity<Pagina<ServicoResponse>> listar(@Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer pagina, @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer tamanho) throws ApplicationException;
 
     @Operation(summary = "Buscar serviço por id", tags = "Serviço")
     @ApiResponse(responseCode = "200", description = "Serviço encontrado", content = @Content(schema = @Schema(implementation = ServicoResponse.class)))

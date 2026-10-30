@@ -113,7 +113,7 @@ class ClienteControllerTest {
         autenticarComo(Perfil.ADMIN);
         when(useCase.listar(1, 5)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 5, 6));
 
-        mockMvc.perform(get("/clientes").param("page", "1").param("size", "5")
+        mockMvc.perform(get("/clientes").param("pagina", "1").param("tamanho", "5")
                         .header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.itens[0].id").value(ID))

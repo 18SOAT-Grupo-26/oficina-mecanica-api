@@ -28,8 +28,8 @@ public interface VeiculoAPI {
     @ApiResponse(responseCode = "200", description = "Página de veículos ativos")
     @GetMapping
     ResponseEntity<Pagina<VeiculoResponse>> listar(@RequestParam(required = false) Long clienteId,
-                                                   @Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer page,
-                                                   @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer size);
+                                                   @Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer pagina,
+                                                   @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer tamanho);
 
     @Operation(summary = "Buscar veículo por id", tags = "Veículo")
     @ApiResponse(responseCode = "200", description = "Veículo encontrado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))

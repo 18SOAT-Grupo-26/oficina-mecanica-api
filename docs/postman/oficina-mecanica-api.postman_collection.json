@@ -251,7 +251,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/insumos?page=1&size=20",
+              "raw": "{{baseUrl}}/insumos?pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -260,12 +260,12 @@
               ],
               "query": [
                 {
-                  "key": "page",
+                  "key": "pagina",
                   "value": "1",
                   "description": "Página (começa em 1). Padrão: 1"
                 },
                 {
-                  "key": "size",
+                  "key": "tamanho",
                   "value": "20",
                   "description": "Itens por página. Padrão: 20, máximo: 100"
                 }
@@ -431,7 +431,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/servico?page=1&size=20",
+              "raw": "{{baseUrl}}/servico?pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -440,12 +440,12 @@
               ],
               "query": [
                 {
-                  "key": "page",
+                  "key": "pagina",
                   "value": "1",
                   "description": "Página (começa em 1). Padrão: 1"
                 },
                 {
-                  "key": "size",
+                  "key": "tamanho",
                   "value": "20",
                   "description": "Itens por página. Padrão: 20, máximo: 100"
                 }
@@ -615,7 +615,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/clientes?page=1&size=20",
+              "raw": "{{baseUrl}}/clientes?pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -624,12 +624,12 @@
               ],
               "query": [
                 {
-                  "key": "page",
+                  "key": "pagina",
                   "value": "1",
                   "description": "Página (começa em 1). Padrão: 1"
                 },
                 {
-                  "key": "size",
+                  "key": "tamanho",
                   "value": "20",
                   "description": "Itens por página. Padrão: 20, máximo: 100"
                 }
@@ -832,7 +832,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/veiculos?page=1&size=20",
+              "raw": "{{baseUrl}}/veiculos?pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -847,12 +847,12 @@
                   "disabled": true
                 },
                 {
-                  "key": "page",
+                  "key": "pagina",
                   "value": "1",
                   "description": "Página (começa em 1). Padrão: 1"
                 },
                 {
-                  "key": "size",
+                  "key": "tamanho",
                   "value": "20",
                   "description": "Itens por página. Padrão: 20, máximo: 100"
                 }
@@ -1535,7 +1535,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/ordens-servico?clienteId={{clienteId}}&page=1&size=20",
+              "raw": "{{baseUrl}}/ordens-servico?clienteId={{clienteId}}&pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1555,12 +1555,12 @@
                   "disabled": true
                 },
                 {
-                  "key": "page",
+                  "key": "pagina",
                   "value": "1",
                   "description": "Página (começa em 1). Padrão: 1"
                 },
                 {
-                  "key": "size",
+                  "key": "tamanho",
                   "value": "20",
                   "description": "Itens por página. Padrão: 20, máximo: 100"
                 }

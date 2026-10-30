@@ -54,8 +54,8 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public Pagina<ServicoResponse> listar(Integer page, Integer size) {
-        return servicoPortOut.listar(Pagina.paginaValida(page), Pagina.tamanhoValido(size)).map(servicoMapper::toResponse);
+    public Pagina<ServicoResponse> listar(Integer pagina, Integer tamanho) {
+        return servicoPortOut.listar(Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho)).map(servicoMapper::toResponse);
     }
 
     @Override

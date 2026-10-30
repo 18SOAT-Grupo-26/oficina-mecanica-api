@@ -39,8 +39,8 @@ public class OrdemServicoController implements OrdemServicoAPI {
 
     @Override
     public ResponseEntity<Pagina<OrdemServicoResponse>> listar(Long clienteId, StatusOrdemServico status,
-                                                               Integer page, Integer size) {
-        return ResponseEntity.ok(useCase.listar(clienteId, status, page, size));
+                                                               Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(clienteId, status, pagina, tamanho));
     }
 
     @Override

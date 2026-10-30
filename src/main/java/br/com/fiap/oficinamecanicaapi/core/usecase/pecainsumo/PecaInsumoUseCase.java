@@ -57,8 +57,8 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public Pagina<PecaInsumoResponse> listar(Integer page, Integer size) {
-        return pecaInsumoPortOut.listar(Pagina.paginaValida(page), Pagina.tamanhoValido(size)).map(pecaInsumoMapper::toResponse);
+    public Pagina<PecaInsumoResponse> listar(Integer pagina, Integer tamanho) {
+        return pecaInsumoPortOut.listar(Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho)).map(pecaInsumoMapper::toResponse);
     }
 
     @Override
