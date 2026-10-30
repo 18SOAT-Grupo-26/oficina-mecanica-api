@@ -275,6 +275,7 @@ As alternativas estão agrupadas pela classificação PACELC e pelo tipo de banc
 ## Referências
 
 - [ADR 001 — Monólito em camadas (ports & adapters)](0001-monolito-em-camadas.md)
+- [DER do banco de dados](../arquitetura/der-banco-de-dados.md): tabelas, chaves e relacionamentos depois da V10
 - [ADR 003 — Estratégia de transações](0003-estrategia-de-transacoes.md): reserva de estoque na geração do orçamento e
   liberação quando o orçamento é reprovado.
 - [ADR 004 — Segurança: autenticação e autorização](0004-seguranca.md): perfis, administrador inicial e minimização

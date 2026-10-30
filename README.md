@@ -39,7 +39,8 @@ na [ADR 001](docs/adr/0001-monolito-em-camadas.md). Todas as decisões de arquit
 no [índice de ADRs](docs/adr/README.md).
 
 O fluxo da OS (abertura, orçamento e mudança de status) está nos
-[diagramas de sequência](docs/arquitetura/sequencia-ordem-servico.md).
+[diagramas de sequência](docs/arquitetura/sequencia-ordem-servico.md), e as tabelas e os relacionamentos estão no
+[DER do banco de dados](docs/arquitetura/der-banco-de-dados.md).
 
 ## Tecnologias utilizadas
 
