@@ -5,6 +5,7 @@ import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.*;
 import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Placa;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Veiculo;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
@@ -743,15 +744,39 @@ class OrdemServicoUseCaseTest {
     }
 
     @Nested
-    @DisplayName("Listagem por cliente e métricas da OS")
+    @DisplayName("Listagem e métricas da OS")
     class ListagemEMetricas {
+
+        @Test
+        @DisplayName("Deve listar as OS com os filtros e a paginação informados, convertidas em resposta")
+        void deveListarOrdensComFiltros() {
+            when(ordemServicoPortOut.listar(ID_CLIENTE, ENTREGUE, 1, 5))
+                    .thenReturn(new Pagina<>(List.of(osNoStatus(ENTREGUE)), 1, 5, 6));
+
+            Pagina<OrdemServicoResponse> pagina = useCase.listar(ID_CLIENTE, ENTREGUE, 1, 5);
+
+            assertThat(pagina.itens()).extracting(OrdemServicoResponse::status).containsExactly(ENTREGUE);
+            assertThat(pagina.itens().getFirst().idCliente()).isEqualTo(ID_CLIENTE);
+            assertThat(pagina.pagina()).isEqualTo(1);
+            assertThat(pagina.tamanho()).isEqualTo(5);
+            assertThat(pagina.total()).isEqualTo(6);
+        }
+
+        @Test
+        @DisplayName("Deve listar todas as OS com a paginação padrão quando nada for informado")
+        void deveListarTodasComPaginacaoPadrao() {
+            when(ordemServicoPortOut.listar(null, null, Pagina.PAGINA_PADRAO, Pagina.TAMANHO_PADRAO))
+                    .thenReturn(new Pagina<>(List.of(), Pagina.PAGINA_PADRAO, Pagina.TAMANHO_PADRAO, 0));
+
+            assertThat(useCase.listar(null, null, null, null).itens()).isEmpty();
+        }
 
         @Test
         @DisplayName("Deve listar as OS do cliente convertidas em resposta")
         void deveListarOrdensDoCliente() {
-            when(ordemServicoPortOut.listarOrdens(ID_CLIENTE)).thenReturn(List.of(osNoStatus(ENTREGUE), osNoStatus(RECEBIDA)));
+            when(ordemServicoPortOut.listarDoCliente(ID_CLIENTE)).thenReturn(List.of(osNoStatus(ENTREGUE), osNoStatus(RECEBIDA)));
 
-            List<OrdemServicoResponse> ordens = useCase.listar(ID_CLIENTE);
+            List<OrdemServicoResponse> ordens = useCase.listarDoCliente(ID_CLIENTE);
 
             assertThat(ordens).hasSize(2).extracting(OrdemServicoResponse::status).containsExactly(ENTREGUE, RECEBIDA);
             assertThat(ordens.getFirst().idCliente()).isEqualTo(ID_CLIENTE);
@@ -760,9 +785,9 @@ class OrdemServicoUseCaseTest {
         @Test
         @DisplayName("Deve listar vazio quando o cliente não tem OS")
         void deveListarVazio() {
-            when(ordemServicoPortOut.listarOrdens(ID_CLIENTE)).thenReturn(List.of());
+            when(ordemServicoPortOut.listarDoCliente(ID_CLIENTE)).thenReturn(List.of());
 
-            assertThat(useCase.listar(ID_CLIENTE)).isEmpty();
+            assertThat(useCase.listarDoCliente(ID_CLIENTE)).isEmpty();
         }
 
         @Test

@@ -24,7 +24,7 @@ public class MinhasOrdensController implements MinhasOrdensAPI {
 
     @Override
     public ResponseEntity<List<OrdemServicoResponse>> listar(DetalhesUsuario usuario) throws ApplicationException {
-        return ResponseEntity.ok(useCase.listar(usuario.usuario().clienteId()));
+        return ResponseEntity.ok(useCase.listarDoCliente(usuario.usuario().clienteId()));
     }
 
     @Override

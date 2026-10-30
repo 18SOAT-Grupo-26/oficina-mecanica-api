@@ -1,6 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServico;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +11,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -116,5 +120,21 @@ class OrdemServicoPersistenceAdapterTest {
 
         assertThat(adapter.listarTemposExecucao())
                 .containsExactly(Duration.ofMinutes(90), Duration.ofHours(3));
+    }
+
+    @Test
+    @DisplayName("Deve listar a página de OS da mais nova para a mais antiga, repassando os filtros")
+    void deveListarPaginaComFiltros() {
+        PageRequest pageable = PageRequest.of(1, 5, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
+        OrdemServicoEntity entity = new OrdemServicoPersistenceMapper().toEntity(OrdemServico.abrir(10L, 20L, T0));
+        entity.setId(ID_OS);
+        when(repository.listar(10L, EM_DIAGNOSTICO, pageable)).thenReturn(new PageImpl<>(List.of(entity), pageable, 6));
+
+        Pagina<OrdemServico> pagina = adapter.listar(10L, EM_DIAGNOSTICO, 1, 5);
+
+        assertThat(pagina.itens()).extracting(OrdemServico::getId).containsExactly(ID_OS);
+        assertThat(pagina.pagina()).isEqualTo(1);
+        assertThat(pagina.tamanho()).isEqualTo(5);
+        assertThat(pagina.total()).isEqualTo(6);
     }
 }

@@ -1,6 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.core.port.out.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServico;
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 
 import java.time.Duration;
 import java.util.List;
@@ -21,5 +23,10 @@ public interface OrdemServicoPortOut {
      */
     List<Duration> listarTemposExecucao();
 
-    List<OrdemServico> listarOrdens(Long idCliente);
+    List<OrdemServico> listarDoCliente(Long idCliente);
+
+    /**
+     * Página de OS da mais nova para a mais antiga; cliente e status nulos não filtram.
+     */
+    Pagina<OrdemServico> listar(Long idCliente, StatusOrdemServico status, int pagina, int tamanho);
 }

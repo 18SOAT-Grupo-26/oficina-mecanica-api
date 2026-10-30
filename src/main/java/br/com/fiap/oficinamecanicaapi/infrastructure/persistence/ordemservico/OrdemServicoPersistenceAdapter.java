@@ -1,8 +1,13 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServico;
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.out.ordemservico.OrdemServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,10 +53,22 @@ public class OrdemServicoPersistenceAdapter implements OrdemServicoPortOut {
     }
 
     @Override
-    public List<OrdemServico> listarOrdens(Long idCliente) {
+    @Transactional(readOnly = true)
+    public List<OrdemServico> listarDoCliente(Long idCliente) {
         return repository.listarOrdensByClientId(idCliente).stream()
                 .map(mapper::toDomain)
                 .toList();
+    }
+
+    /**
+     * O id desempata OS abertas no mesmo instante, para a paginação não repetir nem pular registros.
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Pagina<OrdemServico> listar(Long idCliente, StatusOrdemServico status, int pagina, int tamanho) {
+        PageRequest pageable = PageRequest.of(pagina, tamanho, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
+        Page<OrdemServicoEntity> page = repository.listar(idCliente, status, pageable);
+        return new Pagina<>(page.map(mapper::toDomain).getContent(), pagina, tamanho, page.getTotalElements());
     }
 
     private OrdemServicoEntity carregarParaAtualizar(OrdemServico ordemServico) {
