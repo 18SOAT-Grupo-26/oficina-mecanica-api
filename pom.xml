@@ -198,8 +198,7 @@
 							<goal>report</goal>
 						</goals>
 					</execution>
-					<!-- falha o build se um domínio crítico ficar abaixo do mínimo; ampliar os includes
-					     conforme OS, orçamento e estoque ganharem testes -->
+					<!-- falha o build se um domínio crítico ficar abaixo do mínimo -->
 					<execution>
 						<id>check</id>
 						<phase>verify</phase>
@@ -217,6 +216,8 @@
 										<include>br.com.fiap.oficinamecanicaapi.core.usecase.veiculo*</include>
 										<include>br.com.fiap.oficinamecanicaapi.core.domain.ordemservico*</include>
 										<include>br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico*</include>
+										<include>br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo*</include>
+										<include>br.com.fiap.oficinamecanicaapi.core.usecase.pecainsumo*</include>
 									</includes>
 									<limits>
 										<limit>
