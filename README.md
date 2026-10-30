@@ -222,8 +222,9 @@ são apagados com `down -v`.
 
 ### Meta de cobertura nos domínios críticos
 
-O `mvn verify` falha se algum pacote de domínio ou de caso de uso de `cliente`, `veiculo` ou `ordemservico` ficar
-abaixo de **80% de linhas cobertas** (regra `check` do JaCoCo no `pom.xml`, propriedade `jacoco.minimo.linhas`).
+O `mvn verify` falha se algum pacote de domínio ou de caso de uso de `cliente`, `veiculo`, `ordemservico` ou
+`pecainsumo` (estoque) ficar abaixo de **80% de linhas cobertas** (regra `check` do JaCoCo no `pom.xml`, propriedade
+`jacoco.minimo.linhas`).
 
 ### Pré-validação antes do push
 

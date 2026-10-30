@@ -77,8 +77,8 @@ Hoje (29/10) a `develop` tem **702 execuções de teste unitário** (com os para
 ### 3. Cobertura e qualidade
 
 - **JaCoCo** em todo `mvn verify`: relatório em `target/site/jacoco/` e regra `check` que **falha o build** se um
-  pacote de `cliente`, `veiculo` ou `ordemservico` (domínio e caso de uso) ficar abaixo de **80% de linhas**
-  (`jacoco.minimo.linhas`, RNF20). Outros pacotes entram na regra conforme ganham testes.
+  pacote de `cliente`, `veiculo`, `ordemservico` ou `pecainsumo` (domínio e caso de uso) ficar abaixo de **80% de
+  linhas** (`jacoco.minimo.linhas`, RNF20). Outros pacotes entram na regra conforme ganham testes.
 - **SonarCloud** em cada PR (quality gate visível no próprio PR) e **SonarQube** local (`docker compose --profile
   sonar`) para conferir antes de abrir o PR. Os dois leem o XML do JaCoCo.
 - **Hook `pre-push`** (`.githooks/pre-push`): roda `mvn clean verify` antes do push e bloqueia o envio se um teste
@@ -150,8 +150,8 @@ Os testes de integração entraram na `develop` no #111, com o `maven-failsafe-p
 - **Contras:** pune classes sem regra de negócio (configuração, DTOs, entidades JPA) e incentiva testes que só
   aumentam o número. Quando esta ADR foi escrita, também travaria o build: o projeto estava em **79,9% de linhas**.
   Em 29/10, está em **97,6%**.
-- **Por que não, por enquanto:** a regra fica onde está o risco: domínio e casos de uso de `cliente`, `veiculo` e
-  `ordemservico`. O total do projeto continua acompanhado no Sonar, com meta de 80% (RNF20).
+- **Por que não, por enquanto:** a regra fica onde está o risco: domínio e casos de uso de `cliente`, `veiculo`,
+  `ordemservico` e `pecainsumo` (estoque). O total do projeto continua acompanhado no Sonar, com meta de 80% (RNF20).
 
 ### 5. Testes de arquitetura (ArchUnit)
 
