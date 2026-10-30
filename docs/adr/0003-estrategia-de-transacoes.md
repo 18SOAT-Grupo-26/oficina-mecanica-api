@@ -307,6 +307,7 @@ Header `Idempotency-Key` com uma tabela de requisições já processadas, que de
 - [ADR 002 — Escolha do banco de dados](0002-escolha-do-banco-de-dados.md)
 - [ADR 004 — Segurança: autenticação e autorização](0004-seguranca.md)
 - [ADR 005 — Estratégia de testes](0005-estrategia-de-testes.md)
+- [Diagramas de sequência da OS](../arquitetura/sequencia-ordem-servico.md): abertura, orçamento e mudança de status, com a transação e o `UPDATE` de estoque de cada passo
 - PR #104: rotas de orçamento com reserva, baixa e liberação do estoque
 - PR #109: `DELETE /ordens-servico/{id}` como cancelamento, só para `ADMIN`
 - Event Storming do grupo (Miro) e a reunião de 16/10/2026
