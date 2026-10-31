@@ -29,6 +29,7 @@ import java.util.Set;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -68,6 +69,7 @@ class PecaInsumoControllerTest {
         mockMvc.perform(post(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(REQUEST_JSON))
                 .andExpect(status().isCreated())
+                .andExpect(header().string(HttpHeaders.LOCATION, "http://localhost/pecas-insumos/" + ID))
                 .andExpect(jsonPath("$.id").value(ID))
                 .andExpect(jsonPath("$.nome").value("Filtro de óleo"));
     }

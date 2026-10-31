@@ -6,7 +6,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdem
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.TempoMedioExecucaoResponse;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,7 +27,7 @@ public class OrdemServicoController implements OrdemServicoAPI {
 
     @Override
     public ResponseEntity<OrdemServicoResponse> criar(OrdemServicoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
+        return Criado.em(useCase.criar(request), OrdemServicoResponse::id);
     }
 
     @Override

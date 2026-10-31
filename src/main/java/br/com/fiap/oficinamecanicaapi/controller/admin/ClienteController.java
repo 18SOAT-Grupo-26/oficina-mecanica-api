@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +22,7 @@ public class ClienteController implements ClienteAPI {
 
     @Override
     public ResponseEntity<ClienteResponse> criar(ClienteRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
+        return Criado.em(useCase.criar(request), ClienteResponse::id);
     }
 
     @Override

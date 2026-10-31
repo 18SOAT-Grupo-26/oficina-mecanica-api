@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoUseCasePortIn;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +21,7 @@ public class PecaInsumoController implements PecaInsumoAPI {
 
     @Override
     public ResponseEntity<PecaInsumoResponse> criar(PecaInsumoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
+        return Criado.em(useCase.criar(request), PecaInsumoResponse::id);
     }
 
     @Override

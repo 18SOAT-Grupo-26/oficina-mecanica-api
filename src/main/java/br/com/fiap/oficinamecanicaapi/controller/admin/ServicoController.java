@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +22,7 @@ public class ServicoController implements ServicoAPI {
 
     @Override
     public ResponseEntity<ServicoResponse> criar(ServicoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
+        return Criado.em(useCase.criar(request), ServicoResponse::id);
     }
 
     @Override

@@ -29,6 +29,7 @@ import java.util.Set;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -74,6 +75,7 @@ class VeiculoControllerTest {
         mockMvc.perform(post("/veiculos").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(REQUEST_JSON))
                 .andExpect(status().isCreated())
+                .andExpect(header().string(HttpHeaders.LOCATION, "http://localhost/veiculos/" + ID))
                 .andExpect(jsonPath("$.id").value(ID))
                 .andExpect(jsonPath("$.placa").value(PLACA));
     }
