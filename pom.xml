@@ -14,6 +14,7 @@
 	<properties>
 		<java.version>25</java.version>
 		<jacoco.version>0.8.15</jacoco.version>
+		<archunit.version>1.5.1</archunit.version>
 		<!-- cobertura mínima de linhas por pacote nos domínios críticos (regra "check" do JaCoCo) -->
 		<jacoco.minimo.linhas>0.80</jacoco.minimo.linhas>
 		<sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
@@ -76,6 +77,13 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- testes de arquitetura: a regra de dependência da ADR 001 roda no mvn verify -->
+		<dependency>
+			<groupId>com.tngtech.archunit</groupId>
+			<artifactId>archunit-junit5</artifactId>
+			<version>${archunit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
