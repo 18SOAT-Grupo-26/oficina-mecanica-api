@@ -3,7 +3,6 @@ package br.com.fiap.oficinamecanicaapi.controller.admin;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.TempoMedioExecucaoResponse;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,19 +28,19 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "404", description = "Cliente, veículo, serviço ou peça não cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Veículo de outro cliente, item repetido ou saldo insuficiente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PostMapping
-    ResponseEntity<OrdemServicoResponse> criar(@Valid @RequestBody OrdemServicoRequest request) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> criar(@Valid @RequestBody OrdemServicoRequest request);
 
     @Operation(summary = "Consultar OS", description = "Status, itens e histórico.", tags = "Ordem de Serviço")
     @ApiResponse(responseCode = "200", description = "OS encontrada", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
     @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/{id}")
-    ResponseEntity<OrdemServicoResponse> consultar(@PathVariable Long id) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> consultar(@PathVariable Long id);
 
     @Operation(summary = "Listar OS", description = "Status, itens e histórico.", tags = "Ordem de Serviço")
     @ApiResponse(responseCode = "200", description = "OS encontradas", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
     @ApiResponse(responseCode = "404", description = "Nenhuma OS encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/listar/{idCliente}")
-    ResponseEntity<List<OrdemServicoResponse>> listar(@PathVariable Long idCliente) throws ApplicationException;
+    ResponseEntity<List<OrdemServicoResponse>> listar(@PathVariable Long idCliente);
 
     @Operation(summary = "Atualizar dados da OS",
             description = """
@@ -56,7 +55,7 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "404", description = "OS ou cadastro não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "OS em EM_EXECUCAO ou depois, cliente ou veículo diferente, itens fora de EM_DIAGNOSTICO, item repetido ou saldo insuficiente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PutMapping("/{id}")
-    ResponseEntity<OrdemServicoResponse> atualizar(@PathVariable Long id, @Valid @RequestBody OrdemServicoRequest request) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> atualizar(@PathVariable Long id, @Valid @RequestBody OrdemServicoRequest request);
 
     @Operation(summary = "Mudar status da OS",
             description = """
@@ -71,7 +70,7 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "409", description = "Transição inválida ou status automático", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Status desconhecido ou body ilegível", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PatchMapping("/{id}/status")
-    ResponseEntity<OrdemServicoResponse> alterarStatus(@PathVariable Long id, @Valid @RequestBody OrdemServicoRequest.Status request) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> alterarStatus(@PathVariable Long id, @Valid @RequestBody OrdemServicoRequest.Status request);
 
 
     @Operation(summary = "Gerar Orcamento",
@@ -83,7 +82,7 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "409", description = "Conflito ao gerar orçamento", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "422", description = "Entidade não processável", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PatchMapping("/{id}/gerar-orcamento")
-    ResponseEntity<OrdemServicoResponse> gerarOrcamento(@PathVariable Long id) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> gerarOrcamento(@PathVariable Long id);
 
 
     @Operation(summary = "Aprovar orçamento",
@@ -93,7 +92,7 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "OS fora de AGUARDANDO_APROVACAO ou saldo reservado insuficiente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PatchMapping("/{id}/aprovar-orcamento")
-    ResponseEntity<OrdemServicoResponse> aprovarOrcamento(@PathVariable Long id) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> aprovarOrcamento(@PathVariable Long id);
 
     @Operation(summary = "Rejeitar orçamento",
             description = "Rejeita o orçamento enviado: a OS é cancelada e a reserva de estoque das peças é liberada, sem consumo. Só vale para OS em AGUARDANDO_APROVACAO.",
@@ -102,7 +101,7 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "OS fora de AGUARDANDO_APROVACAO ou reserva inconsistente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PatchMapping("/{id}/rejeitar-orcamento")
-    ResponseEntity<OrdemServicoResponse> rejeitarOrcamento(@PathVariable Long id) throws ApplicationException;
+    ResponseEntity<OrdemServicoResponse> rejeitarOrcamento(@PathVariable Long id);
 
     @Operation(summary = "Consultar tempo médio de execução",
             description = "Média de EM_EXECUCAO a FINALIZADA das OS que passaram por FINALIZADA (inclusive as entregues), em minutos truncados. Sem OS finalizada, a média vem nula.",
@@ -118,5 +117,5 @@ public interface OrdemServicoAPI {
     @ApiResponse(responseCode = "404", description = "OS não encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "OS a partir de EM_EXECUCAO ou já cancelada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @DeleteMapping("/{id}")
-    ResponseEntity<Void> cancelar(@PathVariable Long id) throws ApplicationException;
+    ResponseEntity<Void> cancelar(@PathVariable Long id);
 }

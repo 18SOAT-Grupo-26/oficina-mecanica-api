@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoRequ
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.TempoMedioExecucaoResponse;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,42 +27,42 @@ public class OrdemServicoController implements OrdemServicoAPI {
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> criar(OrdemServicoRequest request) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> criar(OrdemServicoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> consultar(Long id) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> consultar(Long id) {
         return ResponseEntity.ok(useCase.consultar(id));
     }
 
     @Override
-    public ResponseEntity<List<OrdemServicoResponse>> listar(Long idCliente) throws ApplicationException {
+    public ResponseEntity<List<OrdemServicoResponse>> listar(Long idCliente) {
         return ResponseEntity.ok(useCase.listar(idCliente));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> atualizar(Long id, OrdemServicoRequest request) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> atualizar(Long id, OrdemServicoRequest request) {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> alterarStatus(Long id, OrdemServicoRequest.Status request) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> alterarStatus(Long id, OrdemServicoRequest.Status request) {
         return ResponseEntity.ok(useCase.alterarStatus(id, request));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> gerarOrcamento(Long id) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> gerarOrcamento(Long id) {
         return ResponseEntity.ok(useCase.registrarOrcamentoEnviado(id));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> aprovarOrcamento(Long id) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> aprovarOrcamento(Long id) {
         return ResponseEntity.ok(useCase.registrarOrcamentoAprovado(id));
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> rejeitarOrcamento(Long id) throws ApplicationException {
+    public ResponseEntity<OrdemServicoResponse> rejeitarOrcamento(Long id) {
         return ResponseEntity.ok(useCase.registrarOrcamentoRejeitado(id));
     }
 
@@ -74,7 +73,7 @@ public class OrdemServicoController implements OrdemServicoAPI {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')") // funcionário não exclui cadastros
-    public ResponseEntity<Void> cancelar(Long id) throws ApplicationException {
+    public ResponseEntity<Void> cancelar(Long id) {
         useCase.cancelar(id);
         return ResponseEntity.noContent().build();
     }

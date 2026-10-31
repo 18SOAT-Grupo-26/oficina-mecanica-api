@@ -16,7 +16,10 @@ import br.com.fiap.oficinamecanicaapi.core.port.out.pecainsumo.PecaInsumoPortOut
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.veiculo.VeiculoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico.mapper.OrdemServicoMapper;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DominioException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -122,14 +125,14 @@ class OrdemServicoUseCaseTest {
         @Test
         @DisplayName("Deve responder 400 quando falta cliente ou veículo, sem consultar os cadastros")
         void deveResponder400SemCamposObrigatorios() {
-            assertErro(400, "O cliente da OS é obrigatório", () -> useCase.criar(new OrdemServicoRequest(null, ID_VEICULO, List.of(), List.of())));
-            assertErro(400, "O cliente da OS é obrigatório", () -> useCase.criar(new OrdemServicoRequest(" ", ID_VEICULO, List.of(), List.of())));
-            assertErro(400, "O veículo da OS é obrigatório", () -> useCase.criar(new OrdemServicoRequest(DOCUMENTO, null, List.of(), List.of())));
-            assertErro(400, "Os serviços da OS são obrigatórios (envie uma lista vazia se não houver)",
+            assertErro(DadoInvalidoException.class, "O cliente da OS é obrigatório", () -> useCase.criar(new OrdemServicoRequest(null, ID_VEICULO, List.of(), List.of())));
+            assertErro(DadoInvalidoException.class, "O cliente da OS é obrigatório", () -> useCase.criar(new OrdemServicoRequest(" ", ID_VEICULO, List.of(), List.of())));
+            assertErro(DadoInvalidoException.class, "O veículo da OS é obrigatório", () -> useCase.criar(new OrdemServicoRequest(DOCUMENTO, null, List.of(), List.of())));
+            assertErro(DadoInvalidoException.class, "Os serviços da OS são obrigatórios (envie uma lista vazia se não houver)",
                     () -> useCase.criar(new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, null, List.of())));
-            assertErro(400, "As peças da OS são obrigatórias (envie uma lista vazia se não houver)",
+            assertErro(DadoInvalidoException.class, "As peças da OS são obrigatórias (envie uma lista vazia se não houver)",
                     () -> useCase.criar(new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), null)));
-            assertErro(400, "Os dados da OS são obrigatórios", () -> useCase.criar(null));
+            assertErro(DadoInvalidoException.class, "Os dados da OS são obrigatórios", () -> useCase.criar(null));
             verifyNoInteractions(clientePortOut, veiculoPortOut, ordemServicoPortOut);
         }
 
@@ -162,9 +165,9 @@ class OrdemServicoUseCaseTest {
             when(servicoPortOut.buscarPorId(ID_SERVICO)).thenReturn(Optional.empty());
             when(pecaInsumoPortOut.buscarPorId(ID_PECA)).thenReturn(Optional.empty());
 
-            assertErro(404, "Serviço não encontrado no catálogo", () -> useCase.criar(
+            assertErro(RecursoNaoEncontradoException.class, "Serviço não encontrado no catálogo", () -> useCase.criar(
                     new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(new OrdemServicoRequest.Servico(ID_SERVICO, 1)), List.of())));
-            assertErro(404, "Peça não encontrada no catálogo", () -> useCase.criar(
+            assertErro(RecursoNaoEncontradoException.class, "Peça não encontrada no catálogo", () -> useCase.criar(
                     new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), List.of(new OrdemServicoRequest.Peca(ID_PECA, 1)))));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -175,7 +178,7 @@ class OrdemServicoUseCaseTest {
             clienteEVeiculoCadastrados();
             when(pecaInsumoPortOut.buscarPorId(ID_PECA)).thenReturn(Optional.of(filtroComSaldo(1)));
 
-            assertErro(409, "Saldo insuficiente para a peça Filtro de óleo: disponível 1, solicitado 2", () -> useCase.criar(
+            assertErro(ConflitoException.class, "Saldo insuficiente para a peça Filtro de óleo: disponível 1, solicitado 2", () -> useCase.criar(
                     new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), List.of(new OrdemServicoRequest.Peca(ID_PECA, 2)))));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -185,10 +188,10 @@ class OrdemServicoUseCaseTest {
         void deveResponder409ParaItemRepetido() {
             clienteEVeiculoCadastrados();
 
-            assertErro(409, "Serviço repetido na requisição: " + ID_SERVICO, () -> useCase.criar(
+            assertErro(ConflitoException.class, "Serviço repetido na requisição: " + ID_SERVICO, () -> useCase.criar(
                     new OrdemServicoRequest(DOCUMENTO, ID_VEICULO,
                             List.of(new OrdemServicoRequest.Servico(ID_SERVICO, 1), new OrdemServicoRequest.Servico(ID_SERVICO, 2)), List.of())));
-            assertErro(409, "Peça repetida na requisição: " + ID_PECA, () -> useCase.criar(
+            assertErro(ConflitoException.class, "Peça repetida na requisição: " + ID_PECA, () -> useCase.criar(
                     new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(),
                             List.of(new OrdemServicoRequest.Peca(ID_PECA, 1), new OrdemServicoRequest.Peca(ID_PECA, 2)))));
             verifyNoInteractions(servicoPortOut, pecaInsumoPortOut);
@@ -199,17 +202,16 @@ class OrdemServicoUseCaseTest {
         void deveResponder404ParaClienteInexistente() {
             when(clientePortOut.buscarAtivoPorDocumento(any())).thenReturn(Optional.empty());
 
-            assertErro(404, "Cliente não encontrado", () -> useCase.criar(new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), List.of())));
+            assertErro(RecursoNaoEncontradoException.class, "Cliente não encontrado", () -> useCase.criar(new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), List.of())));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
 
         @Test
         @DisplayName("Deve responder 400 para documento inválido sem consultar o cliente")
         void deveResponder400ParaDocumentoInvalido() {
-            ApplicationException exception = assertThrows(ApplicationException.class,
+            DadoInvalidoException exception = assertThrows(DadoInvalidoException.class,
                     () -> useCase.criar(new OrdemServicoRequest("123", ID_VEICULO, List.of(), List.of())));
 
-            assertThat(exception.getErrorCode()).isEqualTo(400);
             verify(clientePortOut, never()).buscarAtivoPorDocumento(any());
         }
 
@@ -219,7 +221,7 @@ class OrdemServicoUseCaseTest {
             when(clientePortOut.buscarAtivoPorDocumento(any())).thenReturn(Optional.of(CLIENTE));
             when(veiculoPortOut.buscarAtivoPorId(ID_VEICULO)).thenReturn(Optional.empty());
 
-            assertErro(404, "Veículo não encontrado", () -> useCase.criar(new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), List.of())));
+            assertErro(RecursoNaoEncontradoException.class, "Veículo não encontrado", () -> useCase.criar(new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), List.of())));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
 
@@ -229,7 +231,7 @@ class OrdemServicoUseCaseTest {
             when(clientePortOut.buscarAtivoPorDocumento(any())).thenReturn(Optional.of(CLIENTE));
             when(veiculoPortOut.buscarAtivoPorId(ID_VEICULO)).thenReturn(Optional.of(veiculoDoCliente(ID_OUTRO_CLIENTE)));
 
-            assertErro(409, "O veículo não pertence ao cliente da OS",
+            assertErro(ConflitoException.class, "O veículo não pertence ao cliente da OS",
                     () -> useCase.criar(new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), List.of())));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -268,7 +270,7 @@ class OrdemServicoUseCaseTest {
         void deveEsconderOsDeOutroCliente() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
 
-            assertErro(404, "Ordem de serviço não encontrada", () -> useCase.consultarDoCliente(ID_OS, ID_OUTRO_CLIENTE));
+            assertErro(RecursoNaoEncontradoException.class, "Ordem de serviço não encontrada", () -> useCase.consultarDoCliente(ID_OS, ID_OUTRO_CLIENTE));
         }
 
         @Test
@@ -276,9 +278,9 @@ class OrdemServicoUseCaseTest {
         void deveResponder404ParaOsInexistente() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.empty());
 
-            assertErro(404, "Ordem de serviço não encontrada", () -> useCase.consultar(ID_OS));
-            assertErro(404, "Ordem de serviço não encontrada", () -> useCase.atualizar(ID_OS, putComItensAtuais(DOCUMENTO)));
-            assertErro(404, "Ordem de serviço não encontrada", () -> useCase.alterarStatus(ID_OS, mudarStatus(FINALIZADA)));
+            assertErro(RecursoNaoEncontradoException.class, "Ordem de serviço não encontrada", () -> useCase.consultar(ID_OS));
+            assertErro(RecursoNaoEncontradoException.class, "Ordem de serviço não encontrada", () -> useCase.atualizar(ID_OS, putComItensAtuais(DOCUMENTO)));
+            assertErro(RecursoNaoEncontradoException.class, "Ordem de serviço não encontrada", () -> useCase.alterarStatus(ID_OS, mudarStatus(FINALIZADA)));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
     }
@@ -290,9 +292,9 @@ class OrdemServicoUseCaseTest {
         @Test
         @DisplayName("Deve responder 400 no PUT sem serviços ou peças, sem consultar a OS")
         void deveRecusarPutSemItens() {
-            assertErro(400, "Os serviços da OS são obrigatórios (envie uma lista vazia se não houver)",
+            assertErro(DadoInvalidoException.class, "Os serviços da OS são obrigatórios (envie uma lista vazia se não houver)",
                     () -> useCase.atualizar(ID_OS, new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, null, List.of())));
-            assertErro(400, "As peças da OS são obrigatórias (envie uma lista vazia se não houver)",
+            assertErro(DadoInvalidoException.class, "As peças da OS são obrigatórias (envie uma lista vazia se não houver)",
                     () -> useCase.atualizar(ID_OS, new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), null)));
             verifyNoInteractions(ordemServicoPortOut, clientePortOut, veiculoPortOut);
         }
@@ -355,7 +357,7 @@ class OrdemServicoUseCaseTest {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
             clienteCadastrado();
 
-            assertErro(409, "Itens só podem ser alterados com a OS em RECEBIDA ou EM_DIAGNOSTICO",
+            assertErro(ConflitoException.class, "Itens só podem ser alterados com a OS em RECEBIDA ou EM_DIAGNOSTICO",
                     () -> useCase.atualizar(ID_OS, new OrdemServicoRequest(DOCUMENTO, ID_VEICULO,
                             List.of(new OrdemServicoRequest.Servico(ID_SERVICO, 1)), List.of())));
             verify(ordemServicoPortOut, never()).salvar(any());
@@ -367,7 +369,7 @@ class OrdemServicoUseCaseTest {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
             when(clientePortOut.buscarAtivoPorDocumento(new Documento(OUTRO_DOCUMENTO))).thenReturn(Optional.of(OUTRO_CLIENTE));
 
-            assertErro(409, "O cliente da OS não pode ser alterado; cancele a OS e abra outra",
+            assertErro(ConflitoException.class, "O cliente da OS não pode ser alterado; cancele a OS e abra outra",
                     () -> useCase.atualizar(ID_OS, putComItensAtuais(OUTRO_DOCUMENTO)));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -378,7 +380,7 @@ class OrdemServicoUseCaseTest {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
             clienteCadastrado();
 
-            assertErro(409, "O veículo da OS não pode ser alterado; cancele a OS e abra outra",
+            assertErro(ConflitoException.class, "O veículo da OS não pode ser alterado; cancele a OS e abra outra",
                     () -> useCase.atualizar(ID_OS, new OrdemServicoRequest(DOCUMENTO, 21L, List.of(), List.of())));
             verifyNoInteractions(veiculoPortOut);
             verify(ordemServicoPortOut, never()).salvar(any());
@@ -390,9 +392,9 @@ class OrdemServicoUseCaseTest {
             when(ordemServicoPortOut.buscarPorId(ID_OS))
                     .thenReturn(Optional.of(osNoStatus(EM_EXECUCAO)), Optional.of(osNoStatus(CANCELADA)));
 
-            assertErro(409, "A OS não pode ser editada com status EM_EXECUCAO",
+            assertErro(ConflitoException.class, "A OS não pode ser editada com status EM_EXECUCAO",
                     () -> useCase.atualizar(ID_OS, putComItensAtuais(DOCUMENTO)));
-            assertErro(409, "A OS não pode ser editada com status CANCELADA",
+            assertErro(ConflitoException.class, "A OS não pode ser editada com status CANCELADA",
                     () -> useCase.atualizar(ID_OS, putComItensAtuais(DOCUMENTO)));
             verifyNoInteractions(clientePortOut, veiculoPortOut, servicoPortOut, pecaInsumoPortOut);
             verify(ordemServicoPortOut, never()).salvar(any());
@@ -408,7 +410,7 @@ class OrdemServicoUseCaseTest {
         void deveRecusarEmDiagnosticoManual() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(RECEBIDA)));
 
-            assertErro(409, "EM_DIAGNOSTICO é automático: a OS entra nele ao ser aberta",
+            assertErro(ConflitoException.class, "EM_DIAGNOSTICO é automático: a OS entra nele ao ser aberta",
                     () -> useCase.alterarStatus(ID_OS, mudarStatus(EM_DIAGNOSTICO)));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -418,7 +420,7 @@ class OrdemServicoUseCaseTest {
         void deveRecusarAguardandoAprovacaoManual() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
 
-            assertErro(409, "AGUARDANDO_APROVACAO é automático: vem do envio do orçamento",
+            assertErro(ConflitoException.class, "AGUARDANDO_APROVACAO é automático: vem do envio do orçamento",
                     () -> useCase.alterarStatus(ID_OS, mudarStatus(AGUARDANDO_APROVACAO)));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -428,7 +430,7 @@ class OrdemServicoUseCaseTest {
         void deveRecusarEmExecucaoDireto() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
 
-            assertErro(409, "EM_EXECUCAO é automático: vem da aprovação do orçamento",
+            assertErro(ConflitoException.class, "EM_EXECUCAO é automático: vem da aprovação do orçamento",
                     () -> useCase.alterarStatus(ID_OS, mudarStatus(EM_EXECUCAO)));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -438,7 +440,7 @@ class OrdemServicoUseCaseTest {
         void deveRecusarPularStatus() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
 
-            assertErro(409, "Transição inválida: EM_DIAGNOSTICO → FINALIZADA",
+            assertErro(ConflitoException.class, "Transição inválida: EM_DIAGNOSTICO → FINALIZADA",
                     () -> useCase.alterarStatus(ID_OS, mudarStatus(FINALIZADA)));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -475,7 +477,7 @@ class OrdemServicoUseCaseTest {
             retornarOsSalva();
 
             useCase.alterarStatus(ID_OS, mudarStatus(ENTREGUE));
-            assertErro(409, "Transição inválida: EM_DIAGNOSTICO → FINALIZADA",
+            assertErro(ConflitoException.class, "Transição inválida: EM_DIAGNOSTICO → FINALIZADA",
                     () -> useCase.alterarStatus(ID_OS, mudarStatus(FINALIZADA)));
 
             assertThat(meterRegistry.get("oficina.os.tempo.execucao").timer().count()).isZero();
@@ -536,8 +538,8 @@ class OrdemServicoUseCaseTest {
         void deveRecusarSoftDeleteInvalido() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_EXECUCAO)), Optional.empty());
 
-            assertErro(409, "Transição inválida: EM_EXECUCAO → CANCELADA", () -> useCase.cancelar(ID_OS));
-            assertErro(404, "Ordem de serviço não encontrada", () -> useCase.cancelar(ID_OS));
+            assertErro(ConflitoException.class, "Transição inválida: EM_EXECUCAO → CANCELADA", () -> useCase.cancelar(ID_OS));
+            assertErro(RecursoNaoEncontradoException.class, "Ordem de serviço não encontrada", () -> useCase.cancelar(ID_OS));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
 
@@ -546,7 +548,7 @@ class OrdemServicoUseCaseTest {
         void deveRecusarCancelarEmExecucao() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_EXECUCAO)));
 
-            assertErro(409, "Transição inválida: EM_EXECUCAO → CANCELADA",
+            assertErro(ConflitoException.class, "Transição inválida: EM_EXECUCAO → CANCELADA",
                     () -> useCase.alterarStatus(ID_OS, mudarStatus(CANCELADA)));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -556,7 +558,7 @@ class OrdemServicoUseCaseTest {
         void deveRecusarVoltarParaRecebida() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
 
-            assertErro(409, "Transição inválida: EM_DIAGNOSTICO → RECEBIDA",
+            assertErro(ConflitoException.class, "Transição inválida: EM_DIAGNOSTICO → RECEBIDA",
                     () -> useCase.alterarStatus(ID_OS, mudarStatus(RECEBIDA)));
         }
 
@@ -565,7 +567,7 @@ class OrdemServicoUseCaseTest {
         void deveRecusarRepetirStatusAtual() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(FINALIZADA)));
 
-            assertErro(409, "Transição inválida: FINALIZADA → FINALIZADA",
+            assertErro(ConflitoException.class, "Transição inválida: FINALIZADA → FINALIZADA",
                     () -> useCase.alterarStatus(ID_OS, mudarStatus(FINALIZADA)));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -573,8 +575,8 @@ class OrdemServicoUseCaseTest {
         @Test
         @DisplayName("Deve responder 400 quando o status de destino não vem, sem consultar a OS")
         void deveExigirStatusDeDestino() {
-            assertErro(400, "O status de destino é obrigatório", () -> useCase.alterarStatus(ID_OS, mudarStatus(null)));
-            assertErro(400, "O status de destino é obrigatório", () -> useCase.alterarStatus(ID_OS, null));
+            assertErro(DadoInvalidoException.class, "O status de destino é obrigatório", () -> useCase.alterarStatus(ID_OS, mudarStatus(null)));
+            assertErro(DadoInvalidoException.class, "O status de destino é obrigatório", () -> useCase.alterarStatus(ID_OS, null));
             verifyNoInteractions(ordemServicoPortOut);
         }
     }
@@ -641,7 +643,7 @@ class OrdemServicoUseCaseTest {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
             when(pecaInsumoPortOut.reservar(ID_PECA, 2)).thenReturn(false);
 
-            assertErro(409, "Saldo insuficiente para reservar a peça Filtro de óleo",
+            assertErro(ConflitoException.class, "Saldo insuficiente para reservar a peça Filtro de óleo",
                     () -> useCase.registrarOrcamentoEnviado(ID_OS));
 
             verify(ordemServicoPortOut, never()).salvar(any());
@@ -655,7 +657,7 @@ class OrdemServicoUseCaseTest {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)));
             when(pecaInsumoPortOut.baixar(ID_PECA, 2)).thenReturn(false);
 
-            assertErro(409, "Não há reserva suficiente para atualizar o estoque da peça Filtro de óleo",
+            assertErro(ConflitoException.class, "Não há reserva suficiente para atualizar o estoque da peça Filtro de óleo",
                     () -> useCase.registrarOrcamentoAprovado(ID_OS));
 
             verify(ordemServicoPortOut, never()).salvar(any());
@@ -668,8 +670,8 @@ class OrdemServicoUseCaseTest {
             when(ordemServicoPortOut.buscarPorId(ID_OS))
                     .thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)), Optional.of(osNoStatus(EM_EXECUCAO)));
 
-            assertErro(409, "Transição inválida: EM_DIAGNOSTICO → EM_EXECUCAO", () -> useCase.registrarOrcamentoAprovado(ID_OS));
-            assertErro(409, "Transição inválida: EM_EXECUCAO → EM_EXECUCAO", () -> useCase.registrarOrcamentoAprovado(ID_OS));
+            assertErro(ConflitoException.class, "Transição inválida: EM_DIAGNOSTICO → EM_EXECUCAO", () -> useCase.registrarOrcamentoAprovado(ID_OS));
+            assertErro(ConflitoException.class, "Transição inválida: EM_EXECUCAO → EM_EXECUCAO", () -> useCase.registrarOrcamentoAprovado(ID_OS));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
 
@@ -679,9 +681,9 @@ class OrdemServicoUseCaseTest {
             when(ordemServicoPortOut.buscarPorId(ID_OS))
                     .thenReturn(Optional.of(osNoStatus(AGUARDANDO_APROVACAO)), Optional.of(osNoStatus(EM_EXECUCAO)));
 
-            assertErro(409, "Transição inválida: AGUARDANDO_APROVACAO → AGUARDANDO_APROVACAO",
+            assertErro(ConflitoException.class, "Transição inválida: AGUARDANDO_APROVACAO → AGUARDANDO_APROVACAO",
                     () -> useCase.registrarOrcamentoEnviado(ID_OS));
-            assertErro(409, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO",
+            assertErro(ConflitoException.class, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO",
                     () -> useCase.registrarOrcamentoRejeitado(ID_OS));
             verify(ordemServicoPortOut, never()).salvar(any());
         }
@@ -691,7 +693,7 @@ class OrdemServicoUseCaseTest {
         void deveRecusarRejeitarAntesDoEnvio() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
 
-            assertErro(409, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO",
+            assertErro(ConflitoException.class, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO",
                     () -> useCase.registrarOrcamentoRejeitado(ID_OS));
             verifyNoInteractions(pecaInsumoPortOut);
             verify(ordemServicoPortOut, never()).salvar(any());
@@ -702,9 +704,9 @@ class OrdemServicoUseCaseTest {
         void deveResponder404ParaOsInexistente() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.empty());
 
-            assertErro(404, "Ordem de serviço não encontrada", () -> useCase.registrarOrcamentoEnviado(ID_OS));
-            assertErro(404, "Ordem de serviço não encontrada", () -> useCase.registrarOrcamentoAprovado(ID_OS));
-            assertErro(404, "Ordem de serviço não encontrada", () -> useCase.registrarOrcamentoRejeitado(ID_OS));
+            assertErro(RecursoNaoEncontradoException.class, "Ordem de serviço não encontrada", () -> useCase.registrarOrcamentoEnviado(ID_OS));
+            assertErro(RecursoNaoEncontradoException.class, "Ordem de serviço não encontrada", () -> useCase.registrarOrcamentoAprovado(ID_OS));
+            assertErro(RecursoNaoEncontradoException.class, "Ordem de serviço não encontrada", () -> useCase.registrarOrcamentoRejeitado(ID_OS));
         }
     }
 
@@ -801,7 +803,7 @@ class OrdemServicoUseCaseTest {
             var paraFinalizada = new OrdemServicoRequest.Status(FINALIZADA);
 
             assertThatThrownBy(() -> useCase.alterarStatus(ID_OS, paraFinalizada))
-                    .isInstanceOf(ApplicationException.class);
+                    .isInstanceOf(ConflitoException.class);
 
             assertThat(meterRegistry.find("oficina.os.transicoes").counter()).isNull();
         }
@@ -873,7 +875,7 @@ class OrdemServicoUseCaseTest {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
             when(pecaInsumoPortOut.reservar(ID_PECA, 2)).thenReturn(false);
 
-            assertThatThrownBy(() -> useCase.registrarOrcamentoEnviado(ID_OS)).isInstanceOf(ApplicationException.class);
+            assertThatThrownBy(() -> useCase.registrarOrcamentoEnviado(ID_OS)).isInstanceOf(ConflitoException.class);
 
             Counter recusada = meterRegistry.get("oficina.estoque.movimentacao.recusada").tag("tipo", "reservar").counter();
             assertThat(recusada.count()).isEqualTo(1);
@@ -961,9 +963,8 @@ class OrdemServicoUseCaseTest {
                 true, ABERTURA, ABERTURA);
     }
 
-    private static void assertErro(int codigo, String mensagem, Executable acao) {
-        ApplicationException exception = assertThrows(ApplicationException.class, acao);
-        assertThat(exception.getErrorCode()).isEqualTo(codigo);
+    private static void assertErro(Class<? extends DominioException> tipo, String mensagem, Executable acao) {
+        DominioException exception = assertThrows(tipo, acao);
         assertThat(exception.getMessage()).isEqualTo(mensagem);
     }
 

@@ -1,6 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import lombok.Getter;
 
 import java.time.Duration;
@@ -83,7 +85,7 @@ public class OrdemServico {
      */
     public void exigirEditavel() {
         if (!status.isEditavel()) {
-            throw new ApplicationException(409, "A OS não pode ser editada com status " + status);
+            throw new ConflitoException("A OS não pode ser editada com status " + status);
         }
     }
 
@@ -92,7 +94,7 @@ public class OrdemServico {
     public void incluirServico(Long idServico, String descricao, ValorMonetario precoUnitario, int quantidade) {
         exigirItensEditaveis();
         if (buscarServico(idServico).isPresent()) {
-            throw new ApplicationException(409, "Serviço já incluído na OS");
+            throw new ConflitoException("Serviço já incluído na OS");
         }
         itensServico.add(ItemServico.novo(idServico, descricao, precoUnitario, quantidade));
     }
@@ -100,7 +102,7 @@ public class OrdemServico {
     public void incluirPeca(Long idPeca, String descricao, ValorMonetario precoUnitario, int quantidade) {
         exigirItensEditaveis();
         if (buscarPeca(idPeca).isPresent()) {
-            throw new ApplicationException(409, "Peça já incluída na OS");
+            throw new ConflitoException("Peça já incluída na OS");
         }
         itensPeca.add(ItemPeca.novo(idPeca, descricao, precoUnitario, quantidade));
     }
@@ -108,14 +110,14 @@ public class OrdemServico {
     public void removerServico(Long idServico) {
         exigirItensEditaveis();
         ItemServico item = buscarServico(idServico)
-                .orElseThrow(() -> new ApplicationException(404, "Serviço não encontrado na OS"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Serviço não encontrado na OS"));
         itensServico.remove(item);
     }
 
     public void removerPeca(Long idPeca) {
         exigirItensEditaveis();
         ItemPeca item = buscarPeca(idPeca)
-                .orElseThrow(() -> new ApplicationException(404, "Peça não encontrada na OS"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Peça não encontrada na OS"));
         itensPeca.remove(item);
     }
 
@@ -127,7 +129,7 @@ public class OrdemServico {
     public void aguardarAprovacao(OffsetDateTime momento) {
         exigirTransicaoPara(AGUARDANDO_APROVACAO, momento);
         if (itensServico.isEmpty() && itensPeca.isEmpty()) {
-            throw new ApplicationException(409, "A OS precisa de ao menos um item para gerar orçamento");
+            throw new ConflitoException("A OS precisa de ao menos um item para gerar orçamento");
         }
         registrarTransicao(AGUARDANDO_APROVACAO, momento);
     }
@@ -146,7 +148,7 @@ public class OrdemServico {
     public void rejeitarOrcamento(OffsetDateTime momento) {
         exigirMomento(momento);
         if (status != AGUARDANDO_APROVACAO) {
-            throw new ApplicationException(409, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO");
+            throw new ConflitoException("Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO");
         }
         cancelar(momento);
     }
@@ -201,7 +203,7 @@ public class OrdemServico {
     private void exigirTransicaoPara(StatusOrdemServico destino, OffsetDateTime momento) {
         exigirMomento(momento);
         if (!status.podeTransitarPara(destino)) {
-            throw new ApplicationException(409, "Transição inválida: " + status + " → " + destino);
+            throw new ConflitoException("Transição inválida: " + status + " → " + destino);
         }
     }
 
@@ -215,7 +217,7 @@ public class OrdemServico {
      */
     private void exigirItensEditaveis() {
         if (status != RECEBIDA && status != EM_DIAGNOSTICO) {
-            throw new ApplicationException(409, "Itens só podem ser alterados com a OS em RECEBIDA ou EM_DIAGNOSTICO");
+            throw new ConflitoException("Itens só podem ser alterados com a OS em RECEBIDA ou EM_DIAGNOSTICO");
         }
     }
 
@@ -236,19 +238,19 @@ public class OrdemServico {
 
     private static void exigirCliente(Long idCliente) {
         if (idCliente == null) {
-            throw new ApplicationException(400, "O cliente da OS é obrigatório");
+            throw new DadoInvalidoException("O cliente da OS é obrigatório");
         }
     }
 
     private static void exigirVeiculo(Long idVeiculo) {
         if (idVeiculo == null) {
-            throw new ApplicationException(400, "O veículo da OS é obrigatório");
+            throw new DadoInvalidoException("O veículo da OS é obrigatório");
         }
     }
 
     private static void exigirMomento(OffsetDateTime momento) {
         if (momento == null) {
-            throw new ApplicationException(400, "A data/hora da operação é obrigatória");
+            throw new DadoInvalidoException("A data/hora da operação é obrigatória");
         }
     }
 }

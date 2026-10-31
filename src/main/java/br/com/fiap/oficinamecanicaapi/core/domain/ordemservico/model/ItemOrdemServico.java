@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import lombok.Getter;
 
 /**
@@ -17,13 +17,13 @@ public abstract class ItemOrdemServico {
 
     protected ItemOrdemServico(Long id, String descricao, ValorMonetario precoUnitario, int quantidade) {
         if (descricao == null || descricao.isBlank()) {
-            throw new ApplicationException(400, "A descrição do item é obrigatória");
+            throw new DadoInvalidoException("A descrição do item é obrigatória");
         }
         if (precoUnitario == null) {
-            throw new ApplicationException(400, "O preço unitário do item é obrigatório");
+            throw new DadoInvalidoException("O preço unitário do item é obrigatório");
         }
         if (quantidade <= 0) {
-            throw new ApplicationException(400, "A quantidade do item deve ser maior que zero");
+            throw new DadoInvalidoException("A quantidade do item deve ser maior que zero");
         }
         this.id = id;
         this.descricao = descricao.trim();

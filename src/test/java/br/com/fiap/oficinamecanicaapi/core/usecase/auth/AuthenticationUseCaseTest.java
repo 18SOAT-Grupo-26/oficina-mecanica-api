@@ -7,7 +7,10 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthToken;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.CadastroRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.LimiteExcedidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.NaoAutenticadoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -91,9 +94,8 @@ class AuthenticationUseCaseTest {
         when(usuarioService.buscarPorIdentificador(IDENTIFICADOR)).thenReturn(detalhes);
         when(passwordEncoder.matches(SENHA, SENHA_CIFRADA)).thenReturn(false);
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.autenticar(REQUEST));
+        NaoAutenticadoException ex = assertThrows(NaoAutenticadoException.class, () -> useCase.autenticar(REQUEST));
 
-        assertThat(ex.getErrorCode()).isEqualTo(401);
         assertThat(ex.getMessage()).isEqualTo(MENSAGEM);
         assertThat(logins("senha_invalida")).isEqualTo(1);
         verifyNoInteractions(jwtTokenProvider);
@@ -104,13 +106,12 @@ class AuthenticationUseCaseTest {
     @DisplayName("Deve responder igual à senha errada (401) quando o usuário não existir, sem revelar isso")
     void deveRecusarUsuarioInexistenteComoSenhaErrada() {
         when(usuarioService.buscarPorIdentificador(IDENTIFICADOR))
-                .thenThrow(new ApplicationException(404, "Usuário não encontrado"));
+                .thenThrow(new RecursoNaoEncontradoException("Usuário não encontrado"));
         // a senha fictícia é aleatória por desenho: não há valor conhecido para casar
         when(passwordEncoder.encode(anyString())).thenReturn(HASH_FICTICIO);
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.autenticar(REQUEST));
+        NaoAutenticadoException ex = assertThrows(NaoAutenticadoException.class, () -> useCase.autenticar(REQUEST));
 
-        assertThat(ex.getErrorCode()).isEqualTo(401);
         assertThat(ex.getMessage()).isEqualTo(MENSAGEM);
         // custo de bcrypt equivalente ao da senha errada: o tempo de resposta também não denuncia
         verify(passwordEncoder).matches(SENHA, HASH_FICTICIO);
@@ -123,24 +124,23 @@ class AuthenticationUseCaseTest {
     @Test
     @DisplayName("Deve responder 429 sem consultar usuário nem senha quando o identificador estiver bloqueado")
     void deveResponder429QuandoBloqueado() {
-        doThrow(new ApplicationException(429, "Muitas tentativas de login. Tente novamente em alguns minutos."))
+        doThrow(new LimiteExcedidoException("Muitas tentativas de login. Tente novamente em alguns minutos."))
                 .when(limiteTentativas).verificarBloqueio(IDENTIFICADOR);
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.autenticar(REQUEST));
+        LimiteExcedidoException ex = assertThrows(LimiteExcedidoException.class, () -> useCase.autenticar(REQUEST));
 
-        assertThat(ex.getErrorCode()).isEqualTo(429);
         verifyNoInteractions(usuarioService, passwordEncoder, jwtTokenProvider);
     }
 
     @Test
-    @DisplayName("Deve propagar erros que não sejam de usuário inexistente")
+    @DisplayName("Deve propagar erros que não sejam de usuário inexistente, sem transformá-los em 401")
     void devePropagarOutrosErros() {
         when(usuarioService.buscarPorIdentificador(IDENTIFICADOR))
-                .thenThrow(new ApplicationException(500, "Erro interno inesperado"));
+                .thenThrow(new IllegalStateException("banco fora do ar"));
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.autenticar(REQUEST));
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> useCase.autenticar(REQUEST));
 
-        assertThat(ex.getErrorCode()).isEqualTo(500);
+        assertThat(ex.getMessage()).isEqualTo("banco fora do ar");
         verify(passwordEncoder, never()).encode(SENHA);
         assertThat(logins("usuario_inexistente")).isZero();
     }
@@ -174,24 +174,23 @@ class AuthenticationUseCaseTest {
     @Test
     @DisplayName("Deve propagar o erro de negócio do cadastro sem contar")
     void devePropagarErroDeNegocioNoCadastro() {
-        doThrow(new ApplicationException(409, "Já existe um usuário cadastrado com este e-mail"))
+        doThrow(new ConflitoException("Já existe um usuário cadastrado com este e-mail"))
                 .when(usuarioService).cadastrar(USUARIO);
 
         assertThatThrownBy(() -> useCase.cadastrarUsuario(CADASTRO))
-                .isInstanceOf(ApplicationException.class)
-                .extracting("errorCode").isEqualTo(409);
+                .isInstanceOf(ConflitoException.class);
         assertThat(meterRegistry.find("oficina.auth.cadastro").counter()).isNull();
     }
 
     @Test
-    @DisplayName("Deve traduzir falha inesperada do cadastro em 500 sem expor a causa")
-    void deveTraduzirFalhaInesperadaNoCadastro() {
+    @DisplayName("Deve deixar a falha inesperada do cadastro subir até o handler (500), sem embrulhar")
+    void devePropagarFalhaInesperadaNoCadastro() {
         doThrow(new IllegalStateException("conexão perdida")).when(usuarioService).cadastrar(USUARIO);
 
         assertThatThrownBy(() -> useCase.cadastrarUsuario(CADASTRO))
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage("Erro ao cadastrar o usuário")
-                .extracting("errorCode").isEqualTo(500);
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("conexão perdida");
+        assertThat(meterRegistry.find("oficina.auth.cadastro").counter()).isNull();
     }
 
     // ---- validação do token -----------------------------------------------------------------------
@@ -215,22 +214,20 @@ class AuthenticationUseCaseTest {
     @Test
     @DisplayName("Deve propagar o 401 do token expirado ou inválido")
     void devePropagar401() {
-        when(jwtTokenProvider.validarToken(TOKEN)).thenThrow(new ApplicationException(401, "Token inválido"));
+        when(jwtTokenProvider.validarToken(TOKEN)).thenThrow(new NaoAutenticadoException("Token inválido"));
 
         assertThatThrownBy(() -> useCase.validarToken("Bearer " + TOKEN))
-                .isInstanceOf(ApplicationException.class)
-                .extracting("errorCode").isEqualTo(401);
+                .isInstanceOf(NaoAutenticadoException.class);
     }
 
     @Test
-    @DisplayName("Deve traduzir falha inesperada na validação em 500")
-    void deveTraduzirFalhaInesperadaNaValidacao() {
+    @DisplayName("Deve deixar a falha inesperada na validação subir até o handler (500), sem embrulhar")
+    void devePropagarFalhaInesperadaNaValidacao() {
         when(jwtTokenProvider.validarToken(TOKEN)).thenThrow(new IllegalStateException("falha"));
 
         assertThatThrownBy(() -> useCase.validarToken("Bearer " + TOKEN))
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage("Erro ao validar o token JWT")
-                .extracting("errorCode").isEqualTo(500);
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("falha");
     }
 
     // ---- apoio ------------------------------------------------------------------------------------
@@ -257,17 +254,15 @@ class AuthenticationUseCaseTest {
         SigninRequest inexistente = new SigninRequest("ninguem", SENHA_LONGA);
         SigninRequest existente = new SigninRequest(IDENTIFICADOR, SENHA_LONGA);
         when(usuarioService.buscarPorIdentificador("ninguem"))
-                .thenThrow(new ApplicationException(404, "Usuário não encontrado"));
+                .thenThrow(new RecursoNaoEncontradoException("Usuário não encontrado"));
         var detalhes = detalhesComSenha(bcrypt.encode(SENHA));
         when(usuarioService.buscarPorIdentificador(IDENTIFICADOR)).thenReturn(detalhes);
 
-        ApplicationException doInexistente = assertThrows(ApplicationException.class,
+        NaoAutenticadoException doInexistente = assertThrows(NaoAutenticadoException.class,
                 () -> comBcryptReal.autenticar(inexistente));
-        ApplicationException doExistente = assertThrows(ApplicationException.class,
+        NaoAutenticadoException doExistente = assertThrows(NaoAutenticadoException.class,
                 () -> comBcryptReal.autenticar(existente));
 
-        assertThat(doInexistente.getErrorCode()).isEqualTo(401);
-        assertThat(doExistente.getErrorCode()).isEqualTo(401);
         assertThat(doInexistente.getMessage()).isEqualTo(doExistente.getMessage());
     }
 }

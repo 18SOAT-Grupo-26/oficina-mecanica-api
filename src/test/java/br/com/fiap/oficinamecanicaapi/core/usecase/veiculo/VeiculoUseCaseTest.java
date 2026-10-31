@@ -10,7 +10,9 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.veiculo.VeiculoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.veiculo.mapper.VeiculoMapper;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -92,9 +94,8 @@ class VeiculoUseCaseTest {
     void deveRejeitarClienteInexistenteNoCadastro() {
         when(clientePortOut.buscarAtivoPorId(CLIENTE_ID)).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.criar(REQUEST));
+        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class, () -> useCase.criar(REQUEST));
 
-        assertThat(exception.getErrorCode()).isEqualTo(404);
         assertThat(exception.getMessage()).isEqualTo("Cliente não encontrado");
         verify(veiculoPortOut, never()).salvar(any(Veiculo.class));
     }
@@ -105,9 +106,8 @@ class VeiculoUseCaseTest {
         when(clientePortOut.buscarAtivoPorId(CLIENTE_ID)).thenReturn(Optional.of(CLIENTE));
         when(veiculoPortOut.existePorPlaca(new Placa(PLACA))).thenReturn(true);
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.criar(REQUEST));
+        ConflitoException exception = assertThrows(ConflitoException.class, () -> useCase.criar(REQUEST));
 
-        assertThat(exception.getErrorCode()).isEqualTo(409);
         verify(veiculoPortOut, never()).salvar(any(Veiculo.class));
     }
 
@@ -116,9 +116,8 @@ class VeiculoUseCaseTest {
     void deveRejeitarPlacaInvalida() {
         VeiculoRequest request = new VeiculoRequest("ABCD123", MARCA, MODELO, ANO, CLIENTE_ID);
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.criar(request));
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class, () -> useCase.criar(request));
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
         verify(clientePortOut, never()).buscarAtivoPorId(CLIENTE_ID);
     }
 
@@ -135,9 +134,8 @@ class VeiculoUseCaseTest {
     void deveRetornarNaoEncontradoPorId() {
         when(veiculoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.buscarPorId(ID));
+        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class, () -> useCase.buscarPorId(ID));
 
-        assertThat(exception.getErrorCode()).isEqualTo(404);
         assertThat(exception.getMessage()).isEqualTo("Veículo não encontrado");
     }
 
@@ -155,10 +153,9 @@ class VeiculoUseCaseTest {
     void deveRetornarNaoEncontradoPorPlaca() {
         when(veiculoPortOut.buscarAtivoPorPlaca(new Placa(PLACA))).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class,
+        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class,
                 () -> useCase.buscarPorPlaca(PLACA));
 
-        assertThat(exception.getErrorCode()).isEqualTo(404);
     }
 
     @Test
@@ -222,10 +219,9 @@ class VeiculoUseCaseTest {
         when(veiculoPortOut.existePorPlaca(new Placa(OUTRA_PLACA))).thenReturn(true);
         VeiculoRequest request = new VeiculoRequest(OUTRA_PLACA, MARCA, MODELO, ANO, CLIENTE_ID);
 
-        ApplicationException exception = assertThrows(ApplicationException.class,
+        ConflitoException exception = assertThrows(ConflitoException.class,
                 () -> useCase.atualizar(ID, request));
 
-        assertThat(exception.getErrorCode()).isEqualTo(409);
         verify(veiculoPortOut, never()).salvar(any(Veiculo.class));
     }
 
@@ -236,10 +232,9 @@ class VeiculoUseCaseTest {
         when(clientePortOut.buscarAtivoPorId(OUTRO_CLIENTE_ID)).thenReturn(Optional.empty());
         VeiculoRequest request = new VeiculoRequest(PLACA, MARCA, MODELO, ANO, OUTRO_CLIENTE_ID);
 
-        ApplicationException exception = assertThrows(ApplicationException.class,
+        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class,
                 () -> useCase.atualizar(ID, request));
 
-        assertThat(exception.getErrorCode()).isEqualTo(404);
         assertThat(exception.getMessage()).isEqualTo("Cliente não encontrado");
     }
 
@@ -259,9 +254,8 @@ class VeiculoUseCaseTest {
     void deveRetornarNaoEncontradoNaDesativacao() {
         when(veiculoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.desativar(ID));
+        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class, () -> useCase.desativar(ID));
 
-        assertThat(exception.getErrorCode()).isEqualTo(404);
         verify(veiculoPortOut, never()).salvar(any(Veiculo.class));
     }
 

@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,7 +21,7 @@ public class PecaInsumoController implements PecaInsumoAPI {
     }
 
     @Override
-    public ResponseEntity<PecaInsumoResponse> criar(PecaInsumoRequest request) throws ApplicationException {
+    public ResponseEntity<PecaInsumoResponse> criar(PecaInsumoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
     }
 
@@ -32,18 +31,18 @@ public class PecaInsumoController implements PecaInsumoAPI {
     }
 
     @Override
-    public ResponseEntity<PecaInsumoResponse> buscarPorId(Long id) throws ApplicationException {
+    public ResponseEntity<PecaInsumoResponse> buscarPorId(Long id) {
         return ResponseEntity.ok(useCase.buscarPorId(id));
     }
 
     @Override
-    public ResponseEntity<PecaInsumoResponse> atualizar(Long id, PecaInsumoRequest request) throws ApplicationException {
+    public ResponseEntity<PecaInsumoResponse> atualizar(Long id, PecaInsumoRequest request) {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> excluir(Long id) throws ApplicationException {
+    public ResponseEntity<Void> excluir(Long id) {
         useCase.excluir(id);
         return ResponseEntity.noContent().build();
     }

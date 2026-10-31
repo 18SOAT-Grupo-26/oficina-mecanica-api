@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.GetLocalTime;
 import lombok.Getter;
 
@@ -68,20 +68,19 @@ public class Veiculo {
 
     private void aplicarDados(Placa placa, String marca, String modelo, Integer ano, Long clienteId) {
         if (placa == null) {
-            throw new ApplicationException(400, "A placa do veículo é obrigatória");
+            throw new DadoInvalidoException("A placa do veículo é obrigatória");
         }
         if (marca == null || marca.isBlank()) {
-            throw new ApplicationException(400, "A marca do veículo é obrigatória");
+            throw new DadoInvalidoException("A marca do veículo é obrigatória");
         }
         if (modelo == null || modelo.isBlank()) {
-            throw new ApplicationException(400, "O modelo do veículo é obrigatório");
+            throw new DadoInvalidoException("O modelo do veículo é obrigatório");
         }
         if (ano == null || ano < ANO_MINIMO || ano > anoMaximo()) {
-            throw new ApplicationException(400,
-                    "Ano inválido — deve estar entre " + ANO_MINIMO + " e " + anoMaximo());
+            throw new DadoInvalidoException("Ano inválido — deve estar entre " + ANO_MINIMO + " e " + anoMaximo());
         }
         if (clienteId == null) {
-            throw new ApplicationException(400, "O cliente do veículo é obrigatório");
+            throw new DadoInvalidoException("O cliente do veículo é obrigatório");
         }
         this.placa = placa;
         this.marca = marca.trim();

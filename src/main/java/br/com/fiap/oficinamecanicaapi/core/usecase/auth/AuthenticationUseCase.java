@@ -6,7 +6,8 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePor
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.CadastroRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.NaoAutenticadoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.MascaraDados;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -47,25 +48,18 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
      */
     @Override
     @Transactional
-    public void cadastrarUsuario(CadastroRequest request) throws ApplicationException {
-        try {
-            log.info("action=register_start username={}", request.nomeUsuario());
+    public void cadastrarUsuario(CadastroRequest request) {
+        log.info("action=register_start username={}", request.nomeUsuario());
 
-            usuarioService.cadastrar(new Usuario(request.nome(), request.email(), request.nomeUsuario(),
-                    request.senha(), request.trocaSenhaObrigatoria(), request.perfil(), request.clienteId()));
-            meterRegistry.counter("oficina.auth.cadastro", "perfil", request.perfil().name()).increment();
+        usuarioService.cadastrar(new Usuario(request.nome(), request.email(), request.nomeUsuario(),
+                request.senha(), request.trocaSenhaObrigatoria(), request.perfil(), request.clienteId()));
+        meterRegistry.counter("oficina.auth.cadastro", "perfil", request.perfil().name()).increment();
 
-            log.info("action=register_success username={}", request.nomeUsuario());
-        } catch (ApplicationException e) {
-            throw e;
-        } catch (Exception e) {
-            log.error("action=register_error username={}", request.nomeUsuario(), e);
-            throw new ApplicationException(500, "Erro ao cadastrar o usuário");
-        }
+        log.info("action=register_success username={}", request.nomeUsuario());
     }
 
     @Override
-    public AuthToken autenticar(SigninRequest request) throws ApplicationException {
+    public AuthToken autenticar(SigninRequest request) {
         log.info("action=signin_start identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
         limiteTentativas.verificarBloqueio(request.identificador());
 
@@ -76,7 +70,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
                 contarLogin("senha_invalida");
                 log.warn("action=signin_invalid_password identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
                 limiteTentativas.registrarFalha(request.identificador());
-                throw new ApplicationException(401, "Credenciais inválidas");
+                throw new NaoAutenticadoException("Credenciais inválidas");
             }
 
             String token = BEARER_PREFIX + jwtTokenProvider.gerarToken(detalhesUsuario);
@@ -89,10 +83,7 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
                     .token(token)
                     .trocaSenhaObrigatoria(detalhesUsuario.usuario().trocaSenhaObrigatoria())
                     .build();
-        } catch (ApplicationException e) {
-            if (e.getErrorCode() != 404) {
-                throw e;
-            }
+        } catch (RecursoNaoEncontradoException e) {
             // Usuário inexistente: mesma resposta e mesmo custo de bcrypt da senha errada, para nem o status
             // nem o tempo revelarem quais logins existem. Usa matches, e não encode: o bcrypt recusa no encode
             // senha com mais de 72 bytes, e o 500 resultante voltaria a revelar que o usuário não existe.
@@ -100,12 +91,12 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
             log.warn("action=signin_user_not_found identifier={}", MascaraDados.mascararIdentificador(request.identificador()));
             contarLogin("usuario_inexistente");
             limiteTentativas.registrarFalha(request.identificador());
-            throw new ApplicationException(401, "Credenciais inválidas");
+            throw new NaoAutenticadoException("Credenciais inválidas");
         }
     }
 
     @Override
-    public Boolean validarToken(String token) throws ApplicationException {
+    public Boolean validarToken(String token) {
         log.debug("action=jwt_validate_start");
 
         String rawToken = token != null && token.startsWith(BEARER_PREFIX)
@@ -120,12 +111,9 @@ public class AuthenticationUseCase implements AuthenticationUseCasePortIn {
                 log.warn("action=jwt_validate_invalid");
             }
             return valido;
-        } catch (ApplicationException e) {
+        } catch (NaoAutenticadoException e) {
             log.warn("action=jwt_validate_error error={}", e.getMessage());
             throw e;
-        } catch (Exception e) {
-            log.error("action=jwt_validate_error error={}", e.getMessage());
-            throw new ApplicationException(500, "Erro ao validar o token JWT");
         }
     }
 

@@ -2,7 +2,6 @@ package br.com.fiap.oficinamecanicaapi.controller.cliente;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoResponse;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,8 +26,7 @@ public interface MinhasOrdensAPI {
     @ApiResponse(responseCode = "200", description = "OS do cliente", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
     @ApiResponse(responseCode = "403", description = "Perfil diferente de CLIENTE", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping
-    ResponseEntity<List<OrdemServicoResponse>> listar(@Parameter(hidden = true) @AuthenticationPrincipal DetalhesUsuario usuario)
-            throws ApplicationException;
+    ResponseEntity<List<OrdemServicoResponse>> listar(@Parameter(hidden = true) @AuthenticationPrincipal DetalhesUsuario usuario);
 
     @Operation(summary = "Consultar minha OS", description = "Status, itens e histórico. A OS de outro cliente responde 404.",
             tags = "Acompanhamento da OS")
@@ -37,5 +35,5 @@ public interface MinhasOrdensAPI {
     @ApiResponse(responseCode = "404", description = "OS não encontrada ou de outro cliente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/{id}")
     ResponseEntity<OrdemServicoResponse> consultar(@Parameter(hidden = true) @AuthenticationPrincipal DetalhesUsuario usuario,
-                                                   @PathVariable Long id) throws ApplicationException;
+                                                   @PathVariable Long id);
 }

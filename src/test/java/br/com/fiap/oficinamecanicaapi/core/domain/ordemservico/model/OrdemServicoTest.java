@@ -1,6 +1,9 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DominioException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -50,8 +53,8 @@ class OrdemServicoTest {
         @Test
         @DisplayName("Deve recusar abrir a OS sem cliente ou sem veículo com erro 400")
         void deveExigirClienteEVeiculoNaAbertura() {
-            assertErro(400, "O cliente da OS é obrigatório", () -> OrdemServico.abrir(null, ID_VEICULO, T0));
-            assertErro(400, "O veículo da OS é obrigatório", () -> OrdemServico.abrir(ID_CLIENTE, null, T0));
+            assertErro(DadoInvalidoException.class, "O cliente da OS é obrigatório", () -> OrdemServico.abrir(null, ID_VEICULO, T0));
+            assertErro(DadoInvalidoException.class, "O veículo da OS é obrigatório", () -> OrdemServico.abrir(ID_CLIENTE, null, T0));
         }
 
         @Test
@@ -72,7 +75,7 @@ class OrdemServicoTest {
         void deveRecusarTransicaoInvalida() {
             OrdemServico os = osEmDiagnostico();
 
-            assertErro(409, "Transição inválida: EM_DIAGNOSTICO → FINALIZADA", () -> os.finalizar(T1));
+            assertErro(ConflitoException.class, "Transição inválida: EM_DIAGNOSTICO → FINALIZADA", () -> os.finalizar(T1));
             assertThat(os.getStatus()).isEqualTo(EM_DIAGNOSTICO);
             assertThat(os.getHistorico()).hasSize(2);
         }
@@ -89,9 +92,9 @@ class OrdemServicoTest {
         @Test
         @DisplayName("Deve exigir data/hora para abrir e para mudar de status")
         void deveExigirDataHora() {
-            assertErro(400, "A data/hora da operação é obrigatória", () -> OrdemServico.abrir(ID_CLIENTE, ID_VEICULO, null));
+            assertErro(DadoInvalidoException.class, "A data/hora da operação é obrigatória", () -> OrdemServico.abrir(ID_CLIENTE, ID_VEICULO, null));
             OrdemServico os = osEmDiagnostico();
-            assertErro(400, "A data/hora da operação é obrigatória", () -> os.aguardarAprovacao(null));
+            assertErro(DadoInvalidoException.class, "A data/hora da operação é obrigatória", () -> os.aguardarAprovacao(null));
         }
 
         @Test
@@ -158,8 +161,8 @@ class OrdemServicoTest {
         void deveRecusarRemoverItemInexistente() {
             OrdemServico os = osEmDiagnosticoComItens();
 
-            assertErro(404, "Serviço não encontrado na OS", () -> os.removerServico(999L));
-            assertErro(404, "Peça não encontrada na OS", () -> os.removerPeca(999L));
+            assertErro(RecursoNaoEncontradoException.class, "Serviço não encontrado na OS", () -> os.removerServico(999L));
+            assertErro(RecursoNaoEncontradoException.class, "Peça não encontrada na OS", () -> os.removerPeca(999L));
         }
 
         @Test
@@ -167,8 +170,8 @@ class OrdemServicoTest {
         void deveRecusarItemDuplicado() {
             OrdemServico os = osEmDiagnosticoComItens();
 
-            assertErro(409, "Serviço já incluído na OS", () -> os.incluirServico(ID_SERVICO, "Troca", ValorMonetario.de("1"), 1));
-            assertErro(409, "Peça já incluída na OS", () -> os.incluirPeca(ID_PECA, "Filtro", ValorMonetario.de("1"), 1));
+            assertErro(ConflitoException.class, "Serviço já incluído na OS", () -> os.incluirServico(ID_SERVICO, "Troca", ValorMonetario.de("1"), 1));
+            assertErro(ConflitoException.class, "Peça já incluída na OS", () -> os.incluirPeca(ID_PECA, "Filtro", ValorMonetario.de("1"), 1));
         }
 
         @Test
@@ -176,7 +179,7 @@ class OrdemServicoTest {
         void deveValidarItemAoIncluir() {
             OrdemServico os = osEmDiagnostico();
 
-            assertErro(400, "A quantidade do item deve ser maior que zero",
+            assertErro(DadoInvalidoException.class, "A quantidade do item deve ser maior que zero",
                     () -> os.incluirPeca(ID_PECA, "Filtro", ValorMonetario.de("30"), 0));
             assertThat(os.getItensPeca()).isEmpty();
         }
@@ -187,10 +190,10 @@ class OrdemServicoTest {
             OrdemServico os = osAguardandoAprovacao();
             String mensagem = "Itens só podem ser alterados com a OS em RECEBIDA ou EM_DIAGNOSTICO";
 
-            assertErro(409, mensagem, () -> os.incluirServico(8L, "Alinhamento", ValorMonetario.de("80"), 1));
-            assertErro(409, mensagem, () -> os.incluirPeca(4L, "Vela", ValorMonetario.de("20"), 1));
-            assertErro(409, mensagem, () -> os.removerServico(ID_SERVICO));
-            assertErro(409, mensagem, () -> os.removerPeca(ID_PECA));
+            assertErro(ConflitoException.class, mensagem, () -> os.incluirServico(8L, "Alinhamento", ValorMonetario.de("80"), 1));
+            assertErro(ConflitoException.class, mensagem, () -> os.incluirPeca(4L, "Vela", ValorMonetario.de("20"), 1));
+            assertErro(ConflitoException.class, mensagem, () -> os.removerServico(ID_SERVICO));
+            assertErro(ConflitoException.class, mensagem, () -> os.removerPeca(ID_PECA));
             assertThat(os.getItensServico()).hasSize(1);
             assertThat(os.getItensPeca()).hasSize(1);
         }
@@ -224,7 +227,7 @@ class OrdemServicoTest {
         void deveRecusarAguardarAprovacaoSemItens() {
             OrdemServico os = osEmDiagnostico();
 
-            assertErro(409, "A OS precisa de ao menos um item para gerar orçamento", () -> os.aguardarAprovacao(T2));
+            assertErro(ConflitoException.class, "A OS precisa de ao menos um item para gerar orçamento", () -> os.aguardarAprovacao(T2));
             assertThat(os.getStatus()).isEqualTo(EM_DIAGNOSTICO);
         }
 
@@ -246,8 +249,8 @@ class OrdemServicoTest {
             OrdemServico emExecucao = osAguardandoAprovacao();
             emExecucao.iniciarExecucao(T3);
 
-            assertErro(409, "Transição inválida: EM_DIAGNOSTICO → EM_EXECUCAO", () -> emDiagnostico.iniciarExecucao(T3));
-            assertErro(409, "Transição inválida: EM_EXECUCAO → EM_EXECUCAO", () -> emExecucao.iniciarExecucao(T4));
+            assertErro(ConflitoException.class, "Transição inválida: EM_DIAGNOSTICO → EM_EXECUCAO", () -> emDiagnostico.iniciarExecucao(T3));
+            assertErro(ConflitoException.class, "Transição inválida: EM_EXECUCAO → EM_EXECUCAO", () -> emExecucao.iniciarExecucao(T4));
             assertThat(emExecucao.getHistorico()).hasSize(4);
         }
 
@@ -256,8 +259,8 @@ class OrdemServicoTest {
         void deveRecusarComandosForaDeOrdem() {
             OrdemServico os = osEmDiagnostico();
 
-            assertErro(409, "Transição inválida: EM_DIAGNOSTICO → FINALIZADA", () -> os.finalizar(T3));
-            assertErro(409, "Transição inválida: EM_DIAGNOSTICO → ENTREGUE", () -> os.entregar(T3));
+            assertErro(ConflitoException.class, "Transição inválida: EM_DIAGNOSTICO → FINALIZADA", () -> os.finalizar(T3));
+            assertErro(ConflitoException.class, "Transição inválida: EM_DIAGNOSTICO → ENTREGUE", () -> os.entregar(T3));
             assertThat(os.getStatus()).isEqualTo(EM_DIAGNOSTICO);
         }
 
@@ -301,10 +304,10 @@ class OrdemServicoTest {
             OrdemServico cancelada = osEmDiagnostico();
             cancelada.cancelar(T1);
 
-            assertErro(409, "A OS não pode ser editada com status EM_EXECUCAO", emExecucao::exigirEditavel);
-            assertErro(409, "A OS não pode ser editada com status FINALIZADA", osFinalizada()::exigirEditavel);
-            assertErro(409, "A OS não pode ser editada com status ENTREGUE", entregue::exigirEditavel);
-            assertErro(409, "A OS não pode ser editada com status CANCELADA", cancelada::exigirEditavel);
+            assertErro(ConflitoException.class, "A OS não pode ser editada com status EM_EXECUCAO", emExecucao::exigirEditavel);
+            assertErro(ConflitoException.class, "A OS não pode ser editada com status FINALIZADA", osFinalizada()::exigirEditavel);
+            assertErro(ConflitoException.class, "A OS não pode ser editada com status ENTREGUE", entregue::exigirEditavel);
+            assertErro(ConflitoException.class, "A OS não pode ser editada com status CANCELADA", cancelada::exigirEditavel);
         }
     }
 
@@ -333,9 +336,9 @@ class OrdemServicoTest {
             OrdemServico cancelada = osEmDiagnostico();
             cancelada.cancelar(T1);
 
-            assertErro(409, "Transição inválida: EM_EXECUCAO → CANCELADA", () -> emExecucao.cancelar(T4));
-            assertErro(409, "Transição inválida: FINALIZADA → CANCELADA", () -> osFinalizada().cancelar(T6));
-            assertErro(409, "Transição inválida: CANCELADA → CANCELADA", () -> cancelada.cancelar(T2));
+            assertErro(ConflitoException.class, "Transição inválida: EM_EXECUCAO → CANCELADA", () -> emExecucao.cancelar(T4));
+            assertErro(ConflitoException.class, "Transição inválida: FINALIZADA → CANCELADA", () -> osFinalizada().cancelar(T6));
+            assertErro(ConflitoException.class, "Transição inválida: CANCELADA → CANCELADA", () -> cancelada.cancelar(T2));
             assertThat(emExecucao.getStatus()).isEqualTo(EM_EXECUCAO);
             assertThat(cancelada.getHistorico()).hasSize(3);
         }
@@ -343,7 +346,7 @@ class OrdemServicoTest {
         @Test
         @DisplayName("Deve exigir data/hora para cancelar")
         void deveExigirDataHoraParaCancelar() {
-            assertErro(400, "A data/hora da operação é obrigatória", () -> osEmDiagnostico().cancelar(null));
+            assertErro(DadoInvalidoException.class, "A data/hora da operação é obrigatória", () -> osEmDiagnostico().cancelar(null));
         }
 
         @Test
@@ -356,10 +359,10 @@ class OrdemServicoTest {
             assertThat(aguardando.getHistorico()).last()
                     .isEqualTo(new RegistroHistorico(StatusOrdemServico.AGUARDANDO_APROVACAO, CANCELADA, T3));
             for (OrdemServico os : List.of(osRecebidaReconstituida(), osEmDiagnostico(), osFinalizada())) {
-                assertErro(409, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO",
+                assertErro(ConflitoException.class, "Só é possível rejeitar o orçamento com a OS em AGUARDANDO_APROVACAO",
                         () -> os.rejeitarOrcamento(T4));
             }
-            assertErro(400, "A data/hora da operação é obrigatória", () -> osAguardandoAprovacao().rejeitarOrcamento(null));
+            assertErro(DadoInvalidoException.class, "A data/hora da operação é obrigatória", () -> osAguardandoAprovacao().rejeitarOrcamento(null));
         }
     }
 
@@ -432,9 +435,8 @@ class OrdemServicoTest {
         return os;
     }
 
-    private static void assertErro(int codigo, String mensagem, Executable acao) {
-        ApplicationException exception = assertThrows(ApplicationException.class, acao);
-        assertThat(exception.getErrorCode()).isEqualTo(codigo);
+    private static void assertErro(Class<? extends DominioException> tipo, String mensagem, Executable acao) {
+        DominioException exception = assertThrows(tipo, acao);
         assertThat(exception.getMessage()).isEqualTo(mensagem);
     }
 }

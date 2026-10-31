@@ -1,6 +1,11 @@
 package br.com.fiap.oficinamecanicaapi.shared.handler;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DominioException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.LimiteExcedidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.NaoAutenticadoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import br.com.fiap.oficinamecanicaapi.shared.utils.GetLocalTime;
 import io.micrometer.core.instrument.Metrics;
@@ -37,32 +42,32 @@ public class HandlerException {
 
     private static final Logger log = LoggerFactory.getLogger(HandlerException.class);
 
-    @ExceptionHandler(ApplicationException.class)
-    public ResponseEntity<ErrorTemplate> handleApplicationException(ApplicationException e) {
-        HttpStatus status = HttpStatus.resolve(e.getErrorCode());
-        if (status == null) {
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-        }
+    /**
+     * Erros do domínio: o status sai do tipo da exceção, e não de um número dentro dela. O switch é exaustivo
+     * porque {@link DominioException} é selada.
+     */
+    @ExceptionHandler(DominioException.class)
+    public ResponseEntity<ErrorTemplate> handleDominio(DominioException e) {
+        HttpStatus status = switch (e) {
+            case DadoInvalidoException _ -> HttpStatus.BAD_REQUEST;
+            case NaoAutenticadoException _ -> HttpStatus.UNAUTHORIZED;
+            case RecursoNaoEncontradoException _ -> HttpStatus.NOT_FOUND;
+            case ConflitoException _ -> HttpStatus.CONFLICT;
+            case LimiteExcedidoException _ -> HttpStatus.TOO_MANY_REQUESTS;
+        };
 
-        if (status.is5xxServerError()) {
-            contarErro(status, "aplicacao");
-            if (log.isErrorEnabled()) {
-                log.error("action=erro_aplicacao status={} rota={} traceId={} mensagem={}",
-                        status.value(), rota(), e.getTraceId(), e.getMessage(), e);
-            }
-        } else {
-            contarErro(status, "negocio");
-            if (log.isWarnEnabled()) {
-                log.warn("action=erro_negocio status={} rota={} traceId={} mensagem={}",
-                        status.value(), rota(), e.getTraceId(), e.getMessage());
-            }
+        String traceId = UUID.randomUUID().toString();
+        contarErro(status, "negocio");
+        if (log.isWarnEnabled()) {
+            log.warn("action=erro_negocio status={} rota={} traceId={} mensagem={}",
+                    status.value(), rota(), traceId, e.getMessage());
         }
 
         ErrorTemplate errorBody = ErrorTemplate.builder()
-                .errorCode(e.getErrorCode())
+                .errorCode(status.value())
                 .message(e.getMessage())
-                .timestamp(e.getTimestamp())
-                .traceId(e.getTraceId())
+                .timestamp(GetLocalTime.getLocalTime())
+                .traceId(traceId)
                 .build();
         return ResponseEntity.status(status).body(errorBody);
     }
@@ -192,7 +197,7 @@ public class HandlerException {
     }
 
     /**
-     * oficina.erros{status, tipo}: negocio/requisicao = recusas esperadas (4xx); aplicacao/servidor = falhas (5xx).
+     * oficina.erros{status, tipo}: negocio/requisicao = recusas esperadas (4xx); servidor = falhas (5xx).
      */
     private static void contarErro(HttpStatus status, String tipo) {
         Metrics.counter("oficina.erros", "status", String.valueOf(status.value()), "tipo", tipo).increment();

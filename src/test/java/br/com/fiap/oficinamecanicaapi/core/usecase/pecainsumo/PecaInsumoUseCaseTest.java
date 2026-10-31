@@ -6,7 +6,9 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.out.pecainsumo.PecaInsumoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.pecainsumo.mapper.PecaInsumoMapper;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,9 +77,8 @@ class PecaInsumoUseCaseTest {
     void criarRejeitaNomeDuplicado() {
         when(pecaInsumoPortOut.existePorNomeNormalizado("oleo do motor")).thenReturn(true);
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.criar(REQUEST));
+        ConflitoException ex = assertThrows(ConflitoException.class, () -> useCase.criar(REQUEST));
 
-        assertThat(ex.getErrorCode()).isEqualTo(409);
         verify(pecaInsumoPortOut, never()).excluir(any());
     }
 
@@ -86,9 +87,8 @@ class PecaInsumoUseCaseTest {
     void criarRejeitaReservadoMaiorQueQuantidade() {
         PecaInsumoRequest invalido = new PecaInsumoRequest("Filtro", null, 2, 5, BigDecimal.TEN);
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.criar(invalido));
+        DadoInvalidoException ex = assertThrows(DadoInvalidoException.class, () -> useCase.criar(invalido));
 
-        assertThat(ex.getErrorCode()).isEqualTo(422);
     }
 
     @Test
@@ -119,9 +119,8 @@ class PecaInsumoUseCaseTest {
     void buscarPorIdNaoEncontrado() {
         when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.buscarPorId(ID));
+        RecursoNaoEncontradoException ex = assertThrows(RecursoNaoEncontradoException.class, () -> useCase.buscarPorId(ID));
 
-        assertThat(ex.getErrorCode()).isEqualTo(404);
     }
 
     @Test
@@ -145,10 +144,9 @@ class PecaInsumoUseCaseTest {
         when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(entidade(ID, "Filtro")));
         when(pecaInsumoPortOut.existePorNomeNormalizado("correia")).thenReturn(true);
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () ->
+        ConflitoException ex = assertThrows(ConflitoException.class, () ->
                 useCase.atualizar(ID, new PecaInsumoRequest("Correia", null, 1, 0, BigDecimal.ONE)));
 
-        assertThat(ex.getErrorCode()).isEqualTo(409);
     }
 
     @Test
@@ -167,7 +165,7 @@ class PecaInsumoUseCaseTest {
     void excluirNaoEncontrado() {
         when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
 
-        assertThrows(ApplicationException.class, () -> useCase.excluir(ID));
+        assertThrows(RecursoNaoEncontradoException.class, () -> useCase.excluir(ID));
         verify(pecaInsumoPortOut, never()).excluir(any());
     }
 
@@ -203,9 +201,8 @@ class PecaInsumoUseCaseTest {
     @DisplayName("criar responde 422 para dados inválidos, sem consultar a persistência")
     void criarValidaCampos(PecaInsumoRequest request, String mensagem) {
         assertThatThrownBy(() -> useCase.criar(request))
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage(mensagem)
-                .extracting("errorCode").isEqualTo(422);
+                .isInstanceOf(DadoInvalidoException.class)
+                .hasMessage(mensagem);
         verifyNoInteractions(pecaInsumoPortOut);
     }
 
@@ -255,8 +252,7 @@ class PecaInsumoUseCaseTest {
         var alteracao = request("Filtro", 1, 0, "1");
 
         assertThatThrownBy(() -> useCase.atualizar(ID, alteracao))
-                .isInstanceOf(ApplicationException.class)
-                .extracting("errorCode").isEqualTo(404);
+                .isInstanceOf(RecursoNaoEncontradoException.class);
 
         verify(pecaInsumoPortOut, never()).salvar(any());
     }

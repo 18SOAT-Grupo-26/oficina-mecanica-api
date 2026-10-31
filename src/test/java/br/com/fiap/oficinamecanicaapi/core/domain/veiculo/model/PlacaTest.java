@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,9 +43,8 @@ class PlacaTest {
     })
     @DisplayName("Deve rejeitar placa fora dos formatos antigo e Mercosul com erro 400")
     void deveRejeitarPlacaInvalida(String valor) {
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> new Placa(valor));
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class, () -> new Placa(valor));
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
         assertThat(exception.getMessage()).isEqualTo(MENSAGEM_INVALIDA);
     }
 

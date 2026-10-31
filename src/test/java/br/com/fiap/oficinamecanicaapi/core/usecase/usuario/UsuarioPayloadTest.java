@@ -2,7 +2,7 @@ package br.com.fiap.oficinamecanicaapi.core.usecase.usuario;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -59,8 +59,7 @@ class UsuarioPayloadTest {
     }
 
     private static void assertErro400(Executable chamada) {
-        ApplicationException exception = assertThrows(ApplicationException.class, chamada);
-        assertThat(exception.getErrorCode()).isEqualTo(400);
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class, chamada);
     }
 
     @Test
@@ -77,8 +76,7 @@ class UsuarioPayloadTest {
         Usuario usuario = new Usuario("Ana", "ana@oficina.com.br", "ana", "Admin@123", true, Perfil.FUNCIONARIO);
 
         assertThatThrownBy(() -> usuarioPayload.validarUsuario(usuario))
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage("O campo trocaSenhaObrigatoria é obrigatório")
-                .extracting("errorCode").isEqualTo(400);
+                .isInstanceOf(DadoInvalidoException.class)
+                .hasMessage("O campo trocaSenhaObrigatoria é obrigatório");
     }
 }

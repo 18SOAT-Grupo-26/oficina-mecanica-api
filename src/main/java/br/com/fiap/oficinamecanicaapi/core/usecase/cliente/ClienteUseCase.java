@@ -8,7 +8,8 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.cliente.mapper.ClienteMapper;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,7 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
 
     @Override
     @Transactional
-    public ClienteResponse criar(ClienteRequest request) throws ApplicationException {
+    public ClienteResponse criar(ClienteRequest request) {
         Documento documento = new Documento(request.documento());
         validarDocumentoDisponivel(documento);
 
@@ -49,13 +50,13 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public ClienteResponse buscarPorId(Long id) throws ApplicationException {
+    public ClienteResponse buscarPorId(Long id) {
         return clienteMapper.toResponse(buscarClienteAtivo(id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ClienteResponse buscarPorDocumento(String documento) throws ApplicationException {
+    public ClienteResponse buscarPorDocumento(String documento) {
         return clientePortOut.buscarAtivoPorDocumento(new Documento(documento))
                 .map(clienteMapper::toResponse)
                 .orElseThrow(ClienteUseCase::clienteNaoEncontrado);
@@ -70,7 +71,7 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
 
     @Override
     @Transactional
-    public ClienteResponse atualizar(Long id, ClienteRequest request) throws ApplicationException {
+    public ClienteResponse atualizar(Long id, ClienteRequest request) {
         Cliente cliente = buscarClienteAtivo(id);
         Documento documento = new Documento(request.documento());
         if (!documento.equals(cliente.getDocumento())) {
@@ -88,7 +89,7 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
 
     @Override
     @Transactional
-    public void desativar(Long id) throws ApplicationException {
+    public void desativar(Long id) {
         Cliente cliente = buscarClienteAtivo(id);
         cliente.desativar();
         clientePortOut.salvar(cliente);
@@ -103,12 +104,12 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
 
     private void validarDocumentoDisponivel(Documento documento) {
         if (clientePortOut.existePorDocumento(documento)) {
-            throw new ApplicationException(409, "Já existe um cliente cadastrado com este documento");
+            throw new ConflitoException("Já existe um cliente cadastrado com este documento");
         }
     }
 
-    private static ApplicationException clienteNaoEncontrado() {
-        return new ApplicationException(404, "Cliente não encontrado");
+    private static RecursoNaoEncontradoException clienteNaoEncontrado() {
+        return new RecursoNaoEncontradoException("Cliente não encontrado");
     }
 
     private void contar(String operacao) {

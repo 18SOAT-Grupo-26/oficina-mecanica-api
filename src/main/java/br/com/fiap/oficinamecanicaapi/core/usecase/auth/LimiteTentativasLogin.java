@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.auth;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.LimiteExcedidoException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -35,7 +35,7 @@ public class LimiteTentativasLogin {
         this.janela = Duration.ofMinutes(janelaMinutos);
     }
 
-    public void verificarBloqueio(String identificador) throws ApplicationException {
+    public void verificarBloqueio(String identificador) {
         String chave = chave(identificador);
         Tentativas atual = tentativas.get(chave);
         if (atual == null) {
@@ -46,7 +46,7 @@ public class LimiteTentativasLogin {
             return;
         }
         if (atual.falhas() >= maxTentativas) {
-            throw new ApplicationException(429, "Muitas tentativas de login. Tente novamente em alguns minutos.");
+            throw new LimiteExcedidoException("Muitas tentativas de login. Tente novamente em alguns minutos.");
         }
     }
 

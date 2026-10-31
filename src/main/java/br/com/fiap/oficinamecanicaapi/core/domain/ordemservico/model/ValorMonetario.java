@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -17,11 +17,11 @@ public record ValorMonetario(BigDecimal valor) {
 
     public ValorMonetario {
         if (valor == null) {
-            throw new ApplicationException(400, "O valor monetário é obrigatório");
+            throw new DadoInvalidoException("O valor monetário é obrigatório");
         }
         valor = valor.setScale(CASAS_DECIMAIS, RoundingMode.HALF_EVEN);
         if (valor.signum() < 0) {
-            throw new ApplicationException(400, "O valor monetário não pode ser negativo");
+            throw new DadoInvalidoException("O valor monetário não pode ser negativo");
         }
     }
 

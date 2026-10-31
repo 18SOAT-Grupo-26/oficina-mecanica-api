@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.shared.utils.helpers;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
@@ -32,35 +32,31 @@ public class PoliticaSenha {
         return ALLOWED_SPECIALS;
     }
 
-    public void validar(String raw) throws ApplicationException {
+    public void validar(String raw) {
         if (raw == null) {
-            throw new ApplicationException(400, "A senha é obrigatória");
+            throw new DadoInvalidoException("A senha é obrigatória");
         }
         if (raw.length() < MIN_LENGTH) {
-            throw new ApplicationException(400,
-                    "A senha deve ter no mínimo " + MIN_LENGTH + " caracteres");
+            throw new DadoInvalidoException("A senha deve ter no mínimo " + MIN_LENGTH + " caracteres");
         }
         if (raw.length() > MAX_LENGTH) {
-            throw new ApplicationException(400,
-                    "A senha deve ter no máximo " + MAX_LENGTH + " caracteres");
+            throw new DadoInvalidoException("A senha deve ter no máximo " + MAX_LENGTH + " caracteres");
         }
         if (!ALLOWED_CHARS.matcher(raw).matches()) {
-            throw new ApplicationException(400,
-                    "A senha contém caracteres não permitidos. Especiais permitidos: "
+            throw new DadoInvalidoException("A senha contém caracteres não permitidos. Especiais permitidos: "
                             + ALLOWED_SPECIALS);
         }
         if (!HAS_UPPER.matcher(raw).find()) {
-            throw new ApplicationException(400, "A senha deve conter uma letra maiúscula");
+            throw new DadoInvalidoException("A senha deve conter uma letra maiúscula");
         }
         if (!HAS_LOWER.matcher(raw).find()) {
-            throw new ApplicationException(400, "A senha deve conter uma letra minúscula");
+            throw new DadoInvalidoException("A senha deve conter uma letra minúscula");
         }
         if (!HAS_DIGIT.matcher(raw).find()) {
-            throw new ApplicationException(400, "A senha deve conter um número");
+            throw new DadoInvalidoException("A senha deve conter um número");
         }
         if (!HAS_SPECIAL.matcher(raw).find()) {
-            throw new ApplicationException(400,
-                    "A senha deve conter um destes caracteres especiais: " + ALLOWED_SPECIALS);
+            throw new DadoInvalidoException("A senha deve conter um destes caracteres especiais: " + ALLOWED_SPECIALS);
         }
     }
 

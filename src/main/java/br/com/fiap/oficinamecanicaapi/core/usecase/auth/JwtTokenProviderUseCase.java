@@ -3,7 +3,7 @@ package br.com.fiap.oficinamecanicaapi.core.usecase.auth;
 import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SegredoJwt;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.NaoAutenticadoException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -35,39 +35,35 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
     }
 
     @Override
-    public String gerarToken(DetalhesUsuario detalhesUsuario) throws ApplicationException {
-        try {
-            Date now = new Date();
-            Date expirationDate = new Date(now.getTime() + Duration.ofMinutes(expiracaoMinutos).toMillis());
+    public String gerarToken(DetalhesUsuario detalhesUsuario) {
+        // sem catch genérico: com a chave validada na subida (SegredoJwtConfig), uma falha aqui é inesperada e
+        // sobe até o HandlerException, que responde 500 e loga a causa
+        Date now = new Date();
+        Date expirationDate = new Date(now.getTime() + Duration.ofMinutes(expiracaoMinutos).toMillis());
 
-            Set<String> permissoes = detalhesUsuario.permissoes() != null
-                    ? detalhesUsuario.permissoes()
-                    : Set.of();
+        Set<String> permissoes = detalhesUsuario.permissoes() != null
+                ? detalhesUsuario.permissoes()
+                : Set.of();
 
-            String token = Jwts.builder()
-                    .claim("username", detalhesUsuario.usuario().nomeUsuario())
-                    .claim("name", detalhesUsuario.usuario().nome())
-                    .claim("email", detalhesUsuario.usuario().email())
-                    .claim("role", detalhesUsuario.usuario().perfil().name())
-                    .claim("permissions", permissoes)
-                    .issuedAt(now)
-                    .expiration(expirationDate)
-                    .signWith(Keys.hmacShaKeyFor(getSigningKey()), SignatureAlgorithm.HS512)
-                    .compact();
+        String token = Jwts.builder()
+                .claim("username", detalhesUsuario.usuario().nomeUsuario())
+                .claim("name", detalhesUsuario.usuario().nome())
+                .claim("email", detalhesUsuario.usuario().email())
+                .claim("role", detalhesUsuario.usuario().perfil().name())
+                .claim("permissions", permissoes)
+                .issuedAt(now)
+                .expiration(expirationDate)
+                .signWith(Keys.hmacShaKeyFor(getSigningKey()), SignatureAlgorithm.HS512)
+                .compact();
 
-            log.debug("action=jwt_emitido username={} perfil={} expiraEm={}",
-                    detalhesUsuario.usuario().nomeUsuario(), detalhesUsuario.usuario().perfil(),
-                    expirationDate.toInstant());
-            return token;
-
-        } catch (Exception e) {
-            log.error("action=jwt_erro_geracao username={}", detalhesUsuario.usuario().nomeUsuario(), e);
-            throw new ApplicationException(500, "Erro ao gerar o token");
-        }
+        log.debug("action=jwt_emitido username={} perfil={} expiraEm={}",
+                detalhesUsuario.usuario().nomeUsuario(), detalhesUsuario.usuario().perfil(),
+                expirationDate.toInstant());
+        return token;
     }
 
     @Override
-    public Boolean validarToken(String token) throws ApplicationException {
+    public Boolean validarToken(String token) {
         try {
             Jwts.parser()
                     .verifyWith(Keys.hmacShaKeyFor(getSigningKey()))
@@ -77,16 +73,16 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
         } catch (ExpiredJwtException ex) {
             log.warn("action=jwt_expirado expirouEm={}", ex.getClaims().getExpiration().toInstant());
             contarRejeitado("expirado");
-            throw new ApplicationException(401, "Token expirado. Faça login novamente.");
+            throw new NaoAutenticadoException("Token expirado. Faça login novamente.");
         } catch (Exception ex) {
             log.warn("action=jwt_invalido motivo={}", ex.getClass().getSimpleName());
             contarRejeitado("invalido");
-            throw new ApplicationException(401, "Token inválido");
+            throw new NaoAutenticadoException("Token inválido");
         }
     }
 
     @Override
-    public String extrairNomeUsuario(String token) throws ApplicationException {
+    public String extrairNomeUsuario(String token) {
         try {
             return Jwts.parser()
                     .verifyWith(Keys.hmacShaKeyFor(getSigningKey()))
@@ -96,7 +92,7 @@ public class JwtTokenProviderUseCase implements JwtTokenUseCasePortIn {
                     .get("username", String.class);
         } catch (Exception ex) {
             log.warn("Error extracting username from token: {}", ex.getMessage());
-            throw new ApplicationException(401, "Token inválido");
+            throw new NaoAutenticadoException("Token inválido");
         }
     }
 

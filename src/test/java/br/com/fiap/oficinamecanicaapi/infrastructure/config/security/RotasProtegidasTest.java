@@ -8,7 +8,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoUseCaseP
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.NaoAutenticadoException;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -83,7 +83,7 @@ class RotasProtegidasTest {
     @BeforeEach
     void configurarTokenInvalido() {
         when(jwtTokenProvider.validarToken(TOKEN_INVALIDO))
-                .thenThrow(new ApplicationException(401, "Token inválido"));
+                .thenThrow(new NaoAutenticadoException("Token inválido"));
     }
 
     @Test

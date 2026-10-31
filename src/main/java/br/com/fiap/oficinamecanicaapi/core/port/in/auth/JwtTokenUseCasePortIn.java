@@ -1,14 +1,13 @@
 package br.com.fiap.oficinamecanicaapi.core.port.in.auth;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 
 public interface JwtTokenUseCasePortIn {
 
-    String gerarToken(DetalhesUsuario detalhesUsuario) throws ApplicationException;
+    String gerarToken(DetalhesUsuario detalhesUsuario);
 
-    Boolean validarToken(String token) throws ApplicationException;
+    Boolean validarToken(String token);
 
-    String extrairNomeUsuario(String token) throws ApplicationException;
+    String extrairNomeUsuario(String token);
 
 }

@@ -6,7 +6,10 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.usuario.UsuarioPortOut;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DominioException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.helpers.PoliticaSenha;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,9 +64,9 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
 
             usuarioPortOut.cadastrar(usuarioComSenhaCifrada);
             log.info("action=user_register_success username={}", usuario.nomeUsuario());
-        } catch (ApplicationException e) {
-            log.warn("action=user_register_rejected username={} status={} motivo={}",
-                    usuario.nomeUsuario(), e.getErrorCode(), e.getMessage());
+        } catch (DominioException e) {
+            log.warn("action=user_register_rejected username={} tipo={} motivo={}",
+                    usuario.nomeUsuario(), e.getClass().getSimpleName(), e.getMessage());
             throw e;
         } catch (RuntimeException e) {
             log.error("action=user_register_failure username={}", usuario.nomeUsuario(), e);
@@ -81,19 +84,16 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     @Transactional(readOnly = true)
     public DetalhesUsuario buscarPorIdentificador(String identificador) {
         var tipoIdentificador = usuarioPayload.isEmail(identificador) ? "email" : "username";
-        try {
-            var detalhes = (usuarioPayload.isEmail(identificador)
-                    ? usuarioPortOut.buscarPorEmail(identificador)
-                    : usuarioPortOut.buscarPorNomeUsuario(identificador))
-                    .orElseThrow(() -> new ApplicationException(404, MENSAGEM_NAO_ENCONTRADO));
-            log.debug("action=user_retrieve_success identifier_type={}", tipoIdentificador);
-            return detalhes;
-        } catch (RuntimeException e) {
-            if (e instanceof ApplicationException ex && ex.getErrorCode() == 404) {
-                log.warn("action=user_retrieve_not_found identifier_type={}", tipoIdentificador);
-            }
-            throw new ApplicationException(404, MENSAGEM_NAO_ENCONTRADO);
+        // só "não existe" vira 404; uma falha de infraestrutura (ex.: banco fora) sobe até o HandlerException
+        var detalhes = usuarioPayload.isEmail(identificador)
+                ? usuarioPortOut.buscarPorEmail(identificador)
+                : usuarioPortOut.buscarPorNomeUsuario(identificador);
+        if (detalhes.isEmpty()) {
+            log.warn("action=user_retrieve_not_found identifier_type={}", tipoIdentificador);
+            throw new RecursoNaoEncontradoException(MENSAGEM_NAO_ENCONTRADO);
         }
+        log.debug("action=user_retrieve_success identifier_type={}", tipoIdentificador);
+        return detalhes.get();
     }
 
     private void validarPayloads(Usuario usuario) {
@@ -103,7 +103,7 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
 
     private void validarEmailDisponivel(String email) {
         if (usuarioPortOut.existePorEmail(email)) {
-            throw new ApplicationException(409, "Já existe um usuário cadastrado com este e-mail");
+            throw new ConflitoException("Já existe um usuário cadastrado com este e-mail");
         }
     }
 
@@ -113,24 +113,24 @@ public class UsuarioUseCase implements UsuarioUseCasePortIn {
     private void validarCliente(Usuario usuario) {
         if (usuario.perfil() != Perfil.CLIENTE) {
             if (usuario.clienteId() != null) {
-                throw new ApplicationException(400, "Só o perfil CLIENTE é ligado a um cliente");
+                throw new DadoInvalidoException("Só o perfil CLIENTE é ligado a um cliente");
             }
             return;
         }
         if (usuario.clienteId() == null) {
-            throw new ApplicationException(400, "Informe o clienteId para o perfil CLIENTE");
+            throw new DadoInvalidoException("Informe o clienteId para o perfil CLIENTE");
         }
         if (clientePortOut.buscarAtivoPorId(usuario.clienteId()).isEmpty()) {
-            throw new ApplicationException(404, "Cliente não encontrado");
+            throw new RecursoNaoEncontradoException("Cliente não encontrado");
         }
         if (usuarioPortOut.existePorClienteId(usuario.clienteId())) {
-            throw new ApplicationException(409, "Já existe um usuário para este cliente");
+            throw new ConflitoException("Já existe um usuário para este cliente");
         }
     }
 
     private void validarNomeUsuarioDisponivel(String nomeUsuario) {
         if (usuarioPortOut.existePorNomeUsuario(nomeUsuario)) {
-            throw new ApplicationException(409, "Já existe um usuário cadastrado com este nome de usuário");
+            throw new ConflitoException("Já existe um usuário cadastrado com este nome de usuário");
         }
     }
 }

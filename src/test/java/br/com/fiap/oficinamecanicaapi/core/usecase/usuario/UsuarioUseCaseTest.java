@@ -5,7 +5,9 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.usuario.UsuarioPortOut;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.helpers.PoliticaSenha;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -74,9 +76,8 @@ class UsuarioUseCaseTest {
     void deveRejeitarEmailRepetido() {
         when(usuarioPortOut.existePorEmail(EMAIL)).thenReturn(true);
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.cadastrar(USUARIO));
+        ConflitoException ex = assertThrows(ConflitoException.class, () -> useCase.cadastrar(USUARIO));
 
-        assertThat(ex.getErrorCode()).isEqualTo(409);
         verify(usuarioPortOut, never()).cadastrar(any());
     }
 
@@ -86,9 +87,8 @@ class UsuarioUseCaseTest {
         when(usuarioPortOut.existePorEmail(EMAIL)).thenReturn(false);
         when(usuarioPortOut.existePorNomeUsuario(NOME_USUARIO)).thenReturn(true);
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.cadastrar(USUARIO));
+        ConflitoException ex = assertThrows(ConflitoException.class, () -> useCase.cadastrar(USUARIO));
 
-        assertThat(ex.getErrorCode()).isEqualTo(409);
         verify(usuarioPortOut, never()).cadastrar(any());
     }
 
@@ -129,11 +129,13 @@ class UsuarioUseCaseTest {
     }
 
     @Test
-    @DisplayName("Deve responder 404 também quando a busca falha por outro motivo, sem expor a causa")
-    void deveEsconderFalhaNaBusca() {
+    @DisplayName("Falha de infraestrutura na busca deve subir até o handler, e não virar 404 (usuário não encontrado)")
+    void devePropagarFalhaNaBusca() {
         when(usuarioPortOut.buscarPorNomeUsuario("ana")).thenThrow(new IllegalStateException("banco caiu"));
 
-        assertNaoEncontrado("ana");
+        assertThatThrownBy(() -> useCase.buscarPorIdentificador("ana"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("banco caiu");
     }
 
     @Test
@@ -142,18 +144,17 @@ class UsuarioUseCaseTest {
         Usuario semNome = new Usuario(" ", "ana@oficina.com.br", "ana", "Admin@123", false, Perfil.FUNCIONARIO);
 
         assertThatThrownBy(() -> useCase.cadastrar(semNome))
-                .isInstanceOf(ApplicationException.class)
-                .extracting("errorCode").isEqualTo(400);
+                .isInstanceOf(DadoInvalidoException.class);
         verifyNoInteractions(usuarioPortOut, politicaSenha);
     }
 
     @Test
     @DisplayName("Deve rejeitar o cadastro quando a senha não segue a política, sem gravar")
     void deveRejeitarSenhaFraca() {
-        doThrow(new ApplicationException(400, "A senha deve conter um número")).when(politicaSenha).validar("Admin@123");
+        doThrow(new DadoInvalidoException("A senha deve conter um número")).when(politicaSenha).validar("Admin@123");
 
         assertThatThrownBy(() -> useCase.cadastrar(USUARIO))
-                .isInstanceOf(ApplicationException.class)
+                .isInstanceOf(DadoInvalidoException.class)
                 .hasMessage("A senha deve conter um número");
         verify(usuarioPortOut, never()).cadastrar(any());
     }
@@ -171,8 +172,7 @@ class UsuarioUseCaseTest {
 
     private void assertNaoEncontrado(String identificador) {
         assertThatThrownBy(() -> useCase.buscarPorIdentificador(identificador))
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage("Usuário não encontrado")
-                .extracting("errorCode").isEqualTo(404);
+                .isInstanceOf(RecursoNaoEncontradoException.class)
+                .hasMessage("Usuário não encontrado");
     }
 }

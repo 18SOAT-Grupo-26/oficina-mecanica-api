@@ -1,10 +1,11 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.auth;
 
+import io.jsonwebtoken.security.WeakKeyException;
 import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SegredoJwt;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.NaoAutenticadoException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -94,9 +95,8 @@ class JwtTokenProviderUseCaseTest {
                 .compact();
 
         assertThatThrownBy(() -> provider.validarToken(expirado))
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage("Token expirado. Faça login novamente.")
-                .extracting("errorCode").isEqualTo(401);
+                .isInstanceOf(NaoAutenticadoException.class)
+                .hasMessage("Token expirado. Faça login novamente.");
         assertThat(rejeitados("expirado")).isEqualTo(1);
     }
 
@@ -104,9 +104,8 @@ class JwtTokenProviderUseCaseTest {
     @DisplayName("Deve responder 401 'Token inválido' para token malformado e contar motivo=invalido")
     void deveRecusarTokenMalformado() {
         assertThatThrownBy(() -> provider.validarToken("nao-e-um-jwt"))
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage("Token inválido")
-                .extracting("errorCode").isEqualTo(401);
+                .isInstanceOf(NaoAutenticadoException.class)
+                .hasMessage("Token inválido");
         assertThat(rejeitados("invalido")).isEqualTo(1);
     }
 
@@ -116,22 +115,19 @@ class JwtTokenProviderUseCaseTest {
         String tokenDeOutroSistema = comSegredo(OUTRO_SEGREDO).gerarToken(DETALHES);
 
         assertThatThrownBy(() -> provider.validarToken(tokenDeOutroSistema))
-                .isInstanceOf(ApplicationException.class)
+                .isInstanceOf(NaoAutenticadoException.class)
                 .hasMessage("Token inválido");
         assertThatThrownBy(() -> provider.extrairNomeUsuario(tokenDeOutroSistema))
-                .isInstanceOf(ApplicationException.class)
-                .extracting("errorCode").isEqualTo(401);
+                .isInstanceOf(NaoAutenticadoException.class);
     }
 
     @Test
-    @DisplayName("Deve responder 500 quando o segredo configurado é curto demais para o HS512")
+    @DisplayName("Segredo curto demais para o HS512 deve falhar sem embrulho (a SegredoJwtConfig impede isso na subida)")
     void deveFalharComSegredoCurto() {
         JwtTokenProviderUseCase comSegredoCurto = comSegredo("curto");
 
         assertThatThrownBy(() -> comSegredoCurto.gerarToken(DETALHES))
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage("Erro ao gerar o token")
-                .extracting("errorCode").isEqualTo(500);
+                .isInstanceOf(WeakKeyException.class);
     }
 
     private JwtTokenProviderUseCase comSegredo(String segredo) {

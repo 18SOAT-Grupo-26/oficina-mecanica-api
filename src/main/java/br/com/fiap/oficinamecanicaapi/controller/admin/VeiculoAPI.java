@@ -3,7 +3,6 @@ package br.com.fiap.oficinamecanicaapi.controller.admin;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoResponse;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,7 +20,7 @@ public interface VeiculoAPI {
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Placa já cadastrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PostMapping
-    ResponseEntity<VeiculoResponse> criar(@Valid @RequestBody VeiculoRequest request) throws ApplicationException;
+    ResponseEntity<VeiculoResponse> criar(@Valid @RequestBody VeiculoRequest request);
 
     @Operation(summary = "Listar veículos ativos, opcionalmente por cliente", tags = "Veículo")
     @ApiResponse(responseCode = "200", description = "Página de veículos ativos")
@@ -34,14 +33,14 @@ public interface VeiculoAPI {
     @ApiResponse(responseCode = "200", description = "Veículo encontrado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/{id}")
-    ResponseEntity<VeiculoResponse> buscarPorId(@PathVariable Long id) throws ApplicationException;
+    ResponseEntity<VeiculoResponse> buscarPorId(@PathVariable Long id);
 
     @Operation(summary = "Buscar veículo por placa", tags = "Veículo")
     @ApiResponse(responseCode = "200", description = "Veículo encontrado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Placa inválida", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/placa/{placa}")
-    ResponseEntity<VeiculoResponse> buscarPorPlaca(@PathVariable String placa) throws ApplicationException;
+    ResponseEntity<VeiculoResponse> buscarPorPlaca(@PathVariable String placa);
 
     @Operation(summary = "Atualizar veículo", tags = "Veículo")
     @ApiResponse(responseCode = "200", description = "Veículo atualizado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))
@@ -49,11 +48,11 @@ public interface VeiculoAPI {
     @ApiResponse(responseCode = "404", description = "Veículo ou cliente não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Placa já cadastrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PutMapping("/{id}")
-    ResponseEntity<VeiculoResponse> atualizar(@PathVariable Long id, @Valid @RequestBody VeiculoRequest request) throws ApplicationException;
+    ResponseEntity<VeiculoResponse> atualizar(@PathVariable Long id, @Valid @RequestBody VeiculoRequest request);
 
     @Operation(summary = "Remover veículo (soft delete)", tags = "Veículo")
     @ApiResponse(responseCode = "204", description = "Veículo desativado")
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @DeleteMapping("/{id}")
-    ResponseEntity<Void> desativar(@PathVariable Long id) throws ApplicationException;
+    ResponseEntity<Void> desativar(@PathVariable Long id);
 }

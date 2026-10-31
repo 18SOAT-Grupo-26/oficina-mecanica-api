@@ -9,7 +9,9 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.cliente.mapper.ClienteMapper;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,9 +93,8 @@ class ClienteUseCaseTest {
     void deveRejeitarDocumentoDuplicadoNoCadastro() {
         when(clientePortOut.existePorDocumento(new Documento(CPF))).thenReturn(true);
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.criar(REQUEST));
+        ConflitoException exception = assertThrows(ConflitoException.class, () -> useCase.criar(REQUEST));
 
-        assertThat(exception.getErrorCode()).isEqualTo(409);
         verify(clientePortOut, never()).salvar(any(Cliente.class));
     }
 
@@ -103,9 +104,8 @@ class ClienteUseCaseTest {
         ClienteRequest request = new ClienteRequest(NOME, CPF, "maria-sem-arroba", TELEFONE, null);
         when(clientePortOut.existePorDocumento(new Documento(CPF))).thenReturn(false);
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.criar(request));
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class, () -> useCase.criar(request));
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
         verify(clientePortOut, never()).salvar(any(Cliente.class));
     }
 
@@ -115,9 +115,8 @@ class ClienteUseCaseTest {
         ClienteRequest request = new ClienteRequest(" ", CPF, EMAIL, TELEFONE, null);
         when(clientePortOut.existePorDocumento(new Documento(CPF))).thenReturn(false);
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.criar(request));
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class, () -> useCase.criar(request));
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
     }
 
     @Test
@@ -125,9 +124,8 @@ class ClienteUseCaseTest {
     void deveRejeitarDocumentoInvalido() {
         ClienteRequest request = new ClienteRequest(NOME, "12345678900", EMAIL, TELEFONE, null);
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.criar(request));
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class, () -> useCase.criar(request));
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
         verify(clientePortOut, never()).existePorDocumento(any(Documento.class));
     }
 
@@ -147,9 +145,8 @@ class ClienteUseCaseTest {
     void deveRetornarNaoEncontradoPorId() {
         when(clientePortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.buscarPorId(ID));
+        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class, () -> useCase.buscarPorId(ID));
 
-        assertThat(exception.getErrorCode()).isEqualTo(404);
     }
 
     @Test
@@ -168,10 +165,9 @@ class ClienteUseCaseTest {
     void deveRetornarNaoEncontradoPorDocumento() {
         when(clientePortOut.buscarAtivoPorDocumento(new Documento(CPF))).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class,
+        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class,
                 () -> useCase.buscarPorDocumento(CPF));
 
-        assertThat(exception.getErrorCode()).isEqualTo(404);
     }
 
     @Test
@@ -245,10 +241,9 @@ class ClienteUseCaseTest {
         when(clientePortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(cliente));
         when(clientePortOut.existePorDocumento(new Documento(CNPJ))).thenReturn(true);
 
-        ApplicationException exception = assertThrows(ApplicationException.class,
+        ConflitoException exception = assertThrows(ConflitoException.class,
                 () -> useCase.atualizar(ID, request));
 
-        assertThat(exception.getErrorCode()).isEqualTo(409);
         verify(clientePortOut, never()).salvar(any(Cliente.class));
     }
 
@@ -257,10 +252,9 @@ class ClienteUseCaseTest {
     void deveRetornarNaoEncontradoNaAtualizacao() {
         when(clientePortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class,
+        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class,
                 () -> useCase.atualizar(ID, REQUEST));
 
-        assertThat(exception.getErrorCode()).isEqualTo(404);
     }
 
     @Test
@@ -280,9 +274,8 @@ class ClienteUseCaseTest {
     void deveRetornarNaoEncontradoNaDesativacao() {
         when(clientePortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> useCase.desativar(ID));
+        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class, () -> useCase.desativar(ID));
 
-        assertThat(exception.getErrorCode()).isEqualTo(404);
         verify(clientePortOut, never()).salvar(any(Cliente.class));
     }
 
@@ -311,7 +304,7 @@ class ClienteUseCaseTest {
     void naoDeveContarCadastroRecusado() {
         when(clientePortOut.existePorDocumento(new Documento(CPF))).thenReturn(true);
 
-        assertThatThrownBy(() -> useCase.criar(REQUEST)).isInstanceOf(ApplicationException.class);
+        assertThatThrownBy(() -> useCase.criar(REQUEST)).isInstanceOf(ConflitoException.class);
 
         assertThat(operacoes("criado")).isZero();
     }
@@ -322,7 +315,7 @@ class ClienteUseCaseTest {
         when(clientePortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(clienteAtivo()));
         ClienteRequest emailInvalido = new ClienteRequest("Maria", CPF, "sem-arroba", "11999998888", null);
 
-        assertThatThrownBy(() -> useCase.atualizar(ID, emailInvalido)).isInstanceOf(ApplicationException.class);
+        assertThatThrownBy(() -> useCase.atualizar(ID, emailInvalido)).isInstanceOf(DadoInvalidoException.class);
 
         assertThat(operacoes("atualizado")).isZero();
     }

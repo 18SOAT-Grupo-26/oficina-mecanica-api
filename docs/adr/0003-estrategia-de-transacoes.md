@@ -69,7 +69,7 @@ condicional** da OS.
 - Casos de uso só de leitura usam `@Transactional(readOnly = true)`.
 - `@Transactional` nunca vai em método privado nem em método chamado pela própria classe, porque nesses casos o proxy do
   Spring não atua.
-- `ApplicationException` estende `RuntimeException`, então qualquer erro de negócio desfaz a transação inteira sem
+- As exceções de domínio (`DominioException`) estendem `RuntimeException`, então qualquer erro de negócio desfaz a transação inteira sem
   configuração extra.
 - `spring.jpa.open-in-view: false`: a sessão do Hibernate não fica aberta durante a renderização da resposta. A conexão
   é devolvida ao pool quando o caso de uso termina, e um lazy loading fora da transação falha cedo, em vez de abrir
@@ -87,7 +87,7 @@ gravar:
 | Baixar   | `UPDATE peca_insumo SET quantidade = quantidade - :q, reservado = reservado - :q WHERE id = :id AND reservado >= :q AND quantidade >= :q` |
 
 - O comando devolve o número de linhas afetadas. Se for `0`, a condição não foi atendida (sem saldo ou reserva
-  inexistente). O caso de uso lança `ApplicationException` com **409**, e a transação inteira é desfeita, inclusive as
+  inexistente). O caso de uso lança `ConflitoException` (**409**), e a transação inteira é desfeita, inclusive as
   peças que já tinham sido reservadas. Isso evita reserva parcial.
 - No PostgreSQL, o `UPDATE` trava a linha até o fim da transação. Uma segunda transação que tente reservar a mesma peça
   espera a primeira terminar e então **reavalia o `WHERE` sobre o valor já confirmado** (comportamento do

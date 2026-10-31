@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.shared.utils.helpers;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -44,8 +44,7 @@ class PoliticaSenhaTest {
     @DisplayName("Deve recusar com 400 senha ausente ou fora da política")
     void deveRecusarSenhaFraca(String senha) {
         assertThatThrownBy(() -> politica.validar(senha))
-                .isInstanceOf(ApplicationException.class)
-                .extracting("errorCode").isEqualTo(400);
+                .isInstanceOf(DadoInvalidoException.class);
     }
 
     @Test
@@ -54,8 +53,7 @@ class PoliticaSenhaTest {
         String senha = "Aa1!" + "a".repeat(61);
 
         assertThatThrownBy(() -> politica.validar(senha))
-                .isInstanceOf(ApplicationException.class)
-                .extracting("errorCode").isEqualTo(400);
+                .isInstanceOf(DadoInvalidoException.class);
     }
 
     @Test

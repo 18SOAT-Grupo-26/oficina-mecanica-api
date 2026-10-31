@@ -2,7 +2,7 @@ package br.com.fiap.oficinamecanicaapi.core.domain.cliente.model;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Endereco;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -103,15 +103,14 @@ class ClienteTest {
         Cliente cliente = Cliente.novo("Maria", CPF, "maria@email.com", "11999998888", null);
 
         assertThatThrownBy(() -> cliente.atualizar("Outro nome", CPF, "invalido", "11999998888", null))
-                .isInstanceOf(ApplicationException.class);
+                .isInstanceOf(DadoInvalidoException.class);
 
         assertThat(cliente.getNome()).isEqualTo("Maria");
     }
 
     private static void assertErro400(String mensagem, org.assertj.core.api.ThrowableAssert.ThrowingCallable acao) {
         assertThatThrownBy(acao)
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage(mensagem)
-                .extracting("errorCode").isEqualTo(400);
+                .isInstanceOf(DadoInvalidoException.class)
+                .hasMessage(mensagem);
     }
 }
