@@ -120,6 +120,7 @@ baixa latência, sem ter que escolher entre as duas.
 | V8     | `V8__remove_identidade.sql`                      | O usuário passa a guardar só nome e e-mail (`UNIQUE`), e identidade, contato e endereço do usuário deixam de existir (minimização de dados, LGPD)           |
 | V9     | `V9__remove_relacao_servico_peca_insumo.sql`     | Remove `servico_peca_insumo`: as peças entram direto na OS (`item_peca_os`), e não pelo serviço                                                              |
 | V10    | `V10__perfis_fase_1.sql`                         | Perfis da fase 1: `ADMINISTRATOR` → `ADMIN`, `OPERATOR` → `FUNCIONARIO`, `MANAGER` absorvido por `FUNCIONARIO`, novo `CLIENTE` e `usuarios.cliente_id` (`UNIQUE`) |
+| V11    | `V11__exclusao_logica_catalogo.sql`              | `ativo` em `servico` e `peca_insumo`: o catálogo passa a ter delete lógico, como cliente e veículo, e a OS antiga continua apontando para o item |
 
 As migrations que mudam dados (V5, V7, V8 e V10) **preservam o que já existe**: renomeiam no lugar e copiam valores
 antes de apagar colunas. Assim, o banco local de cada um e o da avaliação chegam ao mesmo schema sem `down -v`.
@@ -133,7 +134,7 @@ antes de apagar colunas. Assim, o banco local de cada um e o da avaliação cheg
 | Preço histórico                    | Preço copiado para o item da OS na inclusão                            | `preco_unitario` em `item_servico_os` e `item_peca_os` (V6)                                       |
 | Reserva de estoque                 | Transações ACID: OS e estoque são atualizados juntos ou nada é gravado | Colunas `quantidade` e `reservado` em `peca_insumo`                                               |
 | Valores monetários                 | Tipo `numeric` com precisão fixa                                       | `preco` com `precision = 12, scale = 2`                                                           |
-| Delete lógico                      | Flag de ativo ou status, sem `DELETE` físico                           | `ativo` em `ClienteEntity` e `VeiculoEntity`; OS vai para `CANCELADA`                             |
+| Delete lógico                      | Flag de ativo ou status, sem `DELETE` físico                           | `ativo` em `ClienteEntity`, `VeiculoEntity`, `ServicoEntity` e `PecaInsumoEntity` (V11); OS vai para `CANCELADA` |
 | Enums legíveis                     | Enum gravado como texto                                                | `tipo_documento` com `@Enumerated(EnumType.STRING)`                                               |
 | Schema igual em todos os ambientes | Migrations versionadas, conferidas pelo Hibernate na subida            | `V1__schema_inicial.sql` e `ddl-auto: validate`                                                   |
 | Dados obrigatórios                 | Migration de dados                                                     | Perfis em `V2__perfis_iniciais.sql` e `V10__perfis_fase_1.sql`                                    |
@@ -275,7 +276,7 @@ As alternativas estão agrupadas pela classificação PACELC e pelo tipo de banc
 ## Referências
 
 - [ADR 001 — Monólito em camadas (ports & adapters)](0001-monolito-em-camadas.md)
-- [DER do banco de dados](../arquitetura/der-banco-de-dados.md): tabelas, chaves e relacionamentos depois da V10
+- [DER do banco de dados](../arquitetura/der-banco-de-dados.md): tabelas, chaves e relacionamentos depois da V11
 - [ADR 003 — Estratégia de transações](0003-estrategia-de-transacoes.md): reserva de estoque na geração do orçamento e
   liberação quando o orçamento é reprovado.
 - [ADR 004 — Segurança: autenticação e autorização](0004-seguranca.md): perfis, administrador inicial e minimização
