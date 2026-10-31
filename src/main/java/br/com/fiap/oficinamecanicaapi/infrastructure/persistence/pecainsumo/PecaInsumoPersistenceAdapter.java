@@ -50,8 +50,8 @@ public class PecaInsumoPersistenceAdapter implements PecaInsumoPortOut {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<PecaInsumo> buscarPorId(Long id) {
-        return repository.findById(id).map(mapper::toDomain);
+    public Optional<PecaInsumo> buscarAtivoPorId(Long id) {
+        return repository.findByIdAndAtivoTrue(id).map(mapper::toDomain);
     }
 
     @Override
@@ -61,21 +61,15 @@ public class PecaInsumoPersistenceAdapter implements PecaInsumoPortOut {
     }
 
     @Override
-    @Transactional
-    public void excluir(PecaInsumo pecaInsumo) {
-        repository.deleteById(pecaInsumo.getId());
+    @Transactional(readOnly = true)
+    public boolean existeAtivoPorNomeNormalizado(String nomeNormalizado) {
+        return repository.existsByNomeNormalizadoAndAtivoTrue(nomeNormalizado);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existePorNomeNormalizado(String nomeNormalizado) {
-        return repository.existsByNomeNormalizado(nomeNormalizado);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Pagina<PecaInsumo> listar(int pagina, int tamanho) {
-        Page<PecaInsumoEntity> page = repository.findAll(PageRequest.of(pagina - 1, tamanho, Sort.by("id")));
+    public Pagina<PecaInsumo> listarAtivos(int pagina, int tamanho) {
+        Page<PecaInsumoEntity> page = repository.findAllByAtivoTrue(PageRequest.of(pagina - 1, tamanho, Sort.by("id")));
         return new Pagina<>(page.map(mapper::toDomain).getContent(), pagina, tamanho, page.getTotalElements());
     }
 }

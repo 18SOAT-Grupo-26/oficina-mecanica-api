@@ -31,6 +31,20 @@ class ServicoTest {
         assertThat(servico.getNomeNormalizado()).isEqualTo("troca de oleo");
         assertThat(servico.getDescricao()).isEqualTo(DESCRICAO);
         assertThat(servico.getPreco()).isEqualTo(new BigDecimal("80.00"));
+        assertThat(servico.isAtivo()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Desativar deve só marcar o serviço como inativo, mantendo os dados")
+    void deveDesativar() {
+        Servico servico = Servico.reconstituir(1L, NOME, "troca de oleo", DESCRICAO, new BigDecimal("80.00"),
+                true, CRIADO_EM, CRIADO_EM);
+
+        servico.desativar();
+
+        assertThat(servico.isAtivo()).isFalse();
+        assertThat(servico.getId()).isEqualTo(1L);
+        assertThat(servico.getNome()).isEqualTo(NOME);
     }
 
     @ParameterizedTest
@@ -84,7 +98,7 @@ class ServicoTest {
     @DisplayName("Deve atualizar nome, descrição e preço mantendo id e data de criação")
     void deveAtualizar() {
         Servico servico = Servico.reconstituir(1L, NOME, "troca de oleo", DESCRICAO, new BigDecimal("80.00"),
-                CRIADO_EM, CRIADO_EM);
+                true, CRIADO_EM, CRIADO_EM);
 
         servico.atualizar("Alinhamento", null, new BigDecimal("120.5"));
 
@@ -100,7 +114,7 @@ class ServicoTest {
     @DisplayName("Atualização inválida não deve alterar nenhum campo do serviço")
     void naoDeveAlterarComAtualizacaoInvalida() {
         Servico servico = Servico.reconstituir(1L, NOME, "troca de oleo", DESCRICAO, new BigDecimal("80.00"),
-                CRIADO_EM, CRIADO_EM);
+                true, CRIADO_EM, CRIADO_EM);
         BigDecimal precoInvalido = new BigDecimal("-5");
 
         assertThatThrownBy(() -> servico.atualizar("Outro nome", DESCRICAO, precoInvalido))
@@ -113,7 +127,8 @@ class ServicoTest {
     @Test
     @DisplayName("Reconstituir deve aceitar o dado gravado sem validar de novo")
     void deveReconstituirSemValidar() {
-        Servico antigo = Servico.reconstituir(2L, "ab", "ab", null, new BigDecimal("1.00"), CRIADO_EM, null);
+        Servico antigo = Servico.reconstituir(2L, "ab", "ab", null, new BigDecimal("1.00"), true, CRIADO_EM,
+                null);
 
         assertThat(antigo.getNome()).isEqualTo("ab");
         assertThat(antigo.getId()).isEqualTo(2L);

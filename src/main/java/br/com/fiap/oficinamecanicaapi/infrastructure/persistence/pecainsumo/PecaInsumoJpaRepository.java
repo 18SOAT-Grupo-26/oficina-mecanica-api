@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface PecaInsumoJpaRepository
         extends JpaRepository<PecaInsumoEntity, Long> {
 
@@ -34,11 +36,13 @@ public interface PecaInsumoJpaRepository
             """, nativeQuery = true)
     int baixar(@Param("id") Long id, @Param("quantidade") int quantidade);
 
-    boolean existsByNomeNormalizado(String nomeNormalizado);
+    Optional<PecaInsumoEntity> findByIdAndAtivoTrue(Long id);
 
-    Page<PecaInsumoEntity> findAll(Pageable pageable);
+    boolean existsByNomeNormalizadoAndAtivoTrue(String nomeNormalizado);
+
+    Page<PecaInsumoEntity> findAllByAtivoTrue(Pageable pageable);
 
 
-    @Query("select count(p) from PecaInsumoEntity p where p.quantidade - p.reservado <= 0")
+    @Query("select count(p) from PecaInsumoEntity p where p.ativo = true and p.quantidade - p.reservado <= 0")
     long contarSemSaldo();
 }

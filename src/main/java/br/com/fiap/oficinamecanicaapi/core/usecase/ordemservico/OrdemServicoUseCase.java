@@ -278,7 +278,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
             }
         }
         desejado.forEach((idServico, quantidade) -> {
-            Servico servico = servicoPortOut.buscarPorId(idServico)
+            Servico servico = servicoPortOut.buscarAtivoPorId(idServico)
                     .orElseThrow(() -> new RecursoNaoEncontradoException("Serviço não encontrado no catálogo"));
             os.incluirServico(servico.getId(), servico.getNome(), new ValorMonetario(servico.getPreco()), quantidade);
         });
@@ -309,7 +309,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
     }
 
     private PecaInsumo buscarPeca(Long idPeca) {
-        return pecaInsumoPortOut.buscarPorId(idPeca)
+        return pecaInsumoPortOut.buscarAtivoPorId(idPeca)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Peça não encontrada no catálogo"));
     }
 

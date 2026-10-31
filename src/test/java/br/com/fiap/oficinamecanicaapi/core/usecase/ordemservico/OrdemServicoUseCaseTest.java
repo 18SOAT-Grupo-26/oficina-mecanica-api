@@ -141,8 +141,8 @@ class OrdemServicoUseCaseTest {
         @DisplayName("Deve criar a OS com itens dos cadastros, congelando o preço, sem reservar peças")
         void deveCriarComItens() {
             clienteEVeiculoCadastrados();
-            when(servicoPortOut.buscarPorId(ID_SERVICO)).thenReturn(Optional.of(servico(ID_SERVICO, "Troca de óleo", "100")));
-            when(pecaInsumoPortOut.buscarPorId(ID_PECA)).thenReturn(Optional.of(filtroComSaldo(2)));
+            when(servicoPortOut.buscarAtivoPorId(ID_SERVICO)).thenReturn(Optional.of(servico(ID_SERVICO, "Troca de óleo", "100")));
+            when(pecaInsumoPortOut.buscarAtivoPorId(ID_PECA)).thenReturn(Optional.of(filtroComSaldo(2)));
             retornarOsSalva();
 
             OrdemServicoResponse response = useCase.criar(new OrdemServicoRequest(DOCUMENTO, ID_VEICULO,
@@ -163,8 +163,8 @@ class OrdemServicoUseCaseTest {
         @DisplayName("Deve responder 404 quando o serviço ou a peça não estão cadastrados")
         void deveResponder404ParaItemSemCadastro() {
             clienteEVeiculoCadastrados();
-            when(servicoPortOut.buscarPorId(ID_SERVICO)).thenReturn(Optional.empty());
-            when(pecaInsumoPortOut.buscarPorId(ID_PECA)).thenReturn(Optional.empty());
+            when(servicoPortOut.buscarAtivoPorId(ID_SERVICO)).thenReturn(Optional.empty());
+            when(pecaInsumoPortOut.buscarAtivoPorId(ID_PECA)).thenReturn(Optional.empty());
 
             assertErro(RecursoNaoEncontradoException.class, "Serviço não encontrado no catálogo", () -> useCase.criar(
                     new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(new OrdemServicoRequest.Servico(ID_SERVICO, 1)), List.of())));
@@ -177,7 +177,7 @@ class OrdemServicoUseCaseTest {
         @DisplayName("Deve responder 409 quando a quantidade passa do saldo disponível")
         void deveResponder409ParaSaldoInsuficiente() {
             clienteEVeiculoCadastrados();
-            when(pecaInsumoPortOut.buscarPorId(ID_PECA)).thenReturn(Optional.of(filtroComSaldo(1)));
+            when(pecaInsumoPortOut.buscarAtivoPorId(ID_PECA)).thenReturn(Optional.of(filtroComSaldo(1)));
 
             assertErro(ConflitoException.class, "Saldo insuficiente para a peça Filtro de óleo: disponível 1, solicitado 2", () -> useCase.criar(
                     new OrdemServicoRequest(DOCUMENTO, ID_VEICULO, List.of(), List.of(new OrdemServicoRequest.Peca(ID_PECA, 2)))));
@@ -333,8 +333,8 @@ class OrdemServicoUseCaseTest {
         void deveSincronizarItens() {
             when(ordemServicoPortOut.buscarPorId(ID_OS)).thenReturn(Optional.of(osNoStatus(EM_DIAGNOSTICO)));
             clienteCadastrado();
-            when(servicoPortOut.buscarPorId(ID_ALINHAMENTO)).thenReturn(Optional.of(servico(ID_ALINHAMENTO, "Alinhamento", "80")));
-            when(pecaInsumoPortOut.buscarPorId(ID_PECA)).thenReturn(Optional.of(filtroComSaldo(5)));
+            when(servicoPortOut.buscarAtivoPorId(ID_ALINHAMENTO)).thenReturn(Optional.of(servico(ID_ALINHAMENTO, "Alinhamento", "80")));
+            when(pecaInsumoPortOut.buscarAtivoPorId(ID_PECA)).thenReturn(Optional.of(filtroComSaldo(5)));
             retornarOsSalva();
 
             OrdemServicoResponse response = useCase.atualizar(ID_OS, new OrdemServicoRequest(DOCUMENTO, ID_VEICULO,
@@ -348,8 +348,8 @@ class OrdemServicoUseCaseTest {
                 assertThat(item.quantidade()).isEqualTo(3);
                 assertThat(item.precoUnitario()).isEqualByComparingTo("30");
             });
-            verify(servicoPortOut, never()).buscarPorId(ID_SERVICO);
-            verify(pecaInsumoPortOut, never()).buscarPorId(ID_VELA);
+            verify(servicoPortOut, never()).buscarAtivoPorId(ID_SERVICO);
+            verify(pecaInsumoPortOut, never()).buscarAtivoPorId(ID_VELA);
         }
 
         @Test
@@ -963,7 +963,7 @@ class OrdemServicoUseCaseTest {
     }
 
     private static Servico servico(Long id, String nome, String preco) {
-        Servico servico = Servico.reconstituir(id, nome, null, null, new BigDecimal(preco), null, null);
+        Servico servico = Servico.reconstituir(id, nome, null, null, new BigDecimal(preco), true, null, null);
         return servico;
     }
 
@@ -979,6 +979,7 @@ class OrdemServicoUseCaseTest {
                 saldo + 3,
                 3,
                 new BigDecimal("30"),
+                true,
                 null,
                 null);
         return peca;

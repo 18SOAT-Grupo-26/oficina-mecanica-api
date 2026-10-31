@@ -52,7 +52,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
     @Override
     @Transactional(readOnly = true)
     public Pagina<PecaInsumoResponse> listar(Integer pagina, Integer tamanho) {
-        return pecaInsumoPortOut.listar(Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho)).map(pecaInsumoMapper::toResponse);
+        return pecaInsumoPortOut.listarAtivos(Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho)).map(pecaInsumoMapper::toResponse);
     }
 
     @Override
@@ -93,21 +93,22 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
 
     @Override
     @Transactional
-    public void excluir(Long id) {
+    public void desativar(Long id) {
         PecaInsumo insumo = buscarInsumo(id);
-        pecaInsumoPortOut.excluir(insumo);
+        insumo.desativar();
+        pecaInsumoPortOut.salvar(insumo);
 
-        contar("excluido");
-        log.info("action=insumo_excluido id={}", id);
+        contar("desativado");
+        log.info("action=insumo_desativado id={}", id);
     }
 
     private PecaInsumo buscarInsumo(Long id) {
-        return pecaInsumoPortOut.buscarPorId(id)
+        return pecaInsumoPortOut.buscarAtivoPorId(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Insumo não encontrado"));
     }
 
     private void validarNomeDisponivel(String nomeNormalizado) {
-        if (pecaInsumoPortOut.existePorNomeNormalizado(nomeNormalizado)) {
+        if (pecaInsumoPortOut.existeAtivoPorNomeNormalizado(nomeNormalizado)) {
             throw new ConflitoException("Já existe um insumo cadastrado com este nome");
         }
     }

@@ -51,7 +51,7 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     @Override
     @Transactional(readOnly = true)
     public Pagina<ServicoResponse> listar(Integer pagina, Integer tamanho) {
-        return servicoPortOut.listar(Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho)).map(servicoMapper::toResponse);
+        return servicoPortOut.listarAtivos(Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho)).map(servicoMapper::toResponse);
     }
 
     @Override
@@ -85,21 +85,22 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
 
     @Override
     @Transactional
-    public void excluir(Long id) {
+    public void desativar(Long id) {
         Servico servico = buscarServico(id);
-        servicoPortOut.excluir(servico);
+        servico.desativar();
+        servicoPortOut.salvar(servico);
 
-        contar("excluido");
-        log.info("action=servico_excluido id={}", id);
+        contar("desativado");
+        log.info("action=servico_desativado id={}", id);
     }
 
     private Servico buscarServico(Long id) {
-        return servicoPortOut.buscarPorId(id)
+        return servicoPortOut.buscarAtivoPorId(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Serviço não encontrado"));
     }
 
     private void validarNomeDisponivel(String nomeNormalizado) {
-        if (servicoPortOut.existePorNomeNormalizado(nomeNormalizado)) {
+        if (servicoPortOut.existeAtivoPorNomeNormalizado(nomeNormalizado)) {
             throw new ConflitoException("Já existe um serviço cadastrado com este nome");
         }
     }

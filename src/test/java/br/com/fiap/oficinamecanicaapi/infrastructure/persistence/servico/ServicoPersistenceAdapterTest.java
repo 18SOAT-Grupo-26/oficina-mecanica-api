@@ -47,6 +47,7 @@ class ServicoPersistenceAdapterTest {
                 null,
                 null,
                 new BigDecimal("80.00"),
+                true,
                 CRIADO_EM,
                 null);
 
@@ -56,38 +57,38 @@ class ServicoPersistenceAdapterTest {
         verify(repository).save(captor.capture());
         assertThat(captor.getValue().getId()).isEqualTo(1L);
         assertThat(captor.getValue().getCreatedAt()).isEqualTo(CRIADO_EM);
+        assertThat(captor.getValue().isAtivo()).isTrue();
         assertThat(salvo.getNome()).isEqualTo("Troca de óleo");
         assertThat(salvo.getCriadoEm()).isEqualTo(CRIADO_EM);
     }
 
     @Test
-    @DisplayName("buscarPorId deve converter a entidade em domínio e excluir deve apagar pelo id")
-    void buscarEExcluir() {
-        when(repository.findById(1L)).thenReturn(Optional.of(entidade()));
+    @DisplayName("buscarAtivoPorId deve buscar só entre os ativos e converter a entidade em domínio")
+    void buscarAtivo() {
+        when(repository.findByIdAndAtivoTrue(1L)).thenReturn(Optional.of(entidade()));
 
-        Servico servico = adapter.buscarPorId(1L).orElseThrow();
-        adapter.excluir(servico);
+        Servico servico = adapter.buscarAtivoPorId(1L).orElseThrow();
 
         assertThat(servico.getNome()).isEqualTo("Troca de óleo");
+        assertThat(servico.isAtivo()).isTrue();
         assertThat(servico.getCriadoEm()).isEqualTo(CRIADO_EM);
-        verify(repository).deleteById(1L);
     }
 
     @Test
-    @DisplayName("existePorNomeNormalizado deve repassar o resultado")
+    @DisplayName("existeAtivoPorNomeNormalizado deve repassar o resultado")
     void existePorNome() {
-        when(repository.existsByNomeNormalizado("troca de oleo")).thenReturn(true);
+        when(repository.existsByNomeNormalizadoAndAtivoTrue("troca de oleo")).thenReturn(true);
 
-        assertThat(adapter.existePorNomeNormalizado("troca de oleo")).isTrue();
+        assertThat(adapter.existeAtivoPorNomeNormalizado("troca de oleo")).isTrue();
     }
 
     @Test
-    @DisplayName("listar deve paginar por id e devolver o total")
-    void listar() {
+    @DisplayName("listarAtivos deve paginar por id e devolver o total")
+    void listarAtivos() {
         var pageable = PageRequest.of(0, 20, Sort.by("id"));
-        when(repository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entidade()), pageable, 1));
+        when(repository.findAllByAtivoTrue(pageable)).thenReturn(new PageImpl<>(List.of(entidade()), pageable, 1));
 
-        var pagina = adapter.listar(1, 20);
+        var pagina = adapter.listarAtivos(1, 20);
 
         assertThat(pagina.itens()).extracting(Servico::getId).containsExactly(1L);
         assertThat(pagina.total()).isEqualTo(1);
@@ -98,6 +99,7 @@ class ServicoPersistenceAdapterTest {
         entity.setId(1L);
         entity.setNome("Troca de óleo");
         entity.setPreco(new BigDecimal("80.00"));
+        entity.setAtivo(true);
         entity.setCreatedAt(CRIADO_EM);
         return entity;
     }

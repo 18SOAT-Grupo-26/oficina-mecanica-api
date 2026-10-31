@@ -158,14 +158,14 @@ class ServicoControllerTest {
     }
 
     @Test
-    @DisplayName("Deve excluir e responder 204")
-    void deveExcluir() throws Exception {
+    @DisplayName("Deve desativar e responder 204")
+    void deveDesativar() throws Exception {
         autenticarComo(Perfil.ADMIN);
 
         mockMvc.perform(delete(ROTA + "/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isNoContent());
 
-        verify(useCase).excluir(ID);
+        verify(useCase).desativar(ID);
     }
 
     @Test

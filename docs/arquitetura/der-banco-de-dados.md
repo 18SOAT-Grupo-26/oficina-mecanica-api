@@ -1,6 +1,6 @@
 # DER: banco de dados
 
-Modelo físico do PostgreSQL da fase 1, do jeito que fica depois das migrations V1 a V10. Como a aplicação sobe com
+Modelo físico do PostgreSQL da fase 1, do jeito que fica depois das migrations V1 a V12. Como a aplicação sobe com
 `ddl-auto: validate`, as entidades JPA precisam bater com essas tabelas. A escolha do banco e o histórico das migrations
 estão na [ADR 002](../adr/0002-escolha-do-banco-de-dados.md); as transações e a reserva de estoque, na
 [ADR 003](../adr/0003-estrategia-de-transacoes.md); os perfis, na [ADR 004](../adr/0004-seguranca.md).
@@ -91,20 +91,22 @@ erDiagram
     servico {
         bigint id PK
         varchar nome
-        varchar nome_normalizado UK
+        varchar nome_normalizado UK "único entre os ativos"
         varchar descricao
         numeric preco
+        boolean ativo "delete lógico"
         timestamptz created_at
         timestamptz updated_at
     }
     peca_insumo {
         bigint id PK
         varchar nome
-        varchar nome_normalizado UK
+        varchar nome_normalizado UK "único entre os ativos"
         varchar descricao
         int quantidade "estoque físico"
         int reservado "reservado para orçamentos"
         numeric preco
+        boolean ativo "delete lógico"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -157,8 +159,11 @@ erDiagram
   `quantidade - reservado`. Os `UPDATE` de cada passo estão nos [diagramas de sequência da OS](sequencia-ordem-servico.md).
 - **Histórico:** cada mudança de status gera uma linha em `historico_status_os`. É a base do tempo médio de execução
   (de `EM_EXECUCAO` a `FINALIZADA`).
-- **Delete lógico:** clientes e veículos são desativados pelo `ativo`, e a OS vai para `CANCELADA`. Nada disso é apagado
-  fisicamente.
+- **Delete lógico:** clientes, veículos, serviços e peças são desativados pelo `ativo` (o catálogo desde a V11), e a OS
+  vai para `CANCELADA`. Nada disso é apagado fisicamente: a OS antiga continua apontando para o serviço e a peça da
+  época, que só deixam de aparecer no catálogo e de poder entrar em OS nova. O nome é único só entre os ativos (índice
+  parcial da V12), então desativar libera o nome para um cadastro novo. A peça com unidades reservadas não pode ser
+  desativada.
 
 As tabelas `identidades`, `contatos` e `enderecos` (removidas na V8) e `servico_peca_insumo` (removida na V9) aparecem
 nas migrations antigas, mas não existem mais.

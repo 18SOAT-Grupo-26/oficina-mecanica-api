@@ -4,10 +4,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Optional;
+
 public interface ServicoJpaRepository
         extends JpaRepository<ServicoEntity, Long> {
 
-    boolean existsByNomeNormalizado(String nomeNormalizado);
+    Optional<ServicoEntity> findByIdAndAtivoTrue(Long id);
 
-    Page<ServicoEntity> findAll(Pageable pageable);
+    boolean existsByNomeNormalizadoAndAtivoTrue(String nomeNormalizado);
+
+    Page<ServicoEntity> findAllByAtivoTrue(Pageable pageable);
 }

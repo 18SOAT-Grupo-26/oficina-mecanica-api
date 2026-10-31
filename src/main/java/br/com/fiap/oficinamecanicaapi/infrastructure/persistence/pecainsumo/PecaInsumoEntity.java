@@ -20,7 +20,8 @@ public class PecaInsumoEntity extends EntidadeComDatas {
     @Column(nullable = false)
     private String nome;
 
-    @Column(name = "nome_normalizado", nullable = false, unique = true)
+    // único só entre os ativos: índice parcial da V12, que o JPA não expressa
+    @Column(name = "nome_normalizado", nullable = false)
     private String nomeNormalizado;
 
     private String descricao;
@@ -33,5 +34,8 @@ public class PecaInsumoEntity extends EntidadeComDatas {
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal preco;
+
+    @Column(nullable = false)
+    private boolean ativo;
 
 }

@@ -1114,7 +1114,8 @@
                 "servicos",
                 "{{servicoId}}"
               ]
-            }
+            },
+            "description": "Delete lógico."
           },
           "response": []
         },
@@ -1145,12 +1146,13 @@
                 "pecas-insumos",
                 "{{pecaInsumoId}}"
               ]
-            }
+            },
+            "description": "Delete lógico."
           },
           "response": []
         }
       ],
-      "description": "Fica por último para o Runner: o veículo depende do cliente e o serviço depende da peça. Cliente e veículo são desativados (delete lógico). Perfil: `ADMIN` (o funcionário recebe 403)."
+      "description": "Fica por último para o Runner: o veículo depende do cliente. Cliente, veículo, serviço e peça são desativados (delete lógico); as OS que já usam o serviço ou a peça não mudam. Perfil: `ADMIN` (o funcionário recebe 403)."
     },
     {
       "name": "Observabilidade",

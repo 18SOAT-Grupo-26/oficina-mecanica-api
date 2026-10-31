@@ -5,9 +5,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * As queries nativas de estoque são a proteção contra saldo negativo; só um banco real prova as condições do WHERE.
@@ -63,19 +65,35 @@ class PecaInsumoJpaRepositoryIT extends IntegracaoBase {
     }
 
     @Test
-    @DisplayName("contarSemSaldo deve contar só as peças com disponível <= 0")
+    @DisplayName("contarSemSaldo deve contar só as peças ativas com disponível <= 0")
     void contarSemSaldo() {
         inserir("Vela", "vela", 0, 0);
         inserir("Pastilha", "pastilha", 4, 4);
+        Long desativada = inserir("Correia", "correia", 0, 0);
+        jdbcTemplate.update("update peca_insumo set ativo = false where id = ?", desativada);
 
         assertThat(repository.contarSemSaldo()).isEqualTo(2);
     }
 
     @Test
-    @DisplayName("existsByNomeNormalizado deve achar pelo nome normalizado")
+    @DisplayName("existsByNomeNormalizadoAndAtivoTrue deve achar pelo nome normalizado, só entre as peças ativas")
     void existePorNome() {
-        assertThat(repository.existsByNomeNormalizado("filtro de oleo")).isTrue();
-        assertThat(repository.existsByNomeNormalizado("filtro de ar")).isFalse();
+        assertThat(repository.existsByNomeNormalizadoAndAtivoTrue("filtro de oleo")).isTrue();
+        assertThat(repository.existsByNomeNormalizadoAndAtivoTrue("filtro de ar")).isFalse();
+
+        jdbcTemplate.update("update peca_insumo set ativo = false where id = ?", id);
+        assertThat(repository.existsByNomeNormalizadoAndAtivoTrue("filtro de oleo")).isFalse();
+    }
+
+    @Test
+    @DisplayName("O nome deve ser único só entre as peças ativas: a desativada libera o nome")
+    void nomeUnicoEntreAtivas() {
+        jdbcTemplate.update("update peca_insumo set ativo = false where id = ?", id);
+        inserir("Filtro de óleo", "filtro de oleo", 5, 0);
+
+        // último comando do teste: a violação aborta a transação no PostgreSQL
+        assertThatThrownBy(() -> inserir("Filtro de Óleo", "filtro de oleo", 1, 0))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     private Long inserir(String nome, String normalizado, int quantidade, int reservado) {

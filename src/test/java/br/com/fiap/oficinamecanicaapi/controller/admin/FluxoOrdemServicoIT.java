@@ -126,30 +126,74 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
     }
 
     @Test
-    @DisplayName("Excluir serviço ou peça que estão em uma OS deve responder 409, e não 500, sem apagar nada")
+    @DisplayName("Excluir serviço ou peça que estão em uma OS deve desativar o item, sem apagar nem mudar a OS")
     void excluirItemEmUso() throws Exception {
-        criar("/ordens-servico", """
+        long osId = id(criar("/ordens-servico", """
                 {"documentoCliente":"%s","idVeiculo":%d,
                  "servicos":[{"idServico":%d,"quantidade":1}],
                  "pecas":[{"idPeca":%d,"quantidade":1}]}
-                """.formatted(CPF, veiculoId, servicoId, pecaId));
+                """.formatted(CPF, veiculoId, servicoId, pecaId)));
 
-        executar(delete("/servicos/" + servicoId))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", is("O serviço está em uma ordem de serviço e não pode ser excluído")));
-        executar(delete("/pecas-insumos/" + pecaId))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message", is("O insumo está em uma ordem de serviço e não pode ser excluído")));
+        executar(delete("/servicos/" + servicoId)).andExpect(status().isNoContent());
+        executar(delete("/pecas-insumos/" + pecaId)).andExpect(status().isNoContent());
 
-        assertThat(jdbcTemplate.queryForObject("select count(*) from servico", Integer.class)).isEqualTo(1);
-        assertThat(jdbcTemplate.queryForObject("select count(*) from peca_insumo", Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("select ativo from servico where id = ?", Boolean.class, servicoId))
+                .isFalse();
+        assertThat(jdbcTemplate.queryForObject("select ativo from peca_insumo where id = ?", Boolean.class, pecaId))
+                .isFalse();
+        executar(get("/ordens-servico/" + osId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.itensServico", hasSize(1)))
+                .andExpect(jsonPath("$.itensPeca", hasSize(1)));
     }
 
     @Test
-    @DisplayName("Serviço e peça que não estão em nenhuma OS continuam podendo ser excluídos")
-    void excluirItemSemUso() throws Exception {
+    @DisplayName("Peça com unidades reservadas para um orçamento enviado não pode ser desativada")
+    void desativarPecaReservada() throws Exception {
+        long osId = id(criar("/ordens-servico", """
+                {"documentoCliente":"%s","idVeiculo":%d,"servicos":[],
+                 "pecas":[{"idPeca":%d,"quantidade":2}]}
+                """.formatted(CPF, veiculoId, pecaId)));
+        executar(post("/ordens-servico/" + osId + "/orcamento/envio")).andExpect(status().isOk());
+
+        executar(delete("/pecas-insumos/" + pecaId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message",
+                        is("A peça tem 2 unidade(s) reservada(s) para orçamentos enviados e não pode ser desativada")));
+        executar(get("/pecas-insumos/" + pecaId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Desativar serviço ou peça libera o nome para um cadastro novo")
+    void desativarLiberaNome() throws Exception {
         executar(delete("/servicos/" + servicoId)).andExpect(status().isNoContent());
         executar(delete("/pecas-insumos/" + pecaId)).andExpect(status().isNoContent());
+
+        long novoServico = id(criar("/servicos", """
+                {"nome":"Troca de óleo","descricao":"Troca de óleo do motor","preco":120.00}
+                """));
+        long novaPeca = id(criar("/pecas-insumos", """
+                {"nome":"Filtro de óleo","descricao":"Filtro","quantidade":5,"reservado":0,"preco":30.00}
+                """));
+
+        assertThat(novoServico).isNotEqualTo(servicoId);
+        assertThat(novaPeca).isNotEqualTo(pecaId);
+    }
+
+    @Test
+    @DisplayName("Serviço e peça desativados somem do catálogo e não entram em OS nova")
+    void itemDesativadoForaDoCatalogo() throws Exception {
+        executar(delete("/servicos/" + servicoId)).andExpect(status().isNoContent());
+        executar(delete("/pecas-insumos/" + pecaId)).andExpect(status().isNoContent());
+
+        executar(get("/servicos/" + servicoId)).andExpect(status().isNotFound());
+        executar(get("/pecas-insumos")).andExpect(status().isOk()).andExpect(jsonPath("$.itens", hasSize(0)));
+        executar(delete("/servicos/" + servicoId)).andExpect(status().isNotFound());
+        executar(post("/ordens-servico").contentType(MediaType.APPLICATION_JSON).content("""
+                {"documentoCliente":"%s","idVeiculo":%d,"servicos":[{"idServico":%d,"quantidade":1}],"pecas":[]}
+                """.formatted(CPF, veiculoId, servicoId)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message", is("Serviço não encontrado no catálogo")));
     }
 
     @Test
