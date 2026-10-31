@@ -41,11 +41,14 @@ class ServicoPersistenceAdapterTest {
     @DisplayName("salvar deve converter o domínio em entidade, preservando id e datas, e devolver o domínio salvo")
     void salvar() {
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        Servico servico = new Servico();
-        servico.setId(1L);
-        servico.setNome("Troca de óleo");
-        servico.setPreco(new BigDecimal("80.00"));
-        servico.setCriadoEm(CRIADO_EM);
+        Servico servico = Servico.reconstituir(
+                1L,
+                "Troca de óleo",
+                null,
+                null,
+                new BigDecimal("80.00"),
+                CRIADO_EM,
+                null);
 
         Servico salvo = adapter.salvar(servico);
 

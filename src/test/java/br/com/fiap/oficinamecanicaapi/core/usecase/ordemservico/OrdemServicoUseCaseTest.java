@@ -938,10 +938,7 @@ class OrdemServicoUseCaseTest {
     }
 
     private static Servico servico(Long id, String nome, String preco) {
-        Servico servico = new Servico();
-        servico.setId(id);
-        servico.setNome(nome);
-        servico.setPreco(new BigDecimal(preco));
+        Servico servico = Servico.reconstituir(id, nome, null, null, new BigDecimal(preco), null, null);
         return servico;
     }
 
@@ -949,12 +946,16 @@ class OrdemServicoUseCaseTest {
      * Filtro de óleo a R$30, com 3 unidades já reservadas por outras OS além do saldo pedido.
      */
     private static PecaInsumo filtroComSaldo(int saldo) {
-        PecaInsumo peca = new PecaInsumo();
-        peca.setId(ID_PECA);
-        peca.setNome("Filtro de óleo");
-        peca.setPreco(new BigDecimal("30"));
-        peca.setQuantidade(saldo + 3);
-        peca.setReservado(3);
+        PecaInsumo peca = PecaInsumo.reconstituir(
+                ID_PECA,
+                "Filtro de óleo",
+                null,
+                null,
+                saldo + 3,
+                3,
+                new BigDecimal("30"),
+                null,
+                null);
         return peca;
     }
 

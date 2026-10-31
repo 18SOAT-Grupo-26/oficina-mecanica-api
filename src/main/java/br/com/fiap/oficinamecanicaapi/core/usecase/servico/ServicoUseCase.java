@@ -8,14 +8,14 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.servico.mapper.ServicoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
-import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
-import br.com.fiap.oficinamecanicaapi.shared.utils.NormalizadorNome;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Service
 public class ServicoUseCase implements ServicoUseCasePortIn {
@@ -26,9 +26,6 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     static final int TAMANHO_PADRAO = 20;
     static final int TAMANHO_MAXIMO = 100;
 
-    private static final int NOME_MIN_LENGTH = 3;
-    private static final int DESCRICAO_MAX_LENGTH = 500;
-    private static final int PRECO_MAX_CASAS_DECIMAIS = 2;
 
     private final ServicoPortOut servicoPortOut;
     private final ServicoMapper servicoMapper;
@@ -45,12 +42,9 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     @Override
     @Transactional
     public ServicoResponse criar(ServicoRequest request) {
-        validarCampos(request);
-        String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
-        validarNomeDisponivel(nomeNormalizado);
+        Servico servico = Servico.novo(request.nome(), request.descricao(), request.preco());
+        validarNomeDisponivel(servico.getNomeNormalizado());
 
-        Servico servico = new Servico();
-        preencher(servico, request, nomeNormalizado);
         Servico salvo = servicoPortOut.salvar(servico);
 
         contar("criado");
@@ -76,18 +70,18 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     @Transactional
     public ServicoResponse atualizar(Long id, ServicoRequest request) {
         Servico servico = buscarServico(id);
-        validarCampos(request);
+        String nomeAnterior = servico.getNomeNormalizado();
+        BigDecimal precoAnterior = servico.getPreco();
+        servico.atualizar(request.nome(), request.descricao(), request.preco());
 
-        String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
-        if (!nomeNormalizado.equals(servico.getNomeNormalizado())) {
-            validarNomeDisponivel(nomeNormalizado);
+        if (!servico.getNomeNormalizado().equals(nomeAnterior)) {
+            validarNomeDisponivel(servico.getNomeNormalizado());
         }
 
-        if (servico.getPreco().compareTo(request.preco()) != 0) {
+        if (precoAnterior.compareTo(servico.getPreco()) != 0) {
             log.info("action=servico_preco_alterado id={} precoAnterior={} precoNovo={}",
-                    id, servico.getPreco(), request.preco());
+                    id, precoAnterior, servico.getPreco());
         }
-        preencher(servico, request, nomeNormalizado);
         Servico salvo = servicoPortOut.salvar(servico);
 
         contar("atualizado");
@@ -114,35 +108,6 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
         if (servicoPortOut.existePorNomeNormalizado(nomeNormalizado)) {
             throw new ConflitoException("Já existe um serviço cadastrado com este nome");
         }
-    }
-
-    private static void validarCampos(ServicoRequest request) {
-        String nome = request.nome() == null ? null : request.nome().trim();
-        if (nome == null || nome.isEmpty()) {
-            throw new DadoInvalidoException("O campo nome é obrigatório");
-        }
-        if (nome.length() < NOME_MIN_LENGTH) {
-            throw new DadoInvalidoException("O nome deve ter no mínimo 3 caracteres");
-        }
-
-        if (request.preco() == null) {
-            throw new DadoInvalidoException("O campo preco é obrigatório");
-        }
-        if (request.preco().signum() <= 0
-                || request.preco().stripTrailingZeros().scale() > PRECO_MAX_CASAS_DECIMAIS) {
-            throw new DadoInvalidoException("Preço inválido");
-        }
-
-        if (request.descricao() != null && request.descricao().length() > DESCRICAO_MAX_LENGTH) {
-            throw new DadoInvalidoException("A descrição deve ter no máximo 500 caracteres");
-        }
-    }
-
-    private void preencher(Servico servico, ServicoRequest request, String nomeNormalizado) {
-        servico.setNome(request.nome().trim());
-        servico.setNomeNormalizado(nomeNormalizado);
-        servico.setDescricao(request.descricao());
-        servico.setPreco(request.preco().setScale(PRECO_MAX_CASAS_DECIMAIS));
     }
 
     private void contar(String operacao) {

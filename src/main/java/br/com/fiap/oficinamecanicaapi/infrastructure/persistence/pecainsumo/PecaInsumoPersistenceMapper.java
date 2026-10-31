@@ -11,7 +11,19 @@ public interface PecaInsumoPersistenceMapper {
     @Mapping(target = "updatedAt", source = "atualizadoEm")
     PecaInsumoEntity toEntity(PecaInsumo pecaInsumo);
 
-    @Mapping(target = "criadoEm", source = "createdAt")
-    @Mapping(target = "atualizadoEm", source = "updatedAt")
-    PecaInsumo toDomain(PecaInsumoEntity entity);
+    /**
+     * O modelo não tem setters; a reconstrução passa pela fábrica do domínio.
+     */
+    default PecaInsumo toDomain(PecaInsumoEntity entity) {
+        return PecaInsumo.reconstituir(
+                entity.getId(),
+                entity.getNome(),
+                entity.getNomeNormalizado(),
+                entity.getDescricao(),
+                entity.getQuantidade(),
+                entity.getReservado(),
+                entity.getPreco(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt());
+    }
 }

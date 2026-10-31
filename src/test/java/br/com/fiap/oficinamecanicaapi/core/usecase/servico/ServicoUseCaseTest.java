@@ -67,8 +67,9 @@ class ServicoUseCaseTest {
         when(servicoPortOut.existePorNomeNormalizado("troca de oleo")).thenReturn(false);
         when(servicoPortOut.salvar(any())).thenAnswer(inv -> {
             Servico e = inv.getArgument(0);
-            e.setId(ID);
-            return e;
+            // como o banco: devolve o serviço gravado, agora com id
+            return Servico.reconstituir(ID, e.getNome(), e.getNomeNormalizado(), e.getDescricao(), e.getPreco(),
+                    e.getCriadoEm(), e.getAtualizadoEm());
         });
         ServicoResponse esperado = new ServicoResponse(ID, "Troca de Óleo", null, new BigDecimal("80.00"), null, null);
         when(servicoMapper.toResponse(any())).thenReturn(esperado);
@@ -261,11 +262,7 @@ class ServicoUseCaseTest {
     }
 
     private static Servico servico(String nome, String preco) {
-        Servico servico = new Servico();
-        servico.setId(ID);
-        servico.setNome(nome);
-        servico.setNomeNormalizado("troca de oleo");
-        servico.setPreco(new BigDecimal(preco));
+        Servico servico = Servico.reconstituir(ID, nome, "troca de oleo", null, new BigDecimal(preco), null, null);
         return servico;
     }
 
