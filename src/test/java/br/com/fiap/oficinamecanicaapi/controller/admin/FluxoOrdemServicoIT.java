@@ -125,6 +125,33 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
     }
 
     @Test
+    @DisplayName("Excluir serviço ou peça que estão em uma OS deve responder 409, e não 500, sem apagar nada")
+    void excluirItemEmUso() throws Exception {
+        criar("/ordens-servico", """
+                {"documentoCliente":"%s","idVeiculo":%d,
+                 "servicos":[{"idServico":%d,"quantidade":1}],
+                 "pecas":[{"idPeca":%d,"quantidade":1}]}
+                """.formatted(CPF, veiculoId, servicoId, pecaId));
+
+        executar(delete("/servico/" + servicoId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message", is("O serviço está em uma ordem de serviço e não pode ser excluído")));
+        executar(delete("/insumos/" + pecaId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message", is("O insumo está em uma ordem de serviço e não pode ser excluído")));
+
+        assertThat(jdbcTemplate.queryForObject("select count(*) from servico", Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("select count(*) from peca_insumo", Integer.class)).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Serviço e peça que não estão em nenhuma OS continuam podendo ser excluídos")
+    void excluirItemSemUso() throws Exception {
+        executar(delete("/servico/" + servicoId)).andExpect(status().isNoContent());
+        executar(delete("/insumos/" + pecaId)).andExpect(status().isNoContent());
+    }
+
+    @Test
     @DisplayName("Transição que pula etapa deve responder 409")
     void transicaoInvalida() throws Exception {
         long osId = id(criar("/ordens-servico", """
