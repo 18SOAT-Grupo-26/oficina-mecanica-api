@@ -1,6 +1,5 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecainsumo;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecainsumo;
 
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecainsumo.PecaInsumoEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,7 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface PecaInsumoRepository
+public interface PecaInsumoJpaRepository
         extends JpaRepository<PecaInsumoEntity, Long> {
 
     @Modifying

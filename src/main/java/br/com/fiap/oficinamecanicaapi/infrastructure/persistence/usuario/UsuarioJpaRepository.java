@@ -1,11 +1,10 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.usuario;
 
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.usuario.UsuarioEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface UsuarioRepository
+public interface UsuarioJpaRepository
         extends JpaRepository<UsuarioEntity, Long> {
 
     Optional<UsuarioEntity> findByNomeUsuario(String nomeUsuario);

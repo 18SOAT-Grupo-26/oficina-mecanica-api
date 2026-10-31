@@ -3,7 +3,6 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecainsumo;
 import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.out.pecainsumo.PecaInsumoPortOut;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecainsumo.PecaInsumoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -17,10 +16,10 @@ import java.util.Optional;
 @Component
 public class PecaInsumoPersistenceAdapter implements PecaInsumoPortOut {
 
-    private final PecaInsumoRepository repository;
+    private final PecaInsumoJpaRepository repository;
     private final PecaInsumoPersistenceMapper mapper;
 
-    public PecaInsumoPersistenceAdapter(PecaInsumoRepository repository, PecaInsumoPersistenceMapper mapper) {
+    public PecaInsumoPersistenceAdapter(PecaInsumoJpaRepository repository, PecaInsumoPersistenceMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
     }

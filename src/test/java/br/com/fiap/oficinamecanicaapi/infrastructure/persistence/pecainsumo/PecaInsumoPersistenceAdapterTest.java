@@ -1,7 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecainsumo;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecainsumo.PecaInsumoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -31,7 +30,7 @@ class PecaInsumoPersistenceAdapterTest {
     private static final OffsetDateTime CRIADO_EM = OffsetDateTime.parse("2026-10-20T10:00:00-03:00");
 
     @Mock
-    private PecaInsumoRepository repository;
+    private PecaInsumoJpaRepository repository;
 
     private PecaInsumoPersistenceAdapter adapter;
 

@@ -3,8 +3,6 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.usuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.PerfilRepository;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.UsuarioRepository;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,10 +28,10 @@ class UsuarioPersistenceAdapterTest {
             new Usuario("Ana", "ana@oficina.com.br", "ana", "{bcrypt}cifrada", false, Perfil.CLIENTE, 7L);
 
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private UsuarioJpaRepository usuarioRepository;
 
     @Mock
-    private PerfilRepository perfilRepository;
+    private PerfilJpaRepository perfilRepository;
 
     private UsuarioPersistenceAdapter adapter;
 

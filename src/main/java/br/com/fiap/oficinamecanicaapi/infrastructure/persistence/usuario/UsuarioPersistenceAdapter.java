@@ -4,8 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.out.usuario.UsuarioPortOut;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.PerfilRepository;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.usuario.UsuarioRepository;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,12 +13,12 @@ import java.util.Optional;
 @Component
 public class UsuarioPersistenceAdapter implements UsuarioPortOut {
 
-    private final UsuarioRepository usuarioRepository;
-    private final PerfilRepository perfilRepository;
+    private final UsuarioJpaRepository usuarioRepository;
+    private final PerfilJpaRepository perfilRepository;
     private final UsuarioPersistenceMapper mapper;
 
-    public UsuarioPersistenceAdapter(UsuarioRepository usuarioRepository,
-                                     PerfilRepository perfilRepository,
+    public UsuarioPersistenceAdapter(UsuarioJpaRepository usuarioRepository,
+                                     PerfilJpaRepository perfilRepository,
                                      UsuarioPersistenceMapper mapper) {
         this.usuarioRepository = usuarioRepository;
         this.perfilRepository = perfilRepository;
