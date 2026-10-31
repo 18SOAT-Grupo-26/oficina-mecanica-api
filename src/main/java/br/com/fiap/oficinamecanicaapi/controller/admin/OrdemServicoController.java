@@ -53,7 +53,7 @@ public class OrdemServicoController implements OrdemServicoAPI {
     }
 
     @Override
-    public ResponseEntity<OrdemServicoResponse> gerarOrcamento(Long id) {
+    public ResponseEntity<OrdemServicoResponse> enviarOrcamento(Long id) {
         return ResponseEntity.ok(useCase.registrarOrcamentoEnviado(id));
     }
 

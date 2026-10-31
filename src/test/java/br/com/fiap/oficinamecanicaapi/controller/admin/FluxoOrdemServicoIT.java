@@ -66,12 +66,12 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("EM_DIAGNOSTICO")));
 
-        executar(patch("/ordens-servico/" + osId + "/gerar-orcamento"))
+        executar(post("/ordens-servico/" + osId + "/orcamento/envio"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("AGUARDANDO_APROVACAO")));
         assertThat(estoque()).containsExactly(10, 2);
 
-        executar(patch("/ordens-servico/" + osId + "/aprovar-orcamento"))
+        executar(post("/ordens-servico/" + osId + "/orcamento/aprovacao"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("EM_EXECUCAO")));
 
@@ -103,10 +103,10 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
                  "pecas":[{"idPeca":%d,"quantidade":3}]}
                 """.formatted(CPF, veiculoId, pecaId)));
 
-        executar(patch("/ordens-servico/" + osId + "/gerar-orcamento")).andExpect(status().isOk());
+        executar(post("/ordens-servico/" + osId + "/orcamento/envio")).andExpect(status().isOk());
         assertThat(estoque()).containsExactly(10, 3);
 
-        executar(patch("/ordens-servico/" + osId + "/rejeitar-orcamento"))
+        executar(post("/ordens-servico/" + osId + "/orcamento/rejeicao"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("CANCELADA")));
         assertThat(estoque()).containsExactly(10, 0);

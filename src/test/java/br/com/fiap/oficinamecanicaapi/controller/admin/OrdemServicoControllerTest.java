@@ -206,34 +206,34 @@ class OrdemServicoControllerTest {
     }
 
     @Test
-    @DisplayName("Deve gerar o orçamento pelo PATCH")
-    void deveGerarOrcamento() throws Exception {
+    @DisplayName("Deve enviar o orçamento por POST em /orcamento/envio")
+    void deveEnviarOrcamento() throws Exception {
         autenticarComo(Perfil.ADMIN);
         when(useCase.registrarOrcamentoEnviado(ID)).thenReturn(response(AGUARDANDO_APROVACAO));
 
-        mockMvc.perform(patch("/ordens-servico/{id}/gerar-orcamento", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(post("/ordens-servico/{id}/orcamento/envio", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("AGUARDANDO_APROVACAO"));
     }
 
     @Test
-    @DisplayName("Deve aprovar o orçamento pelo PATCH")
+    @DisplayName("Deve aprovar o orçamento por POST em /orcamento/aprovacao")
     void deveAprovarOrcamento() throws Exception {
         autenticarComo(Perfil.ADMIN);
         when(useCase.registrarOrcamentoAprovado(ID)).thenReturn(response(EM_EXECUCAO));
 
-        mockMvc.perform(patch("/ordens-servico/{id}/aprovar-orcamento", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(post("/ordens-servico/{id}/orcamento/aprovacao", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("EM_EXECUCAO"));
     }
 
     @Test
-    @DisplayName("Deve rejeitar o orçamento pelo PATCH")
+    @DisplayName("Deve rejeitar o orçamento por POST em /orcamento/rejeicao")
     void deveRejeitarOrcamento() throws Exception {
         autenticarComo(Perfil.ADMIN);
         when(useCase.registrarOrcamentoRejeitado(ID)).thenReturn(response(CANCELADA));
 
-        mockMvc.perform(patch("/ordens-servico/{id}/rejeitar-orcamento", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(post("/ordens-servico/{id}/orcamento/rejeicao", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CANCELADA"));
     }
