@@ -157,7 +157,8 @@ Possíveis problemas:
 - **SonarQube reinicia ou não abre**: falta memória para o Docker; veja os pré-requisitos.
 - **A API não sobe com erro de senha do administrador**: `ADMIN_SENHA` está fora da política de senha (veja
   [Usuários](#usuários-credenciais-de-demonstração-e-autenticação)).
-  ```
+
+## Variáveis de ambiente
 
 Todas ficam no `.env` (copiado do [`.env.example`](.env.example)). O Compose repassa à API as que estão no
 `environment` do serviço `api`; fora do Docker, a API lê o `.env` direto.
