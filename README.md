@@ -422,8 +422,8 @@ prometheus, grafana               # configuração da observabilidade
 ## Documentação DDD
 
 - [Event Storming no Miro](https://miro.com/app/board/uXjVEYmxgDM=/): board original
-- [Event Storming (PDF)](docs/ddd/Event%20Storming.pdf): criação da OS, acompanhamento da OS e peças e insumos
-- [Agregados e contextos delimitados (PDF)](docs/ddd/Agregados%20e%20Contextos%20Delimitadores.pdf): agregados e os
+- [Event Storming (PDF)](docs/ddd/event-storming.pdf): criação da OS, acompanhamento da OS e peças e insumos
+- [Agregados e contextos delimitados (PDF)](docs/ddd/diagramas.pdf): agregados e os
   contextos Atendimento, Ordem de Serviço e Catálogo e Estoque
 - [Linguagem ubíqua](docs/ddd/linguagem-ubiqua.md): glossário e relação entre a documentação e o código
 
