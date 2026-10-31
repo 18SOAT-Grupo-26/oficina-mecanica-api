@@ -29,7 +29,7 @@ Funcionalidades disponíveis até o momento:
 - CRUD de clientes, com validação de CPF/CNPJ e busca por documento (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
 - CRUD de veículos, com validação de placa e busca por placa (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
 - CRUD de peças e insumos, com saldo em estoque e quantidade reservada (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
-- CRUD de serviços (somente `ADMIN`)
+- CRUD de serviços (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
 - Ordem de serviço (`ADMIN` e `FUNCIONARIO`; cancelamento só `ADMIN`): abertura com serviços e peças, envio,
   aprovação e rejeição do orçamento (com reserva, baixa e devolução do estoque), mudança de status com histórico,
   listagem paginada com filtro por cliente e status e tempo médio de execução
@@ -427,8 +427,8 @@ curl -X POST http://localhost:8081/api/v1/usuarios -H "Content-Type: application
 O token vale `JWT_EXPIRATION_MINUTES` (padrão 60 min). Após `LOGIN_MAX_TENTATIVAS` (padrão 5) falhas de login de uma
 mesma conta em `LOGIN_JANELA_MINUTOS` (padrão 15), o login dela responde **429** até a janela expirar.
 
-Perfis existentes (migration `V10__perfis_fase_1.sql`): `ADMIN` (tudo, inclusive exclusões, serviços e cadastro de
-usuários), `FUNCIONARIO` (cadastros sem exclusão e ordens de serviço) e `CLIENTE` (consulta das próprias OS).
+Perfis existentes (migration `V10__perfis_fase_1.sql`): `ADMIN` (tudo, inclusive exclusões e cadastro de
+usuários), `FUNCIONARIO` (cadastros sem exclusão, inclusive serviços, e ordens de serviço) e `CLIENTE` (consulta das próprias OS).
 Credenciais de demonstração: as do administrador inicial definidas no seu `.env` (`ADMIN_USUARIO` / `ADMIN_SENHA`).
 
 ## Análise de vulnerabilidades
