@@ -126,8 +126,8 @@ docker compose down                        # parar todos os containers
 docker compose down -v                     # parar e APAGAR os volumes: banco, SonarQube, Prometheus e Grafana
 ```
 
-> Para apagar só os dados do banco: `docker compose down` e depois `docker volume rm oficina-mecanica-api_pgdata` (o
-> prefixo é o nome da pasta do projeto; confira com `docker volume ls`).
+> Para apagar só os dados do banco: `docker compose down` e depois `docker volume rm oficina-mecanica_pgdata` (o
+> prefixo é o nome do projeto, fixado em `name:` no `docker-compose.yml`; confira com `docker volume ls`).
 
 ### Banco de dados e migrations (Flyway)
 

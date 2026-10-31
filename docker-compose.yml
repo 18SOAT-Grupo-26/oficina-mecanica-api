@@ -1,3 +1,6 @@
+# nome do projeto no Docker (grupo dos containers e prefixo dos volumes), independente da pasta do clone
+name: oficina-mecanica
+
 services:
   db:
     image: postgres:18-alpine
