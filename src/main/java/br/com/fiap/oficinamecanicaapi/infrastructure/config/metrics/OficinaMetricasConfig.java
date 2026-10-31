@@ -2,7 +2,7 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.config.metrics;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
 import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico.OrdemServicoJpaRepository;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecainsumo.PecaInsumoRepository;
+import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecainsumo.PecaInsumoJpaRepository;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 public class OficinaMetricasConfig {
 
     public OficinaMetricasConfig(OrdemServicoJpaRepository ordemServicoRepository,
-                                 PecaInsumoRepository pecaInsumoRepository,
+                                 PecaInsumoJpaRepository pecaInsumoRepository,
                                  MeterRegistry registry) {
         for (StatusOrdemServico status : StatusOrdemServico.values()) {
             Gauge.builder("oficina.os.quantidade", ordemServicoRepository, repo -> repo.countByStatus(status))
@@ -22,7 +22,7 @@ public class OficinaMetricasConfig {
                     .tag("status", status.name())
                     .register(registry);
         }
-        Gauge.builder("oficina.estoque.pecas.sem.saldo", pecaInsumoRepository, PecaInsumoRepository::contarSemSaldo)
+        Gauge.builder("oficina.estoque.pecas.sem.saldo", pecaInsumoRepository, PecaInsumoJpaRepository::contarSemSaldo)
                 .description("Peças com quantidade em estoque menos reservada <= 0")
                 .register(registry);
     }

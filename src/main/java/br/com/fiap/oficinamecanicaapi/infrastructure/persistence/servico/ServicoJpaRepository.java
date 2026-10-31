@@ -1,11 +1,10 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.servico;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.servico;
 
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.servico.ServicoEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ServicoRepository
+public interface ServicoJpaRepository
         extends JpaRepository<ServicoEntity, Long> {
 
     boolean existsByNomeNormalizado(String nomeNormalizado);

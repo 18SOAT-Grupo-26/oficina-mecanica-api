@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.pecainsumo;
+package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.pecainsumo;
 
 import br.com.fiap.oficinamecanicaapi.integracao.IntegracaoBase;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,10 +14,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Cada teste roda numa transação desfeita no fim. A leitura usa JDBC na mesma conexão, sem cache do Hibernate.
  */
 @Transactional
-class PecaInsumoRepositoryIT extends IntegracaoBase {
+class PecaInsumoJpaRepositoryIT extends IntegracaoBase {
 
     @Autowired
-    private PecaInsumoRepository repository;
+    private PecaInsumoJpaRepository repository;
 
     private Long id;
 

@@ -3,7 +3,6 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.servico.ServicoRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -15,10 +14,10 @@ import java.util.Optional;
 @Component
 public class ServicoPersistenceAdapter implements ServicoPortOut {
 
-    private final ServicoRepository repository;
+    private final ServicoJpaRepository repository;
     private final ServicoPersistenceMapper mapper;
 
-    public ServicoPersistenceAdapter(ServicoRepository repository, ServicoPersistenceMapper mapper) {
+    public ServicoPersistenceAdapter(ServicoJpaRepository repository, ServicoPersistenceMapper mapper) {
         this.repository = repository;
         this.mapper = mapper;
     }

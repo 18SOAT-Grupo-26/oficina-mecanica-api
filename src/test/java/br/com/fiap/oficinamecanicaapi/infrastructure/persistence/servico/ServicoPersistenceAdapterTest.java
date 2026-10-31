@@ -1,7 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.servico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
-import br.com.fiap.oficinamecanicaapi.infrastructure.persistence.repository.servico.ServicoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,7 @@ class ServicoPersistenceAdapterTest {
     private static final OffsetDateTime CRIADO_EM = OffsetDateTime.parse("2026-10-20T10:00:00-03:00");
 
     @Mock
-    private ServicoRepository repository;
+    private ServicoJpaRepository repository;
 
     private ServicoPersistenceAdapter adapter;
 

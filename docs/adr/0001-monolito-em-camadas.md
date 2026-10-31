@@ -222,10 +222,11 @@ callbacks em cada entidade sem levar JPA para o domínio.
   Grafana do compose) entraram antes do previsto em 21/10. A configuração fica em `infrastructure/config/metrics`, mas
   os casos de uso registram contadores direto no `MeterRegistry`, o que é mais uma dependência leve no `core`. A
   padronização de logs (`action=... chave=valor`) segue o mesmo caminho.
-- Nenhuma entidade JPA fica no `core`, e o `UsuarioUseCase` usa o `UsuarioPortOut` em vez dos repositórios. Ainda
-  ficam fora do padrão: os repositórios de `usuario`, `servico` e `pecainsumo` em
-  `infrastructure/persistence/repository/` (e não em `persistence/<contexto>/`); `Servico` e `PecaInsumo`, que são
-  modelos anêmicos (getters e setters, com a validação no caso de uso, e não no modelo como em `Cliente`); e, na
+- Nenhuma entidade JPA fica no `core`, e o `UsuarioUseCase` usa o `UsuarioPortOut` em vez dos repositórios. Todos os
+  repositórios ficam em `infrastructure/persistence/<contexto>/*JpaRepository`, junto da entidade e do adapter (os de
+  `usuario`, `servico` e `pecainsumo` saíram de `persistence/repository/` em 31/10). Ainda ficam fora do padrão:
+  `Servico` e `PecaInsumo`, que são modelos anêmicos (getters e setters, com a validação no caso de uso, e não no
+  modelo como em `Cliente`); e, na
   segurança, `Perfil` implementa `GrantedAuthority` e o JWT é gerado em `core/usecase/auth`
   ([ADR 004](0004-seguranca.md)). O pente fino de 29/10 achou mais um ponto: os DTOs `*Request`/`*Response` ficam
   em `core/domain/<contexto>/model`, misturados aos modelos de domínio, quando o lugar de um contrato do port in é
