@@ -121,6 +121,7 @@ baixa latência, sem ter que escolher entre as duas.
 | V9     | `V9__remove_relacao_servico_peca_insumo.sql`     | Remove `servico_peca_insumo`: as peças entram direto na OS (`item_peca_os`), e não pelo serviço                                                              |
 | V10    | `V10__perfis_fase_1.sql`                         | Perfis da fase 1: `ADMINISTRATOR` → `ADMIN`, `OPERATOR` → `FUNCIONARIO`, `MANAGER` absorvido por `FUNCIONARIO`, novo `CLIENTE` e `usuarios.cliente_id` (`UNIQUE`) |
 | V11    | `V11__exclusao_logica_catalogo.sql`              | `ativo` em `servico` e `peca_insumo`: o catálogo passa a ter delete lógico, como cliente e veículo, e a OS antiga continua apontando para o item |
+| V12    | `V12__nome_unico_entre_ativos_catalogo.sql`      | `nome_normalizado` de `servico` e `peca_insumo` passa a ser único só entre os ativos (índice único parcial): desativar um item libera o nome |
 
 As migrations que mudam dados (V5, V7, V8 e V10) **preservam o que já existe**: renomeiam no lugar e copiam valores
 antes de apagar colunas. Assim, o banco local de cada um e o da avaliação chegam ao mesmo schema sem `down -v`.
@@ -130,7 +131,7 @@ antes de apagar colunas. Assim, o banco local de cada um e o da avaliação cheg
 | Necessidade                        | Como é tratada                                                         | Exemplo no código                                                                                 |
 |------------------------------------|------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
 | Relacionamentos                    | Chaves estrangeiras                                                    | `VeiculoEntity` → `ClienteEntity` (`@ManyToOne`); itens e histórico → `ordem_servico`             |
-| Unicidade                          | Constraints `UNIQUE` no banco, além da validação no caso de uso        | `documento` em `clientes`, `placa` em `veiculos`, `nome_normalizado` em `servico` e `peca_insumo`, `nome_usuario`, `email` e `cliente_id` em `usuarios` |
+| Unicidade                          | Constraints `UNIQUE` no banco, além da validação no caso de uso        | `documento` em `clientes`, `placa` em `veiculos`, `nome_normalizado` em `servico` e `peca_insumo` (só entre os ativos, V12), `nome_usuario`, `email` e `cliente_id` em `usuarios` |
 | Preço histórico                    | Preço copiado para o item da OS na inclusão                            | `preco_unitario` em `item_servico_os` e `item_peca_os` (V6)                                       |
 | Reserva de estoque                 | Transações ACID: OS e estoque são atualizados juntos ou nada é gravado | Colunas `quantidade` e `reservado` em `peca_insumo`                                               |
 | Valores monetários                 | Tipo `numeric` com precisão fixa                                       | `preco` com `precision = 12, scale = 2`                                                           |
@@ -276,7 +277,7 @@ As alternativas estão agrupadas pela classificação PACELC e pelo tipo de banc
 ## Referências
 
 - [ADR 001 — Monólito em camadas (ports & adapters)](0001-monolito-em-camadas.md)
-- [DER do banco de dados](../arquitetura/der-banco-de-dados.md): tabelas, chaves e relacionamentos depois da V11
+- [DER do banco de dados](../arquitetura/der-banco-de-dados.md): tabelas, chaves e relacionamentos depois da V12
 - [ADR 003 — Estratégia de transações](0003-estrategia-de-transacoes.md): reserva de estoque na geração do orçamento e
   liberação quando o orçamento é reprovado.
 - [ADR 004 — Segurança: autenticação e autorização](0004-seguranca.md): perfis, administrador inicial e minimização

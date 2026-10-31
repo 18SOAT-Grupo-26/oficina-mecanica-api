@@ -14,8 +14,8 @@ Event Storming no Miro: https://miro.com/app/board/uXjVEYmxgDM=/
 | **Endereço** | Objeto de valor do Cliente (logradouro, número, bairro, cidade, estado, CEP e complemento), sem regras de validação. |
 | **Veículo** | Automóvel de um cliente, identificado pela placa, com marca, modelo e ano. |
 | **Placa** | Identificação do veículo no formato antigo (AAA9999) ou Mercosul (AAA9A99), guardada sem hífen e em maiúsculas. É única: não existem dois veículos com a mesma placa. |
-| **Serviço** | Trabalho do catálogo da oficina, com nome único e preço. Excluir só desativa: some do catálogo e não entra em OS nova, mas continua nas OS que já o usam. |
-| **Peça ou insumo** | Item físico do catálogo, com preço, controlado em estoque pela quantidade e pelo reservado. O saldo disponível é a quantidade menos o reservado. Como o serviço, excluir só desativa. |
+| **Serviço** | Trabalho do catálogo da oficina, com nome único e preço. Excluir só desativa: some do catálogo e não entra em OS nova, mas continua nas OS que já o usam. O nome é único só entre os ativos, então fica livre para um cadastro novo. |
+| **Peça ou insumo** | Item físico do catálogo, com preço, controlado em estoque pela quantidade e pelo reservado. O saldo disponível é a quantidade menos o reservado. Como o serviço, excluir só desativa e libera o nome, mas a peça com unidades reservadas não pode ser desativada. |
 | **Item de serviço / Item de peça** | Serviço ou peça incluído na OS, com quantidade e o preço congelado na inclusão: mudar o preço no catálogo não altera a OS. Uma peça só é incluída se houver saldo disponível. |
 | **Valor monetário** | Valor em reais com duas casas decimais, nunca negativo. É o preço de cada item e o subtotal (preço × quantidade). |
 | **Orçamento** | Conjunto dos itens da OS com o subtotal de cada um. A equipe envia o orçamento para aprovação e registra a decisão do cliente (aprovado ou rejeitado). |
