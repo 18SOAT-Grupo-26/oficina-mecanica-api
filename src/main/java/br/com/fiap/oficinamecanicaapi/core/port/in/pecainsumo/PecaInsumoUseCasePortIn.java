@@ -1,7 +1,5 @@
 package br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumoRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 

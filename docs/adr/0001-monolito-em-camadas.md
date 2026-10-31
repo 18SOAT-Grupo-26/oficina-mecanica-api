@@ -228,9 +228,9 @@ callbacks em cada entidade sem levar JPA para o domínio.
   `Servico` e `PecaInsumo`, que são modelos anêmicos (getters e setters, com a validação no caso de uso, e não no
   modelo como em `Cliente`); e, na
   segurança, `Perfil` implementa `GrantedAuthority` e o JWT é gerado em `core/usecase/auth`
-  ([ADR 004](0004-seguranca.md)). O pente fino de 29/10 achou mais um ponto: os DTOs `*Request`/`*Response` ficam
-  em `core/domain/<contexto>/model`, misturados aos modelos de domínio, quando o lugar de um contrato do port in é
-  `core/port/in/<contexto>/`. O resto do que ele achou já foi corrigido: o `JwtAuthenticationFilter` usa o port in
+  ([ADR 004](0004-seguranca.md)). O que o pente fino de 29/10 achou já foi corrigido: os DTOs `*Request`/`*Response`
+  saíram de `core/domain/<contexto>/model` para `core/port/in/<contexto>/`, ao lado do port in de que são contrato
+  (31/10), o `JwtAuthenticationFilter` usa o port in
   (#122), o `UsuarioPayload` saiu de `shared` para `core/usecase/usuario` (#124) e o pacote `pecaInsumo` passou a ser
   `pecainsumo`, em minúsculas como os outros contextos. As correções são acompanhadas como issues de
   dívida técnica no repositório.

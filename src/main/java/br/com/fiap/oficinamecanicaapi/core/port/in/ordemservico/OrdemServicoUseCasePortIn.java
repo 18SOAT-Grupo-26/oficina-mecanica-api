@@ -1,8 +1,5 @@
 package br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoResponse;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.TempoMedioExecucaoResponse;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 
 import java.util.List;

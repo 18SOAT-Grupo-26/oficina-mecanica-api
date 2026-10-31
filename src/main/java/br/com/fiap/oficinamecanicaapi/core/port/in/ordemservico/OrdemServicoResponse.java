@@ -1,5 +1,9 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
+package br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico;
 
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ItemPeca;
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ItemServico;
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.RegistroHistorico;
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;

@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.pecainsumo.mapper;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
-import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumoResponse;
+import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoResponse;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.servico.model;
+package br.com.fiap.oficinamecanicaapi.core.port.in.servico;
 
 import java.math.BigDecimal;
 

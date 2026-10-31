@@ -1,10 +1,10 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.auth;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.AuthToken;
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.CadastroRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthToken;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePortIn;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.CadastroRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.MascaraDados;

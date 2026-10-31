@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model;
+package br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo;
 
 import java.math.BigDecimal;
 

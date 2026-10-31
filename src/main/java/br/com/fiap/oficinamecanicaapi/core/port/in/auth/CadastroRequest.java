@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.auth.model;
+package br.com.fiap.oficinamecanicaapi.core.port.in.auth;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import jakarta.validation.constraints.NotBlank;

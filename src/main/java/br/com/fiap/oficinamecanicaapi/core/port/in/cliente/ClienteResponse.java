@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.cliente.model;
+package br.com.fiap.oficinamecanicaapi.core.port.in.cliente;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Endereco;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.TipoDocumento;

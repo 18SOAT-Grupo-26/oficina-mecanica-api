@@ -1,8 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.controller.auth;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.AuthToken;
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.CadastroRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SigninRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthToken;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.CadastroRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;

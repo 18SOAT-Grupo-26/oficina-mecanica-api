@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.controller.cliente;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
+import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.http.ResponseEntity;

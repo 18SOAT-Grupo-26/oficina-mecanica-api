@@ -1,8 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico.mapper;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServico;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.ValorMonetario;
+import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoResponse;
 import org.mapstruct.Mapper;
 
 import java.math.BigDecimal;

@@ -1,8 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.controller.admin;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
-import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.VeiculoRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.VeiculoResponse;
+import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.http.HttpStatus;

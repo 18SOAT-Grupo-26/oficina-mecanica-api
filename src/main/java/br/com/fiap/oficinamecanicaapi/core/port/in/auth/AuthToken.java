@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.auth.model;
+package br.com.fiap.oficinamecanicaapi.core.port.in.auth;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
