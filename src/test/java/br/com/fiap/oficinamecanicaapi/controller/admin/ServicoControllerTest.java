@@ -40,7 +40,7 @@ class ServicoControllerTest {
     private static final String BEARER = "Bearer " + TOKEN;
     private static final String USERNAME = "usuario";
     private static final Long ID = 1L;
-    private static final String ROTA = "/servico";
+    private static final String ROTA = "/servicos";
     private static final ServicoRequest REQUEST = new ServicoRequest("Troca de óleo", "Óleo sintético", new BigDecimal("80.00"));
     private static final ServicoResponse RESPONSE = new ServicoResponse(ID, "Troca de óleo", "Óleo sintético", new BigDecimal("80.00"), null, null);
     private static final String REQUEST_JSON = """

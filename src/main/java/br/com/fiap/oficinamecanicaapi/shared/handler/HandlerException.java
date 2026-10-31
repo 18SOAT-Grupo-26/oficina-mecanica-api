@@ -93,7 +93,7 @@ public class HandlerException {
     }
 
     /**
-     * Header obrigatório ausente (ex.: Authorization no /auth/validate); sem este handler cairia no 500.
+     * Header obrigatório ausente (ex.: Authorization no /auth/validacao); sem este handler cairia no 500.
      */
     @ExceptionHandler(MissingRequestHeaderException.class)
     public ResponseEntity<ErrorTemplate> handleMissingHeader(MissingRequestHeaderException e) {

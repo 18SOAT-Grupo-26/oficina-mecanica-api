@@ -17,9 +17,9 @@ public final class RotasPublicas {
 
     /**
      * Login e validação do token. Listadas uma a uma, sem curinga: uma rota nova em /auth nasce protegida
-     * (o cadastro de usuários, por exemplo, exige ADMIN).
+     * (o cadastro de usuários, em /usuarios, exige ADMIN).
      */
-    protected static final String[] AUTENTICACAO = {"/auth/login", "/auth/validate"};
+    protected static final String[] AUTENTICACAO = {"/auth/login", "/auth/validacao"};
 
     public static final String[] DOCUMENTACAO = {
             "/v3/api-docs/**",

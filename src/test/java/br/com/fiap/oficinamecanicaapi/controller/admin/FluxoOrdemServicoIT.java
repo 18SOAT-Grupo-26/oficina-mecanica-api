@@ -45,10 +45,10 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
         veiculoId = id(criar("/veiculos", """
                 {"placa":"BRA2E19","marca":"Fiat","modelo":"Argo","ano":2022,"clienteId":%d}
                 """.formatted(clienteId)));
-        servicoId = id(criar("/servico", """
+        servicoId = id(criar("/servicos", """
                 {"nome":"Troca de óleo","descricao":"Troca de óleo do motor","preco":100.00}
                 """));
-        pecaId = id(criar("/insumos", """
+        pecaId = id(criar("/pecas-insumos", """
                 {"nome":"Filtro de óleo","descricao":"Filtro","quantidade":10,"reservado":0,"preco":25.00}
                 """));
     }
@@ -134,10 +134,10 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
                  "pecas":[{"idPeca":%d,"quantidade":1}]}
                 """.formatted(CPF, veiculoId, servicoId, pecaId));
 
-        executar(delete("/servico/" + servicoId))
+        executar(delete("/servicos/" + servicoId))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message", is("O serviço está em uma ordem de serviço e não pode ser excluído")));
-        executar(delete("/insumos/" + pecaId))
+        executar(delete("/pecas-insumos/" + pecaId))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message", is("O insumo está em uma ordem de serviço e não pode ser excluído")));
 
@@ -148,8 +148,8 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
     @Test
     @DisplayName("Serviço e peça que não estão em nenhuma OS continuam podendo ser excluídos")
     void excluirItemSemUso() throws Exception {
-        executar(delete("/servico/" + servicoId)).andExpect(status().isNoContent());
-        executar(delete("/insumos/" + pecaId)).andExpect(status().isNoContent());
+        executar(delete("/servicos/" + servicoId)).andExpect(status().isNoContent());
+        executar(delete("/pecas-insumos/" + pecaId)).andExpect(status().isNoContent());
     }
 
     @Test

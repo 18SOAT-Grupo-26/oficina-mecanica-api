@@ -114,7 +114,7 @@ public abstract class IntegracaoBase {
     }
 
     private void cadastrar(String json) throws Exception {
-        mockMvc.perform(post("/auth/cadastro")
+        mockMvc.perform(post("/usuarios")
                         .header(HttpHeaders.AUTHORIZATION, tokenAdmin())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))

@@ -13,7 +13,7 @@ class RotasPublicasTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "/auth/login", "/auth/validate",
+            "/auth/login", "/auth/validacao",
             "/actuator/health", "/actuator/prometheus",
             "/documentation", "/swagger-ui/index.html", "/v3/api-docs", "/api-docs-personalized"})
     @DisplayName("Deve tratar como públicas só autenticação, documentação e monitoramento")
@@ -23,9 +23,9 @@ class RotasPublicasTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-            "/clientes", "/clientes/1", "/veiculos", "/servico", "/insumos",
+            "/clientes", "/clientes/1", "/veiculos", "/servicos", "/pecas-insumos",
             "/ordens-servico", "/ordens-servico/1/status", "/ordens-servico/tempo-medio-execucao",
-            "/auth/cadastro", "/auth/usuarios", "/authx", "/autenticacao/login"})
+            "/usuarios", "/auth/cadastro", "/auth/usuarios", "/authx", "/autenticacao/login"})
     @DisplayName("Deve exigir token em todas as outras rotas, inclusive o cadastro e qualquer rota nova em /auth")
     void deveReconhecerRotasProtegidas(String rota) {
         assertThat(RotasPublicas.isPublica(rota)).isFalse();

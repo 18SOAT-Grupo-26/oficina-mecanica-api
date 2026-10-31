@@ -39,7 +39,7 @@ class SegurancaIT extends IntegracaoBase {
         mockMvc.perform(get("/clientes")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/ordens-servico/tempo-medio-execucao")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/minhas-ordens")).andExpect(status().isUnauthorized());
-        mockMvc.perform(post("/auth/cadastro").contentType(MediaType.APPLICATION_JSON)
+        mockMvc.perform(post("/usuarios").contentType(MediaType.APPLICATION_JSON)
                         .content(cadastroJson("intruso", "ADMIN")))
                 .andExpect(status().isUnauthorized());
     }
@@ -56,10 +56,10 @@ class SegurancaIT extends IntegracaoBase {
     void funcionarioComPermissao() throws Exception {
         String funcionario = tokenDe("funcionario", "FUNCIONARIO");
 
-        mockMvc.perform(get("/servico").header(HttpHeaders.AUTHORIZATION, funcionario)).andExpect(status().isOk());
+        mockMvc.perform(get("/servicos").header(HttpHeaders.AUTHORIZATION, funcionario)).andExpect(status().isOk());
         mockMvc.perform(get("/clientes").header(HttpHeaders.AUTHORIZATION, funcionario)).andExpect(status().isOk());
         mockMvc.perform(get("/veiculos").header(HttpHeaders.AUTHORIZATION, funcionario)).andExpect(status().isOk());
-        mockMvc.perform(get("/insumos").header(HttpHeaders.AUTHORIZATION, funcionario)).andExpect(status().isOk());
+        mockMvc.perform(get("/pecas-insumos").header(HttpHeaders.AUTHORIZATION, funcionario)).andExpect(status().isOk());
         mockMvc.perform(get("/ordens-servico/tempo-medio-execucao").header(HttpHeaders.AUTHORIZATION, funcionario))
                 .andExpect(status().isOk());
     }
@@ -72,9 +72,9 @@ class SegurancaIT extends IntegracaoBase {
         mockMvc.perform(delete("/clientes/1").header(HttpHeaders.AUTHORIZATION, funcionario))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message", is("Acesso negado")));
-        mockMvc.perform(delete("/servico/1").header(HttpHeaders.AUTHORIZATION, funcionario))
+        mockMvc.perform(delete("/servicos/1").header(HttpHeaders.AUTHORIZATION, funcionario))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, funcionario)
+        mockMvc.perform(post("/usuarios").header(HttpHeaders.AUTHORIZATION, funcionario)
                         .contentType(MediaType.APPLICATION_JSON).content(cadastroJson("outro", "FUNCIONARIO")))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/minhas-ordens").header(HttpHeaders.AUTHORIZATION, funcionario))
@@ -98,7 +98,7 @@ class SegurancaIT extends IntegracaoBase {
     @Test
     @DisplayName("Cadastro de CLIENTE sem clienteId deve responder 400")
     void clienteSemClienteId() throws Exception {
-        mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, tokenAdmin())
+        mockMvc.perform(post("/usuarios").header(HttpHeaders.AUTHORIZATION, tokenAdmin())
                         .contentType(MediaType.APPLICATION_JSON).content(cadastroJson("semcliente", "CLIENTE")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is("Informe o clienteId para o perfil CLIENTE")));
@@ -112,15 +112,15 @@ class SegurancaIT extends IntegracaoBase {
         mockMvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"identificador\":\"ana\",\"senha\":\"Errada@123\"}"))
                 .andExpect(status().isUnauthorized());
-        mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, tokenAdmin())
+        mockMvc.perform(post("/usuarios").header(HttpHeaders.AUTHORIZATION, tokenAdmin())
                         .contentType(MediaType.APPLICATION_JSON).content(cadastroJson("ana", "FUNCIONARIO")))
                 .andExpect(status().isConflict());
     }
 
     @Test
-    @DisplayName("/auth/validate deve aceitar o token emitido pelo login")
+    @DisplayName("/auth/validacao deve aceitar o token emitido pelo login")
     void validarToken() throws Exception {
-        mockMvc.perform(get("/auth/validate").header(HttpHeaders.AUTHORIZATION, tokenAdmin()))
+        mockMvc.perform(get("/auth/validacao").header(HttpHeaders.AUTHORIZATION, tokenAdmin()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", is(true)));
     }

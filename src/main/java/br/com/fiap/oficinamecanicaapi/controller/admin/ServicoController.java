@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/servico")
+@RequestMapping("/servicos")
 @PreAuthorize("hasAnyRole('ADMIN', 'FUNCIONARIO')")
 public class ServicoController implements ServicoAPI {
 

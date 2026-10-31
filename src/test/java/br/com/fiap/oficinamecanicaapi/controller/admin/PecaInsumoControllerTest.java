@@ -40,7 +40,7 @@ class PecaInsumoControllerTest {
     private static final String BEARER = "Bearer " + TOKEN;
     private static final String USERNAME = "usuario";
     private static final Long ID = 1L;
-    private static final String ROTA = "/insumos";
+    private static final String ROTA = "/pecas-insumos";
     private static final PecaInsumoRequest REQUEST = new PecaInsumoRequest("Filtro de óleo", "Original", 10, 0, new BigDecimal("30.00"));
     private static final PecaInsumoResponse RESPONSE = new PecaInsumoResponse(ID, "Filtro de óleo", "Original", 10, 0, new BigDecimal("30.00"), null, null);
     private static final String REQUEST_JSON = """
