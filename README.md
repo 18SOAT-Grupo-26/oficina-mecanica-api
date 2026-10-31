@@ -286,7 +286,8 @@ Para ver os problemas do Sonar enquanto programa, instale a extensão **SonarQub
 - Swagger UI: http://localhost:8081/api/v1/documentation
 - OpenAPI (JSON): http://localhost:8081/api/v1/api-docs-personalized
 
-Para chamar endpoints protegidos pelo Swagger, faça login em `POST /auth/login`, clique em **Authorize** e cole o token.
+Para chamar endpoints protegidos pelo Swagger, faça login em `POST /auth/login`, clique em **Authorize** e cole o token
+**sem o prefixo `Bearer `**: o Swagger já o acrescenta e, com o prefixo duplicado, a API responde 401.
 
 ### Respostas de erro
 
