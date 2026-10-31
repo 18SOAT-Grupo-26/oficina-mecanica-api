@@ -192,11 +192,15 @@ Todas ficam no `.env` (copiado do [`.env.example`](.env.example)). O Compose rep
 
 | Comando      | O que roda | Precisa de |
 |--------------|------------|------------|
-| `mvn test`   | testes unitários (`*Test`): domínio, casos de uso, controllers, segurança | só Java e Maven |
+| `mvn test`   | testes unitários (`*Test`): domínio, casos de uso, controllers, segurança e arquitetura | só Java e Maven |
 | `mvn verify` | unitários + testes de integração (`*IT`), cobertura JaCoCo e a meta de 80% | Docker aberto (Testcontainers sobe um PostgreSQL 18 só para o teste) |
 
 Os testes de integração ficam no pacote da classe que exercitam (ex.: `SegurancaIT`, `FluxoOrdemServicoIT`,
 `MigracoesIT`) e usam a base `src/test/java/.../integracao/IntegracaoBase.java`. Sem Docker, eles são pulados.
+
+O `RegraDependenciaTest` (ArchUnit) confere a regra de dependência da
+[ADR 001](docs/adr/0001-monolito-em-camadas.md): um `import` de `infrastructure` dentro do `core`, por exemplo,
+reprova o build. A única exceção é o `Perfil`, que implementa `GrantedAuthority` (dívida conhecida).
 
 Sem Java ou Maven instalados, os unitários rodam num container:
 
@@ -283,6 +287,25 @@ Para ver os problemas do Sonar enquanto programa, instale a extensão **SonarQub
 - OpenAPI (JSON): http://localhost:8081/api/v1/api-docs-personalized
 
 Para chamar endpoints protegidos pelo Swagger, faça login em `POST /auth/login`, clique em **Authorize** e cole o token.
+
+### Respostas de erro
+
+Todo erro volta no mesmo formato (`ErrorTemplate`: `errorCode`, `message`, `timestamp` e `traceId`), sem stack trace.
+O `HandlerException` converte cada tipo de erro no status HTTP:
+
+| Status | Quando |
+|--------|--------|
+| 400 | Dado inválido: Bean Validation (`@Valid`), regra de formato do domínio (CPF/CNPJ, placa, nome, preço, estoque), parâmetro de tipo errado ou header obrigatório ausente |
+| 401 | Token ausente, inválido ou expirado, ou credenciais inválidas no login |
+| 403 | Perfil sem permissão para a rota (ex.: `FUNCIONARIO` tentando excluir) |
+| 404 | Recurso não encontrado ou desativado |
+| 409 | Conflito com uma regra de negócio: duplicidade, transição de status inválida, saldo insuficiente, item em uso |
+| 422 | Body ausente ou ilegível (JSON malformado, enum desconhecido) |
+| 429 | Muitas tentativas de login |
+| 500 | Erro inesperado ou de configuração do servidor (ex.: perfil ausente na tabela `perfis`) |
+| 503 | Banco fora do ar ou lento demais |
+
+Desde o #139, a validação de serviço e de peça responde **400**, como a dos outros cadastros. Antes, respondia 422.
 
 ### Collection do Postman
 

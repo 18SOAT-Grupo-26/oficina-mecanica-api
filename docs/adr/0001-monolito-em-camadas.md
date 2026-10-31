@@ -215,9 +215,9 @@ callbacks em cada entidade sem levar JPA para o domínio.
 - Curva de aprendizado: ports, adapters e a regra de dependência são novos para parte da equipe. Num projeto do nosso
   tamanho, a quantidade de abstrações pesa mais do que pesaria num sistema grande.
 - A aplicação escala só como um todo. Um bug ou um deploy afeta todos os contextos.
-- Hoje, a regra de dependência depende de disciplina e de code review. A mitigação planejada é adicionar testes de
-  arquitetura (ArchUnit) ao pipeline que já roda Sonar e JaCoCo em cada PR, para que uma violação de camada reprove o
-  PR ([ADR 005](0005-estrategia-de-testes.md)).
+- A regra de dependência não depende mais só de disciplina e de code review: desde 31/10, o `RegraDependenciaTest`
+  (ArchUnit) confere a tabela acima no `mvn test`, e uma violação de camada reprova o PR
+  ([ADR 005](0005-estrategia-de-testes.md)). A exceção declarada é o `Perfil` (`GrantedAuthority`), citada abaixo.
 - As métricas de negócio e de segurança (Micrometer, expostas em `/actuator/prometheus` e lidas pelo Prometheus e pelo
   Grafana do compose) entraram antes do previsto em 21/10. A configuração fica em `infrastructure/config/metrics`, mas
   os casos de uso registram contadores direto no `MeterRegistry`, o que é mais uma dependência leve no `core`. A

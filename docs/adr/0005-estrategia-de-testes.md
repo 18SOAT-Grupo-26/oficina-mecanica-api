@@ -116,7 +116,7 @@ Os testes de integração entraram na `develop` no #111, com o `maven-failsafe-p
 | Banco do `docker compose` nos testes            | Integração        | Descartada: estado compartilhado entre execuções  |
 | **JaCoCo com mínimo por pacote crítico**        | Cobertura         | **Escolhida**                                     |
 | Mínimo de 80% no projeto inteiro                | Cobertura         | Descartada por enquanto: pune código sem regra    |
-| Testes de arquitetura (ArchUnit)                | Arquitetura       | Evolução (ADR 001)                                |
+| **Testes de arquitetura (ArchUnit)**            | Arquitetura       | **Escolhida** (31/10)                             |
 | Testes de contrato (Spring Cloud Contract, Pact) | Contrato          | Não se aplica: sem consumidores conhecidos        |
 | Testes de mutação (PIT)                         | Qualidade         | Evolução futura                                   |
 | Testes de carga (k6, Gatling)                   | Desempenho        | Fase 2                                            |
@@ -157,10 +157,13 @@ Os testes de integração entraram na `develop` no #111, com o `maven-failsafe-p
 
 - **Prós:** a regra de dependência da ADR 001 vira teste, e um `import` de `infrastructure` dentro do `core` reprova o
   PR.
-- **Contras:** mais uma dependência e regras para manter. Hoje o `core` ainda tem exceções conhecidas (ADR 001 e ADR
-  004), então as regras nasceriam com exceções.
-- **Por que não, por enquanto:** é a mitigação já prevista na ADR 001. Entra quando as dívidas do `core` forem pagas,
-  para nascer sem exceções.
+- **Contras:** mais uma dependência e regras para manter. O `core` ainda tem uma exceção conhecida, então a regra
+  nasceu com ela declarada.
+- **Decisão (31/10):** entrou no `RegraDependenciaTest`, com uma regra por linha da tabela "Regra de dependência" da
+  ADR 001, rodando no `mvn test` (e, portanto, no pre-push e no CI). Os pacotes são ancorados na raiz do projeto, para
+  `core/domain/shared` não ser confundido com o `shared` transversal. A única exceção é o `Perfil`, que implementa
+  `GrantedAuthority` (ADR 004); qualquer violação nova reprova o build. Gerar o JWT em `core/usecase/auth` não viola a
+  tabela, porque o jjwt é uma biblioteca e não uma camada.
 
 ### 6. Testes de contrato, mutação e carga
 
