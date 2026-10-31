@@ -48,6 +48,7 @@ public interface PecaInsumoAPI {
     @Operation(summary = "Excluir insumo", tags = "Insumo")
     @ApiResponse(responseCode = "204", description = "Insumo excluído")
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "O insumo está em uma ordem de serviço e não pode ser excluído", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @DeleteMapping("/{id}")
     ResponseEntity<Void> excluir(@PathVariable Long id);
 }

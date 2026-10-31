@@ -13,6 +13,7 @@ import org.apache.tomcat.util.http.InvalidParameterException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -147,6 +148,17 @@ public class HandlerException {
         Metrics.counter("oficina.banco.indisponivel").increment();
         return buildError(HttpStatus.SERVICE_UNAVAILABLE,
                 "Serviço temporariamente indisponível. Tente novamente.", e);
+    }
+
+    /**
+     * Violação de chave estrangeira (ex.: excluir serviço ou peça que estão em uma ordem de serviço) é uma recusa de
+     * negócio (409), e não falha do servidor. Outras violações de integridade continuam como 500.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorTemplate> handleIntegridade(DataIntegrityViolationException e) {
+        return ChaveEstrangeira.mensagem(e)
+                .map(mensagem -> buildError(HttpStatus.CONFLICT, mensagem))
+                .orElseGet(() -> handleGenericException(e));
     }
 
     @ExceptionHandler(Exception.class)
