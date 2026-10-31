@@ -1,6 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.RegrasCatalogo;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.NormalizadorNome;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import java.time.OffsetDateTime;
  * Peça ou insumo do estoque, sem JPA. A entidade fica em {@code infrastructure/persistence/pecainsumo}.
  * Só muda pelos métodos com regra ({@link #novo}, {@link #atualizar}, {@link #desativar}), então o estoque nunca
  * fica incoerente ({@code 0 <= reservado <= quantidade}). Não é apagada: a OS antiga continua apontando para a peça
- * desativada. Reserva e baixa na OS continuam no UPDATE atômico do port (ADR 003).
+ * desativada; só não pode ser desativada enquanto houver unidades reservadas para orçamentos enviados. Reserva e baixa na OS continuam no UPDATE atômico do port (ADR 003).
  */
 @Getter
 public class PecaInsumo {
@@ -69,6 +70,10 @@ public class PecaInsumo {
     }
 
     public void desativar() {
+        if (reservado != null && reservado > 0) {
+            throw new ConflitoException("A peça tem " + reservado
+                    + " unidade(s) reservada(s) para orçamentos enviados e não pode ser desativada");
+        }
         this.ativo = false;
     }
 

@@ -100,7 +100,7 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
     }
 
     private void validarNomeDisponivel(String nomeNormalizado) {
-        if (servicoPortOut.existePorNomeNormalizado(nomeNormalizado)) {
+        if (servicoPortOut.existeAtivoPorNomeNormalizado(nomeNormalizado)) {
             throw new ConflitoException("Já existe um serviço cadastrado com este nome");
         }
     }

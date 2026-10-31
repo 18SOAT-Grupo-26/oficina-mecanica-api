@@ -21,7 +21,7 @@ public interface PecaInsumoPortOut {
 
     List<PecaInsumo> buscarPorIds(Collection<Long> ids);
 
-    boolean existePorNomeNormalizado(String nomeNormalizado);
+    boolean existeAtivoPorNomeNormalizado(String nomeNormalizado);
 
     Pagina<PecaInsumo> listarAtivos(int pagina, int tamanho);
 }

@@ -148,6 +148,39 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
     }
 
     @Test
+    @DisplayName("Peça com unidades reservadas para um orçamento enviado não pode ser desativada")
+    void desativarPecaReservada() throws Exception {
+        long osId = id(criar("/ordens-servico", """
+                {"documentoCliente":"%s","idVeiculo":%d,"servicos":[],
+                 "pecas":[{"idPeca":%d,"quantidade":2}]}
+                """.formatted(CPF, veiculoId, pecaId)));
+        executar(post("/ordens-servico/" + osId + "/orcamento/envio")).andExpect(status().isOk());
+
+        executar(delete("/pecas-insumos/" + pecaId))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message",
+                        is("A peça tem 2 unidade(s) reservada(s) para orçamentos enviados e não pode ser desativada")));
+        executar(get("/pecas-insumos/" + pecaId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("Desativar serviço ou peça libera o nome para um cadastro novo")
+    void desativarLiberaNome() throws Exception {
+        executar(delete("/servicos/" + servicoId)).andExpect(status().isNoContent());
+        executar(delete("/pecas-insumos/" + pecaId)).andExpect(status().isNoContent());
+
+        long novoServico = id(criar("/servicos", """
+                {"nome":"Troca de óleo","descricao":"Troca de óleo do motor","preco":120.00}
+                """));
+        long novaPeca = id(criar("/pecas-insumos", """
+                {"nome":"Filtro de óleo","descricao":"Filtro","quantidade":5,"reservado":0,"preco":30.00}
+                """));
+
+        assertThat(novoServico).isNotEqualTo(servicoId);
+        assertThat(novaPeca).isNotEqualTo(pecaId);
+    }
+
+    @Test
     @DisplayName("Serviço e peça desativados somem do catálogo e não entram em OS nova")
     void itemDesativadoForaDoCatalogo() throws Exception {
         executar(delete("/servicos/" + servicoId)).andExpect(status().isNoContent());

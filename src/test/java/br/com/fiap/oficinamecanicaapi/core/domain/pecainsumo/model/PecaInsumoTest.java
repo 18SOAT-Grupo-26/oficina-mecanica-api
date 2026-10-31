@@ -1,5 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model;
 
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,14 +36,25 @@ class PecaInsumoTest {
     @Test
     @DisplayName("Desativar deve só marcar a peça como inativa, mantendo o estoque")
     void deveDesativar() {
-        PecaInsumo peca = PecaInsumo.reconstituir(7L, NOME, "filtro de oleo", null, 10, 2, new BigDecimal("30.00"),
+        PecaInsumo peca = PecaInsumo.reconstituir(7L, NOME, "filtro de oleo", null, 10, 0, new BigDecimal("30.00"),
                 true, CRIADO_EM, CRIADO_EM);
 
         peca.desativar();
 
         assertThat(peca.isAtivo()).isFalse();
         assertThat(peca.getQuantidade()).isEqualTo(10);
-        assertThat(peca.getReservado()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Não deve desativar com 409 a peça que tem unidades reservadas para orçamentos enviados")
+    void naoDeveDesativarComReserva() {
+        PecaInsumo peca = PecaInsumo.reconstituir(7L, NOME, "filtro de oleo", null, 10, 2, new BigDecimal("30.00"),
+                true, CRIADO_EM, CRIADO_EM);
+
+        assertThatThrownBy(peca::desativar)
+                .isInstanceOf(ConflitoException.class)
+                .hasMessage("A peça tem 2 unidade(s) reservada(s) para orçamentos enviados e não pode ser desativada");
+        assertThat(peca.isAtivo()).isTrue();
     }
 
     @Test

@@ -49,6 +49,7 @@ public interface PecaInsumoAPI {
     @Operation(summary = "Remover insumo (soft delete)", tags = "Insumo")
     @ApiResponse(responseCode = "204", description = "Insumo desativado; as OS que já o usam não mudam")
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "O insumo tem unidades reservadas para orçamentos enviados e não pode ser desativado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @DeleteMapping("/{id}")
     ResponseEntity<Void> desativar(@PathVariable Long id);
 }

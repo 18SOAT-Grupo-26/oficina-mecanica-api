@@ -108,7 +108,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
     }
 
     private void validarNomeDisponivel(String nomeNormalizado) {
-        if (pecaInsumoPortOut.existePorNomeNormalizado(nomeNormalizado)) {
+        if (pecaInsumoPortOut.existeAtivoPorNomeNormalizado(nomeNormalizado)) {
             throw new ConflitoException("Já existe um insumo cadastrado com este nome");
         }
     }

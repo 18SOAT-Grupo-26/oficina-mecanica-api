@@ -36,8 +36,8 @@ public class ServicoPersistenceAdapter implements ServicoPortOut {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existePorNomeNormalizado(String nomeNormalizado) {
-        return repository.existsByNomeNormalizado(nomeNormalizado);
+    public boolean existeAtivoPorNomeNormalizado(String nomeNormalizado) {
+        return repository.existsByNomeNormalizadoAndAtivoTrue(nomeNormalizado);
     }
 
     @Override

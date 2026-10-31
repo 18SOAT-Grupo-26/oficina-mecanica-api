@@ -38,7 +38,7 @@ public interface PecaInsumoJpaRepository
 
     Optional<PecaInsumoEntity> findByIdAndAtivoTrue(Long id);
 
-    boolean existsByNomeNormalizado(String nomeNormalizado);
+    boolean existsByNomeNormalizadoAndAtivoTrue(String nomeNormalizado);
 
     Page<PecaInsumoEntity> findAllByAtivoTrue(Pageable pageable);
 

@@ -64,7 +64,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("criar persiste serviço com nome normalizado e preço com 2 casas")
     void criarPersisteServico() {
-        when(servicoPortOut.existePorNomeNormalizado("troca de oleo")).thenReturn(false);
+        when(servicoPortOut.existeAtivoPorNomeNormalizado("troca de oleo")).thenReturn(false);
         when(servicoPortOut.salvar(any())).thenAnswer(inv -> {
             Servico e = inv.getArgument(0);
             // como o banco: devolve o serviço gravado, agora com id
@@ -98,7 +98,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("criar rejeita nome duplicado ignorando maiúsculas, acentos e espaços (409)")
     void criarRejeitaNomeDuplicado() {
-        when(servicoPortOut.existePorNomeNormalizado("troca de oleo")).thenReturn(true);
+        when(servicoPortOut.existeAtivoPorNomeNormalizado("troca de oleo")).thenReturn(true);
 
         ConflitoException ex = assertThrows(ConflitoException.class,
                 () -> useCase.criar(request("  TROCA   de óleo", null, "10")));
@@ -188,7 +188,7 @@ class ServicoUseCaseTest {
         assertThat(response.preco()).isEqualByComparingTo("95.50");
         assertThat(response.descricao()).isEqualTo("Com filtro");
         assertThat(atual.getPreco().scale()).isEqualTo(2);
-        verify(servicoPortOut, never()).existePorNomeNormalizado(anyString());
+        verify(servicoPortOut, never()).existeAtivoPorNomeNormalizado(anyString());
         assertThat(operacoes("atualizado")).isEqualTo(1);
     }
 
@@ -196,7 +196,7 @@ class ServicoUseCaseTest {
     @DisplayName("atualizar para o nome de outro serviço responde 409 sem gravar")
     void atualizarNomeDuplicado() {
         when(servicoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(servico("Troca de óleo", "80.00")));
-        when(servicoPortOut.existePorNomeNormalizado("alinhamento")).thenReturn(true);
+        when(servicoPortOut.existeAtivoPorNomeNormalizado("alinhamento")).thenReturn(true);
 
         assertErro(ConflitoException.class, "Já existe um serviço cadastrado com este nome",
                 () -> useCase.atualizar(ID, new ServicoRequest("Alinhamento", null, new BigDecimal("50"))));
@@ -236,7 +236,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("criar conta a operação no sucesso e não conta quando a validação falha")
     void criarContaOperacao() {
-        when(servicoPortOut.existePorNomeNormalizado("balanceamento")).thenReturn(false);
+        when(servicoPortOut.existeAtivoPorNomeNormalizado("balanceamento")).thenReturn(false);
         when(servicoPortOut.salvar(any())).thenAnswer(invocacao -> invocacao.getArgument(0));
 
         useCase.criar(new ServicoRequest("Balanceamento", null, new BigDecimal("60")));

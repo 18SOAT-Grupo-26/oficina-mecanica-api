@@ -57,7 +57,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("criar persiste insumo com nome normalizado e preço com 2 casas")
     void criarPersisteInsumo() {
-        when(pecaInsumoPortOut.existePorNomeNormalizado("oleo do motor")).thenReturn(false);
+        when(pecaInsumoPortOut.existeAtivoPorNomeNormalizado("oleo do motor")).thenReturn(false);
         when(pecaInsumoPortOut.salvar(any())).thenAnswer(inv -> {
             PecaInsumo e = inv.getArgument(0);
             // como o banco: devolve a peça gravada, agora com id
@@ -77,7 +77,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("criar rejeita nome já cadastrado (409)")
     void criarRejeitaNomeDuplicado() {
-        when(pecaInsumoPortOut.existePorNomeNormalizado("oleo do motor")).thenReturn(true);
+        when(pecaInsumoPortOut.existeAtivoPorNomeNormalizado("oleo do motor")).thenReturn(true);
 
         ConflitoException ex = assertThrows(ConflitoException.class, () -> useCase.criar(REQUEST));
 
@@ -137,14 +137,14 @@ class PecaInsumoUseCaseTest {
 
         assertThat(response.quantidade()).isEqualTo(7);
         assertThat(response.descricao()).isEqualTo("novo");
-        verify(pecaInsumoPortOut, never()).existePorNomeNormalizado(any());
+        verify(pecaInsumoPortOut, never()).existeAtivoPorNomeNormalizado(any());
     }
 
     @Test
     @DisplayName("atualizar com nome de outro insumo lança 409")
     void atualizarNomeDuplicado() {
         when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(entidade(ID, "Filtro")));
-        when(pecaInsumoPortOut.existePorNomeNormalizado("correia")).thenReturn(true);
+        when(pecaInsumoPortOut.existeAtivoPorNomeNormalizado("correia")).thenReturn(true);
 
         ConflitoException ex = assertThrows(ConflitoException.class, () ->
                 useCase.atualizar(ID, new PecaInsumoRequest("Correia", null, 1, 0, BigDecimal.ONE)));
@@ -161,6 +161,17 @@ class PecaInsumoUseCaseTest {
 
         verify(pecaInsumoPortOut).salvar(entity);
         assertThat(entity.isAtivo()).isFalse();
+    }
+
+    @Test
+    @DisplayName("desativar recusa com 409 o insumo com unidades reservadas, sem gravar")
+    void desativarRecusaInsumoReservado() {
+        PecaInsumo reservado = peca("Filtro de óleo", "filtro de oleo", 10, 3, "30.00");
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(reservado));
+
+        assertThrows(ConflitoException.class, () -> useCase.desativar(ID));
+        verify(pecaInsumoPortOut, never()).salvar(any());
+        assertThat(operacoes("desativado")).isZero();
     }
 
     @Test
@@ -216,7 +227,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("criar sem reservado informado grava reservado zero e conta a operação")
     void criarComReservadoNulo() {
-        when(pecaInsumoPortOut.existePorNomeNormalizado("vela de ignicao")).thenReturn(false);
+        when(pecaInsumoPortOut.existeAtivoPorNomeNormalizado("vela de ignicao")).thenReturn(false);
         when(pecaInsumoPortOut.salvar(any())).thenAnswer(invocacao -> invocacao.getArgument(0));
 
         PecaInsumoResponse response = useCase.criar(request("Vela de ignição", 8, null, "20"));
@@ -236,7 +247,7 @@ class PecaInsumoUseCaseTest {
 
         assertThat(response.quantidade()).isEqualTo(25);
         assertThat(response.preco()).isEqualByComparingTo("32.50");
-        verify(pecaInsumoPortOut, never()).existePorNomeNormalizado(any());
+        verify(pecaInsumoPortOut, never()).existeAtivoPorNomeNormalizado(any());
         assertThat(operacoes("atualizado")).isEqualTo(1);
     }
 
@@ -245,7 +256,7 @@ class PecaInsumoUseCaseTest {
     void atualizarTrocandoNome() {
         PecaInsumo atual = peca("Filtro de óleo", "filtro de oleo", 10, 0, "30.00");
         when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(atual));
-        when(pecaInsumoPortOut.existePorNomeNormalizado("filtro de ar")).thenReturn(false);
+        when(pecaInsumoPortOut.existeAtivoPorNomeNormalizado("filtro de ar")).thenReturn(false);
         when(pecaInsumoPortOut.salvar(atual)).thenReturn(atual);
 
         assertThat(useCase.atualizar(ID, request("Filtro de ar", 10, 0, "30")).nome()).isEqualTo("Filtro de ar");

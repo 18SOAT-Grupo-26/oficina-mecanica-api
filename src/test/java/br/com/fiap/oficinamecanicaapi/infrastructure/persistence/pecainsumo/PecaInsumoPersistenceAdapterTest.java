@@ -83,13 +83,13 @@ class PecaInsumoPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("existePorNomeNormalizado e listarAtivos devem repassar os dados do repositório")
+    @DisplayName("existeAtivoPorNomeNormalizado e listarAtivos devem repassar os dados do repositório")
     void existeEListar() {
         var pageable = PageRequest.of(0, 20, Sort.by("id"));
-        when(repository.existsByNomeNormalizado("filtro de oleo")).thenReturn(false);
+        when(repository.existsByNomeNormalizadoAndAtivoTrue("filtro de oleo")).thenReturn(false);
         when(repository.findAllByAtivoTrue(pageable)).thenReturn(new PageImpl<>(List.of(entidade()), pageable, 1));
 
-        assertThat(adapter.existePorNomeNormalizado("filtro de oleo")).isFalse();
+        assertThat(adapter.existeAtivoPorNomeNormalizado("filtro de oleo")).isFalse();
         assertThat(adapter.listarAtivos(1, 20).itens()).extracting(PecaInsumo::getId).containsExactly(1L);
     }
 

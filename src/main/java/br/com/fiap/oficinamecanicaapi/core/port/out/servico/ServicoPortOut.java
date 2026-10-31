@@ -11,7 +11,7 @@ public interface ServicoPortOut {
 
     Optional<Servico> buscarAtivoPorId(Long id);
 
-    boolean existePorNomeNormalizado(String nomeNormalizado);
+    boolean existeAtivoPorNomeNormalizado(String nomeNormalizado);
 
     Pagina<Servico> listarAtivos(int pagina, int tamanho);
 }

@@ -11,7 +11,7 @@ public interface ServicoJpaRepository
 
     Optional<ServicoEntity> findByIdAndAtivoTrue(Long id);
 
-    boolean existsByNomeNormalizado(String nomeNormalizado);
+    boolean existsByNomeNormalizadoAndAtivoTrue(String nomeNormalizado);
 
     Page<ServicoEntity> findAllByAtivoTrue(Pageable pageable);
 }

@@ -75,11 +75,11 @@ class ServicoPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("existePorNomeNormalizado deve repassar o resultado")
+    @DisplayName("existeAtivoPorNomeNormalizado deve repassar o resultado")
     void existePorNome() {
-        when(repository.existsByNomeNormalizado("troca de oleo")).thenReturn(true);
+        when(repository.existsByNomeNormalizadoAndAtivoTrue("troca de oleo")).thenReturn(true);
 
-        assertThat(adapter.existePorNomeNormalizado("troca de oleo")).isTrue();
+        assertThat(adapter.existeAtivoPorNomeNormalizado("troca de oleo")).isTrue();
     }
 
     @Test
