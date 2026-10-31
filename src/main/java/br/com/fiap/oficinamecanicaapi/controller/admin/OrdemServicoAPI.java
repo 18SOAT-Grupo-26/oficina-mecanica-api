@@ -1,8 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.controller.admin;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServicoResponse;
-import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.TempoMedioExecucaoResponse;
+import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoResponse;
+import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.TempoMedioExecucaoResponse;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;

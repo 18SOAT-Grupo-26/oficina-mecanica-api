@@ -1,9 +1,9 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.servico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
+import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.servico.mapper.ServicoMapper;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;

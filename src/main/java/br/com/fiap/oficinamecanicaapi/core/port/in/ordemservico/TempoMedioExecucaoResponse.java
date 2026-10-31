@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
+package br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico;
 
 /**
  * Tempo médio de execução das OS que passaram por FINALIZADA (de EM_EXECUCAO a FINALIZADA).

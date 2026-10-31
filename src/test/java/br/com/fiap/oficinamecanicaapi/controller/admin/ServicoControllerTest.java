@@ -1,12 +1,12 @@
 package br.com.fiap.oficinamecanicaapi.controller.admin;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
+import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;

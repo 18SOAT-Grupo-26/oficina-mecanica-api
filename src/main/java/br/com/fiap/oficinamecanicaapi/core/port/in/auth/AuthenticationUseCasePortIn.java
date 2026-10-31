@@ -1,8 +1,5 @@
 package br.com.fiap.oficinamecanicaapi.core.port.in.auth;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.AuthToken;
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.CadastroRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 
 public interface AuthenticationUseCasePortIn {

@@ -1,4 +1,4 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model;
+package br.com.fiap.oficinamecanicaapi.core.port.in.veiculo;
 
 import java.time.OffsetDateTime;
 

@@ -1,5 +1,6 @@
-package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
+package br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico;
 
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

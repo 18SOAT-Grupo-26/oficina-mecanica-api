@@ -1,8 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.port.in.veiculo;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
-import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.VeiculoRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.VeiculoResponse;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 
 public interface VeiculoUseCasePortIn {

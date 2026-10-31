@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.cliente.mapper;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.ClienteResponse;
+import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

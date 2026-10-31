@@ -1,10 +1,10 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.cliente;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.Cliente;
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.ClienteRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.cliente.model.ClienteResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
+import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.cliente.mapper.ClienteMapper;

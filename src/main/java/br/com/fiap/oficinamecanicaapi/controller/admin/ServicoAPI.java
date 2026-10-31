@@ -1,8 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.controller.admin;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoRequest;
-import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
+import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;

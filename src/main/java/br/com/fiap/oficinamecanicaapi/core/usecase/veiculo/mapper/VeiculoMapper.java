@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.veiculo.mapper;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Veiculo;
-import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.VeiculoResponse;
+import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
