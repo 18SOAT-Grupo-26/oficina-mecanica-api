@@ -24,7 +24,7 @@ class RotasPublicasTest {
     @ParameterizedTest
     @ValueSource(strings = {
             "/clientes", "/clientes/1", "/veiculos", "/servico", "/insumos",
-            "/ordens-servico", "/ordens-servico/1/status", "/ordens-servico/listar/1",
+            "/ordens-servico", "/ordens-servico/1/status", "/ordens-servico/tempo-medio-execucao",
             "/auth/cadastro", "/auth/usuarios", "/authx", "/autenticacao/login"})
     @DisplayName("Deve exigir token em todas as outras rotas, inclusive o cadastro e qualquer rota nova em /auth")
     void deveReconhecerRotasProtegidas(String rota) {

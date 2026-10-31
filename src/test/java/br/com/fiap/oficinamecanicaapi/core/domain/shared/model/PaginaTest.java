@@ -25,8 +25,8 @@ class PaginaTest {
     }
 
     @ParameterizedTest(name = "página {0} → {1}")
-    @CsvSource(value = {"NULL, 0", "-1, 0", "0, 0", "4, 4"}, nullValues = "NULL")
-    @DisplayName("Página ausente ou negativa deve virar a primeira")
+    @CsvSource(value = {"NULL, 1", "-1, 1", "0, 1", "1, 1", "4, 4"}, nullValues = "NULL")
+    @DisplayName("Página ausente, zero ou negativa deve virar a primeira (1)")
     void deveValidarPagina(Integer informada, int esperada) {
         assertThat(Pagina.paginaValida(informada)).isEqualTo(esperada);
     }

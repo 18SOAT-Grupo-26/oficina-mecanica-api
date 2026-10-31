@@ -1,6 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.controller.admin;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
@@ -388,35 +389,60 @@ class OrdemServicoControllerTest {
     }
 
     @Test
-    @DisplayName("Deve listar as OS do cliente")
-    void deveListarOrdensDoCliente() throws Exception {
+    @DisplayName("Deve listar as OS filtrando por cliente e status e repassando a paginação")
+    void deveListarOrdensComFiltros() throws Exception {
         autenticarComo(Perfil.FUNCIONARIO);
-        when(useCase.listar(ID_CLIENTE)).thenReturn(List.of(
-                new OrdemServicoResponse(2L, ID_CLIENTE, 20L, StatusOrdemServico.EM_DIAGNOSTICO, List.of(), List.of(), List.of()),
-                new OrdemServicoResponse(1L, ID_CLIENTE, 20L, StatusOrdemServico.ENTREGUE, List.of(), List.of(), List.of())));
+        when(useCase.listar(ID_CLIENTE, ENTREGUE, 1, 5)).thenReturn(new Pagina<>(List.of(
+                new OrdemServicoResponse(1L, ID_CLIENTE, 20L, ENTREGUE, List.of(), List.of(), List.of())), 1, 5, 6));
 
-        mockMvc.perform(get("/ordens-servico/listar/{idCliente}", ID_CLIENTE).header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(get("/ordens-servico").header(HttpHeaders.AUTHORIZATION, BEARER)
+                        .param("clienteId", "10").param("status", "ENTREGUE").param("pagina", "1").param("tamanho", "5"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].id").value(2))
-                .andExpect(jsonPath("$[1].status").value("ENTREGUE"));
+                .andExpect(jsonPath("$.itens.length()").value(1))
+                .andExpect(jsonPath("$.itens[0].status").value("ENTREGUE"))
+                .andExpect(jsonPath("$.pagina").value(1))
+                .andExpect(jsonPath("$.total").value(6));
     }
 
     @Test
-    @DisplayName("Deve responder lista vazia quando o cliente não tem OS")
-    void deveResponderListaVazia() throws Exception {
-        autenticarComo(Perfil.FUNCIONARIO);
-        when(useCase.listar(ID_CLIENTE)).thenReturn(List.of());
+    @DisplayName("Deve listar todas as OS quando nenhum filtro for informado")
+    void deveListarTodasAsOrdens() throws Exception {
+        autenticarComo(Perfil.ADMIN);
+        when(useCase.listar(null, null, null, null)).thenReturn(new Pagina<>(List.of(
+                new OrdemServicoResponse(2L, 11L, 21L, EM_DIAGNOSTICO, List.of(), List.of(), List.of()),
+                new OrdemServicoResponse(1L, ID_CLIENTE, 20L, ENTREGUE, List.of(), List.of(), List.of())), 0, 20, 2));
 
-        mockMvc.perform(get("/ordens-servico/listar/{idCliente}", ID_CLIENTE).header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(get("/ordens-servico").header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.itens.length()").value(2))
+                .andExpect(jsonPath("$.itens[0].id").value(2))
+                .andExpect(jsonPath("$.total").value(2));
     }
 
     @Test
-    @DisplayName("Deve responder 401 sem token")
-    void deveExigirToken() throws Exception {
-        mockMvc.perform(get("/ordens-servico/listar/{idCliente}", ID_CLIENTE))
+    @DisplayName("Deve responder 400 quando o status do filtro não existe")
+    void deveRecusarStatusDesconhecidoNoFiltro() throws Exception {
+        autenticarComo(Perfil.FUNCIONARIO);
+
+        mockMvc.perform(get("/ordens-servico").header(HttpHeaders.AUTHORIZATION, BEARER).param("status", "PERDIDA"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(useCase);
+    }
+
+    @Test
+    @DisplayName("Deve responder 401 na listagem sem token")
+    void deveExigirTokenNaListagem() throws Exception {
+        mockMvc.perform(get("/ordens-servico"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Deve responder 403 na listagem para o perfil CLIENTE")
+    void deveNegarListagemAoCliente() throws Exception {
+        autenticarComo(Perfil.CLIENTE);
+
+        mockMvc.perform(get("/ordens-servico").header(HttpHeaders.AUTHORIZATION, BEARER))
+                .andExpect(status().isForbidden());
     }
 }

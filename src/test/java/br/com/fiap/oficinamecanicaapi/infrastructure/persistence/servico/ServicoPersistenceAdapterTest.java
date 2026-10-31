@@ -87,7 +87,7 @@ class ServicoPersistenceAdapterTest {
         var pageable = PageRequest.of(0, 20, Sort.by("id"));
         when(repository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entidade()), pageable, 1));
 
-        var pagina = adapter.listar(0, 20);
+        var pagina = adapter.listar(1, 20);
 
         assertThat(pagina.itens()).extracting(Servico::getId).containsExactly(1L);
         assertThat(pagina.total()).isEqualTo(1);

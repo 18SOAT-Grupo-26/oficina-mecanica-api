@@ -27,8 +27,8 @@ public class ClienteController implements ClienteAPI {
     }
 
     @Override
-    public ResponseEntity<Pagina<ClienteResponse>> listar(Integer page, Integer size) {
-        return ResponseEntity.ok(useCase.listar(page, size));
+    public ResponseEntity<Pagina<ClienteResponse>> listar(Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(pagina, tamanho));
     }
 
     @Override

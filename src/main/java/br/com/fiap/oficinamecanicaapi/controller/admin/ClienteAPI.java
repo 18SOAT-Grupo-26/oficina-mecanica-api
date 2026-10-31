@@ -5,6 +5,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteResponse;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -24,8 +25,8 @@ public interface ClienteAPI {
     @Operation(summary = "Listar clientes ativos", tags = "Cliente")
     @ApiResponse(responseCode = "200", description = "Página de clientes ativos")
     @GetMapping
-    ResponseEntity<Pagina<ClienteResponse>> listar(@RequestParam(required = false) Integer page,
-                                                   @RequestParam(required = false) Integer size);
+    ResponseEntity<Pagina<ClienteResponse>> listar(@Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer pagina,
+                                                   @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer tamanho);
 
     @Operation(summary = "Buscar cliente por id", tags = "Cliente")
     @ApiResponse(responseCode = "200", description = "Cliente encontrado", content = @Content(schema = @Schema(implementation = ClienteResponse.class)))

@@ -82,9 +82,10 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("ENTREGUE")));
 
-        executar(get("/ordens-servico/listar/" + clienteId))
+        executar(get("/ordens-servico").param("clienteId", String.valueOf(clienteId)).param("status", "ENTREGUE"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$.itens", hasSize(1)))
+                .andExpect(jsonPath("$.itens[0].id", is((int) osId)));
         executar(get("/ordens-servico/tempo-medio-execucao"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.quantidadeOrdens", is(1)));

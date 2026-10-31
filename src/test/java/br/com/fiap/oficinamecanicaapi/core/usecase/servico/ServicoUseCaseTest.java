@@ -151,7 +151,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("listar aplica a paginação padrão quando nada é informado")
     void listarComPaginacaoPadrao() {
-        when(servicoPortOut.listar(0, 20)).thenReturn(new Pagina<>(List.of(servico("Troca de óleo", "80.00")), 0, 20, 1));
+        when(servicoPortOut.listar(1, 20)).thenReturn(new Pagina<>(List.of(servico("Troca de óleo", "80.00")), 1, 20, 1));
 
         Pagina<ServicoResponse> pagina = useCase.listar(null, null);
 
@@ -162,7 +162,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("listar corrige página negativa e limita o tamanho a 100")
     void listarCorrigePaginacao() {
-        when(servicoPortOut.listar(0, 100)).thenReturn(new Pagina<>(List.of(), 0, 100, 0));
+        when(servicoPortOut.listar(1, 100)).thenReturn(new Pagina<>(List.of(), 1, 100, 0));
 
         assertThat(useCase.listar(-3, 500).tamanho()).isEqualTo(100);
     }

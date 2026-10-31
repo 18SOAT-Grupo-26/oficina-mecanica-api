@@ -67,8 +67,8 @@ histórico ou ao resultado do comando.
 | Política | Orçamento enviado → Reserva de estoque | `PecaInsumoPortOut.reservar` | `PATCH /ordens-servico/{id}/gerar-orcamento` |
 | Política | Orçamento aprovado → Baixa de estoque | `PecaInsumoPortOut.baixar` | `PATCH /ordens-servico/{id}/aprovar-orcamento` |
 | Política | Orçamento rejeitado ou OS cancelada em Aguardando aprovação → Liberação de estoque | `PecaInsumoPortOut.liberar` | `PATCH /ordens-servico/{id}/rejeitar-orcamento` · `PATCH /ordens-servico/{id}/status` (CANCELADA) · `DELETE /ordens-servico/{id}` |
-| Modelo de leitura | OS com itens e histórico (equipe) | `OrdemServicoUseCase.consultar`, `listar` | `GET /ordens-servico/{id}` · `GET /ordens-servico/listar/{idCliente}` |
-| Modelo de leitura | Andamento e histórico da OS (Cliente) | `MinhasOrdensController`, `OrdemServicoUseCase.consultarDoCliente` | `GET /minhas-ordens` · `GET /minhas-ordens/{id}` |
+| Modelo de leitura | OS com itens e histórico (equipe) | `OrdemServicoUseCase.consultar`, `listar` | `GET /ordens-servico/{id}` · `GET /ordens-servico` (filtros `clienteId` e `status`, paginado) |
+| Modelo de leitura | Andamento e histórico da OS (Cliente) | `MinhasOrdensController`, `OrdemServicoUseCase.listarDoCliente`, `consultarDoCliente` | `GET /minhas-ordens` · `GET /minhas-ordens/{id}` |
 | Modelo de leitura | Tempo médio de execução | `consultarTempoMedioExecucao` | `GET /ordens-servico/tempo-medio-execucao` |
 | Ator | Administrador | `Perfil.ADMIN` | tudo, inclusive `POST /auth/cadastro` e os `DELETE` |
 | Ator | Funcionário | `Perfil.FUNCIONARIO` | cadastros (sem `DELETE`) e todas as rotas de `/ordens-servico`, exceto `DELETE /ordens-servico/{id}` |

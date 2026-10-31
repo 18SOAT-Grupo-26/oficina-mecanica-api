@@ -1,5 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico;
 
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 
 import java.util.List;
 
@@ -18,7 +20,15 @@ public interface OrdemServicoUseCasePortIn {
 
     OrdemServicoResponse consultar(Long id);
 
-    List<OrdemServicoResponse> listar(Long idCliente);
+    /**
+     * Listagem da oficina, da OS mais nova para a mais antiga. Cliente e status são filtros opcionais (nulo = todos).
+     */
+    Pagina<OrdemServicoResponse> listar(Long idCliente, StatusOrdemServico status, Integer pagina, Integer tamanho);
+
+    /**
+     * Todas as OS do cliente, da mais nova para a mais antiga: é a lista que o próprio cliente acompanha.
+     */
+    List<OrdemServicoResponse> listarDoCliente(Long idCliente);
 
     /**
      * Consulta feita pelo próprio cliente: a OS de outro cliente responde 404, como se não existisse.

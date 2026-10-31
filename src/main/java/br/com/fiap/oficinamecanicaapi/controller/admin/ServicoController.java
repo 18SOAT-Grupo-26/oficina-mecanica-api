@@ -27,8 +27,8 @@ public class ServicoController implements ServicoAPI {
     }
 
     @Override
-    public ResponseEntity<Pagina<ServicoResponse>> listar(Integer page, Integer size) {
-        return ResponseEntity.ok(useCase.listar(page, size));
+    public ResponseEntity<Pagina<ServicoResponse>> listar(Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(pagina, tamanho));
     }
 
     @Override

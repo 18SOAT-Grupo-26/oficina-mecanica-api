@@ -32,7 +32,7 @@ Funcionalidades disponíveis até o momento:
 - CRUD de serviços (somente `ADMIN`)
 - Ordem de serviço (`ADMIN` e `FUNCIONARIO`; cancelamento só `ADMIN`): abertura com serviços e peças, envio,
   aprovação e rejeição do orçamento (com reserva, baixa e devolução do estoque), mudança de status com histórico,
-  listagem por cliente e tempo médio de execução
+  listagem paginada com filtro por cliente e status e tempo médio de execução
 - Acompanhamento das próprias OS pelo cliente (perfil `CLIENTE`, em `/minhas-ordens`)
 - Observabilidade com Prometheus e Grafana (os 4 sinais de ouro e métricas de negócio)
 

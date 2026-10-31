@@ -49,7 +49,7 @@ public class ServicoPersistenceAdapter implements ServicoPortOut {
     @Override
     @Transactional(readOnly = true)
     public Pagina<Servico> listar(int pagina, int tamanho) {
-        Page<ServicoEntity> page = repository.findAll(PageRequest.of(pagina, tamanho, Sort.by("id")));
+        Page<ServicoEntity> page = repository.findAll(PageRequest.of(pagina - 1, tamanho, Sort.by("id")));
         return new Pagina<>(page.map(mapper::toDomain).getContent(), pagina, tamanho, page.getTotalElements());
     }
 }

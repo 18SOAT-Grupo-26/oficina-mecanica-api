@@ -91,7 +91,7 @@ class PecaInsumoControllerTest {
         autenticarComo(Perfil.ADMIN);
         when(useCase.listar(2, 5)).thenReturn(new Pagina<>(List.of(RESPONSE), 2, 5, 11));
 
-        mockMvc.perform(get(ROTA).param("page", "2").param("size", "5").header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(get(ROTA).param("pagina", "2").param("tamanho", "5").header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.itens[0].id").value(ID))
                 .andExpect(jsonPath("$.pagina").value(2))
@@ -102,7 +102,7 @@ class PecaInsumoControllerTest {
     @DisplayName("Deve listar sem paginação informada, repassando nulos ao caso de uso")
     void deveListarSemPaginacao() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.listar(null, null)).thenReturn(new Pagina<>(List.of(), 0, 20, 0));
+        when(useCase.listar(null, null)).thenReturn(new Pagina<>(List.of(), 1, 20, 0));
 
         mockMvc.perform(get(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())

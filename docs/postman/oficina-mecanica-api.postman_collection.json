@@ -251,7 +251,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/insumos?page=0&size=20",
+              "raw": "{{baseUrl}}/insumos?pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -260,12 +260,12 @@
               ],
               "query": [
                 {
-                  "key": "page",
-                  "value": "0",
-                  "description": "Página (começa em 0). Padrão: 0"
+                  "key": "pagina",
+                  "value": "1",
+                  "description": "Página (começa em 1). Padrão: 1"
                 },
                 {
-                  "key": "size",
+                  "key": "tamanho",
                   "value": "20",
                   "description": "Itens por página. Padrão: 20, máximo: 100"
                 }
@@ -431,7 +431,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/servico?page=0&size=20",
+              "raw": "{{baseUrl}}/servico?pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -440,12 +440,12 @@
               ],
               "query": [
                 {
-                  "key": "page",
-                  "value": "0",
-                  "description": "Página (começa em 0). Padrão: 0"
+                  "key": "pagina",
+                  "value": "1",
+                  "description": "Página (começa em 1). Padrão: 1"
                 },
                 {
-                  "key": "size",
+                  "key": "tamanho",
                   "value": "20",
                   "description": "Itens por página. Padrão: 20, máximo: 100"
                 }
@@ -615,7 +615,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/clientes?page=0&size=20",
+              "raw": "{{baseUrl}}/clientes?pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -624,12 +624,12 @@
               ],
               "query": [
                 {
-                  "key": "page",
-                  "value": "0",
-                  "description": "Página (começa em 0). Padrão: 0"
+                  "key": "pagina",
+                  "value": "1",
+                  "description": "Página (começa em 1). Padrão: 1"
                 },
                 {
-                  "key": "size",
+                  "key": "tamanho",
                   "value": "20",
                   "description": "Itens por página. Padrão: 20, máximo: 100"
                 }
@@ -832,7 +832,7 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/veiculos?page=0&size=20",
+              "raw": "{{baseUrl}}/veiculos?pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -847,12 +847,12 @@
                   "disabled": true
                 },
                 {
-                  "key": "page",
-                  "value": "0",
-                  "description": "Página (começa em 0). Padrão: 0"
+                  "key": "pagina",
+                  "value": "1",
+                  "description": "Página (começa em 1). Padrão: 1"
                 },
                 {
-                  "key": "size",
+                  "key": "tamanho",
                   "value": "20",
                   "description": "Itens por página. Padrão: 20, máximo: 100"
                 }
@@ -1521,7 +1521,7 @@
           "response": []
         },
         {
-          "name": "Listar OS de Cliente",
+          "name": "Listar OS",
           "request": {
             "method": "GET",
             "header": [
@@ -1535,22 +1535,38 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/ordens-servico/listar/:clienteId",
+              "raw": "{{baseUrl}}/ordens-servico?clienteId={{clienteId}}&pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "ordens-servico",
-                "listar",
-                ":clienteId"
+                "ordens-servico"
               ],
-              "variable": [
+              "query": [
                 {
                   "key": "clienteId",
-                  "value": "{{clienteId}}"
+                  "value": "{{clienteId}}",
+                  "description": "(opcional) Filtra pelas OS do cliente"
+                },
+                {
+                  "key": "status",
+                  "value": "EM_DIAGNOSTICO",
+                  "description": "(opcional, desativado) Filtra pelo status: RECEBIDA, EM_DIAGNOSTICO, AGUARDANDO_APROVACAO, EM_EXECUCAO, FINALIZADA, ENTREGUE ou CANCELADA",
+                  "disabled": true
+                },
+                {
+                  "key": "pagina",
+                  "value": "1",
+                  "description": "Página (começa em 1). Padrão: 1"
+                },
+                {
+                  "key": "tamanho",
+                  "value": "20",
+                  "description": "Itens por página. Padrão: 20, máximo: 100"
                 }
               ]
-            }
+            },
+            "description": "Lista paginada de OS, da mais nova para a mais antiga. Filtros opcionais por cliente e status; sem filtro, traz todas."
           },
           "response": []
         }

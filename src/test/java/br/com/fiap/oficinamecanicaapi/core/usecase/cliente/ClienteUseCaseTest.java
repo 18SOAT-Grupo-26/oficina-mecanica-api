@@ -195,8 +195,8 @@ class ClienteUseCaseTest {
     @Test
     @DisplayName("Deve limitar o tamanho da página ao máximo permitido")
     void deveLimitarTamanhoMaximo() {
-        when(clientePortOut.listarAtivos(0, Pagina.TAMANHO_MAXIMO))
-                .thenReturn(new Pagina<>(List.of(), 0, Pagina.TAMANHO_MAXIMO, 0));
+        when(clientePortOut.listarAtivos(Pagina.PAGINA_PADRAO, Pagina.TAMANHO_MAXIMO))
+                .thenReturn(new Pagina<>(List.of(), Pagina.PAGINA_PADRAO, Pagina.TAMANHO_MAXIMO, 0));
 
         Pagina<ClienteResponse> pagina = useCase.listar(0, 500);
 

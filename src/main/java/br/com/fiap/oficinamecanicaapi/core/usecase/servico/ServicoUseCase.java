@@ -22,10 +22,6 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
 
     private static final Logger log = LoggerFactory.getLogger(ServicoUseCase.class);
 
-    static final int PAGINA_PADRAO = 0;
-    static final int TAMANHO_PADRAO = 20;
-    static final int TAMANHO_MAXIMO = 100;
-
 
     private final ServicoPortOut servicoPortOut;
     private final ServicoMapper servicoMapper;
@@ -54,10 +50,8 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public Pagina<ServicoResponse> listar(Integer page, Integer size) {
-        int paginaValida = page == null || page < 0 ? PAGINA_PADRAO : page;
-        int tamanhoValido = size == null || size < 1 ? TAMANHO_PADRAO : Math.min(size, TAMANHO_MAXIMO);
-        return servicoPortOut.listar(paginaValida, tamanhoValido).map(servicoMapper::toResponse);
+    public Pagina<ServicoResponse> listar(Integer pagina, Integer tamanho) {
+        return servicoPortOut.listar(Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho)).map(servicoMapper::toResponse);
     }
 
     @Override

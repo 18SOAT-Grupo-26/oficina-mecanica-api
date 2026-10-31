@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
@@ -45,6 +47,32 @@ class OrdemServicoJpaRepositoryIT extends IntegracaoBase {
                 .extracting(OrdemServicoEntity::getId)
                 .containsExactly(nova, antiga);
         assertThat(repository.listarOrdensByClientId(9999L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("listar deve aplicar só os filtros informados e paginar da mais nova para a mais antiga")
+    void listarComFiltros() {
+        Long antigaA = os(clienteA, veiculoA, "ENTREGUE", "now() - interval '2 days'");
+        Long novaA = os(clienteA, veiculoA, "EM_DIAGNOSTICO", "now()");
+        Long b = os(clienteB, veiculoB, "ENTREGUE", "now() - interval '1 day'");
+        PageRequest primeira = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
+
+        assertThat(repository.listar(null, null, primeira))
+                .extracting(OrdemServicoEntity::getId)
+                .containsExactly(novaA, b, antigaA);
+        assertThat(repository.listar(clienteA, null, primeira))
+                .extracting(OrdemServicoEntity::getId)
+                .containsExactly(novaA, antigaA);
+        assertThat(repository.listar(null, StatusOrdemServico.ENTREGUE, primeira))
+                .extracting(OrdemServicoEntity::getId)
+                .containsExactly(b, antigaA);
+        assertThat(repository.listar(clienteA, StatusOrdemServico.ENTREGUE, primeira))
+                .extracting(OrdemServicoEntity::getId)
+                .containsExactly(antigaA);
+
+        var segunda = repository.listar(null, null, PageRequest.of(1, 2, primeira.getSort()));
+        assertThat(segunda.getContent()).extracting(OrdemServicoEntity::getId).containsExactly(antigaA);
+        assertThat(segunda.getTotalElements()).isEqualTo(3);
     }
 
     @Test

@@ -3,16 +3,17 @@ package br.com.fiap.oficinamecanicaapi.controller.admin;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.TempoMedioExecucaoResponse;
+import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Ordem de Serviço: abertura, consulta, itens e status. Toda resposta traz a OS com itens e histórico de status.
@@ -36,11 +37,16 @@ public interface OrdemServicoAPI {
     @GetMapping("/{id}")
     ResponseEntity<OrdemServicoResponse> consultar(@PathVariable Long id);
 
-    @Operation(summary = "Listar OS", description = "Status, itens e histórico.", tags = "Ordem de Serviço")
-    @ApiResponse(responseCode = "200", description = "OS encontradas", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
-    @ApiResponse(responseCode = "404", description = "Nenhuma OS encontrada", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @GetMapping("/listar/{idCliente}")
-    ResponseEntity<List<OrdemServicoResponse>> listar(@PathVariable Long idCliente);
+    @Operation(summary = "Listar OS",
+            description = "Da mais nova para a mais antiga, com status, itens e histórico. Cliente e status são filtros opcionais; sem filtro, vêm todas, inclusive as canceladas.",
+            tags = "Ordem de Serviço")
+    @ApiResponse(responseCode = "200", description = "Página de OS (vazia quando nenhuma atende aos filtros)")
+    @ApiResponse(responseCode = "400", description = "Status desconhecido ou parâmetro inválido", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @GetMapping
+    ResponseEntity<Pagina<OrdemServicoResponse>> listar(@RequestParam(required = false) Long clienteId,
+                                                        @RequestParam(required = false) StatusOrdemServico status,
+                                                        @Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer pagina,
+                                                        @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer tamanho);
 
     @Operation(summary = "Atualizar dados da OS",
             description = """
