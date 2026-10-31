@@ -21,6 +21,7 @@ public interface ServicoPersistenceMapper {
                 entity.getNomeNormalizado(),
                 entity.getDescricao(),
                 entity.getPreco(),
+                entity.isAtivo(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());
     }

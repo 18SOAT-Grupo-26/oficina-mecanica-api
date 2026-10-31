@@ -42,10 +42,9 @@ public interface ServicoAPI {
     @PutMapping("/{id}")
     ResponseEntity<ServicoResponse> atualizar(@PathVariable Long id, @RequestBody ServicoRequest request);
 
-    @Operation(summary = "Excluir serviço", tags = "Serviço")
-    @ApiResponse(responseCode = "204", description = "Serviço excluído")
+    @Operation(summary = "Remover serviço (soft delete)", tags = "Serviço")
+    @ApiResponse(responseCode = "204", description = "Serviço desativado; as OS que já o usam não mudam")
     @ApiResponse(responseCode = "404", description = "Serviço não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "409", description = "O serviço está em uma ordem de serviço e não pode ser excluído", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @DeleteMapping("/{id}")
-    ResponseEntity<Void> excluir(@PathVariable Long id);
+    ResponseEntity<Void> desativar(@PathVariable Long id);
 }

@@ -30,14 +30,8 @@ public class ServicoPersistenceAdapter implements ServicoPortOut {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<Servico> buscarPorId(Long id) {
-        return repository.findById(id).map(mapper::toDomain);
-    }
-
-    @Override
-    @Transactional
-    public void excluir(Servico servico) {
-        repository.deleteById(servico.getId());
+    public Optional<Servico> buscarAtivoPorId(Long id) {
+        return repository.findByIdAndAtivoTrue(id).map(mapper::toDomain);
     }
 
     @Override
@@ -48,8 +42,8 @@ public class ServicoPersistenceAdapter implements ServicoPortOut {
 
     @Override
     @Transactional(readOnly = true)
-    public Pagina<Servico> listar(int pagina, int tamanho) {
-        Page<ServicoEntity> page = repository.findAll(PageRequest.of(pagina - 1, tamanho, Sort.by("id")));
+    public Pagina<Servico> listarAtivos(int pagina, int tamanho) {
+        Page<ServicoEntity> page = repository.findAllByAtivoTrue(PageRequest.of(pagina - 1, tamanho, Sort.by("id")));
         return new Pagina<>(page.map(mapper::toDomain).getContent(), pagina, tamanho, page.getTotalElements());
     }
 }

@@ -12,5 +12,5 @@ public interface ServicoUseCasePortIn {
 
     ServicoResponse atualizar(Long id, ServicoRequest request);
 
-    void excluir(Long id);
+    void desativar(Long id);
 }

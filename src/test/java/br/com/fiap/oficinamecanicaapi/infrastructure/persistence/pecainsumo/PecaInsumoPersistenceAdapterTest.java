@@ -56,7 +56,8 @@ class PecaInsumoPersistenceAdapterTest {
     @DisplayName("salvar deve converter o domínio em entidade, preservando id, estoque e datas")
     void salvar() {
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        PecaInsumo peca = PecaInsumo.reconstituir(1L, "Filtro de óleo", null, null, 10, 2, null, CRIADO_EM, null);
+        PecaInsumo peca = PecaInsumo.reconstituir(1L, "Filtro de óleo", null, null, 10, 2, null, true, CRIADO_EM,
+                null);
 
         PecaInsumo salvo = adapter.salvar(peca);
 
@@ -64,33 +65,32 @@ class PecaInsumoPersistenceAdapterTest {
         verify(repository).save(captor.capture());
         assertThat(captor.getValue().getReservado()).isEqualTo(2);
         assertThat(captor.getValue().getCreatedAt()).isEqualTo(CRIADO_EM);
+        assertThat(captor.getValue().isAtivo()).isTrue();
         assertThat(salvo.getQuantidade()).isEqualTo(10);
         assertThat(salvo.getCriadoEm()).isEqualTo(CRIADO_EM);
     }
 
     @Test
-    @DisplayName("buscarPorId e buscarPorIds devem converter em domínio e excluir deve apagar pelo id")
-    void buscarEExcluir() {
-        when(repository.findById(1L)).thenReturn(Optional.of(entidade()));
+    @DisplayName("buscarAtivoPorId deve buscar só entre os ativos; buscarPorIds converte em domínio")
+    void buscar() {
+        when(repository.findByIdAndAtivoTrue(1L)).thenReturn(Optional.of(entidade()));
         when(repository.findAllById(Set.of(1L))).thenReturn(List.of(entidade()));
 
-        PecaInsumo peca = adapter.buscarPorId(1L).orElseThrow();
+        PecaInsumo peca = adapter.buscarAtivoPorId(1L).orElseThrow();
         assertThat(adapter.buscarPorIds(Set.of(1L))).extracting(PecaInsumo::getId).containsExactly(1L);
-        adapter.excluir(peca);
 
         assertThat(peca.getCriadoEm()).isEqualTo(CRIADO_EM);
-        verify(repository).deleteById(1L);
     }
 
     @Test
-    @DisplayName("existePorNomeNormalizado e listar devem repassar os dados do repositório")
+    @DisplayName("existePorNomeNormalizado e listarAtivos devem repassar os dados do repositório")
     void existeEListar() {
         var pageable = PageRequest.of(0, 20, Sort.by("id"));
         when(repository.existsByNomeNormalizado("filtro de oleo")).thenReturn(false);
-        when(repository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entidade()), pageable, 1));
+        when(repository.findAllByAtivoTrue(pageable)).thenReturn(new PageImpl<>(List.of(entidade()), pageable, 1));
 
         assertThat(adapter.existePorNomeNormalizado("filtro de oleo")).isFalse();
-        assertThat(adapter.listar(1, 20).itens()).extracting(PecaInsumo::getId).containsExactly(1L);
+        assertThat(adapter.listarAtivos(1, 20).itens()).extracting(PecaInsumo::getId).containsExactly(1L);
     }
 
     private static PecaInsumoEntity entidade() {

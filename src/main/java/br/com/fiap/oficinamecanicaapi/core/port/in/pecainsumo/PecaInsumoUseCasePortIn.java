@@ -12,5 +12,5 @@ public interface PecaInsumoUseCasePortIn {
 
     PecaInsumoResponse atualizar(Long id, PecaInsumoRequest request);
 
-    void excluir(Long id);
+    void desativar(Long id);
 }

@@ -63,10 +63,12 @@ class PecaInsumoJpaRepositoryIT extends IntegracaoBase {
     }
 
     @Test
-    @DisplayName("contarSemSaldo deve contar só as peças com disponível <= 0")
+    @DisplayName("contarSemSaldo deve contar só as peças ativas com disponível <= 0")
     void contarSemSaldo() {
         inserir("Vela", "vela", 0, 0);
         inserir("Pastilha", "pastilha", 4, 4);
+        Long desativada = inserir("Correia", "correia", 0, 0);
+        jdbcTemplate.update("update peca_insumo set ativo = false where id = ?", desativada);
 
         assertThat(repository.contarSemSaldo()).isEqualTo(2);
     }

@@ -9,11 +9,9 @@ public interface ServicoPortOut {
 
     Servico salvar(Servico servico);
 
-    Optional<Servico> buscarPorId(Long id);
+    Optional<Servico> buscarAtivoPorId(Long id);
 
     boolean existePorNomeNormalizado(String nomeNormalizado);
 
-    void excluir(Servico servico);
-
-    Pagina<Servico> listar(int pagina, int tamanho);
+    Pagina<Servico> listarAtivos(int pagina, int tamanho);
 }

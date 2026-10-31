@@ -69,7 +69,7 @@ class ServicoUseCaseTest {
             Servico e = inv.getArgument(0);
             // como o banco: devolve o serviço gravado, agora com id
             return Servico.reconstituir(ID, e.getNome(), e.getNomeNormalizado(), e.getDescricao(), e.getPreco(),
-                    e.getCriadoEm(), e.getAtualizadoEm());
+                    e.isAtivo(), e.getCriadoEm(), e.getAtualizadoEm());
         });
         ServicoResponse esperado = new ServicoResponse(ID, "Troca de Óleo", null, new BigDecimal("80.00"), null, null);
         when(servicoMapper.toResponse(any())).thenReturn(esperado);
@@ -142,7 +142,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("buscarPorId retorna 404 quando serviço não existe")
     void buscarPorIdNaoEncontrado() {
-        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
+        when(servicoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
         RecursoNaoEncontradoException ex = assertThrows(RecursoNaoEncontradoException.class, () -> useCase.buscarPorId(ID));
 
@@ -151,7 +151,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("listar aplica a paginação padrão quando nada é informado")
     void listarComPaginacaoPadrao() {
-        when(servicoPortOut.listar(1, 20)).thenReturn(new Pagina<>(List.of(servico("Troca de óleo", "80.00")), 1, 20, 1));
+        when(servicoPortOut.listarAtivos(1, 20)).thenReturn(new Pagina<>(List.of(servico("Troca de óleo", "80.00")), 1, 20, 1));
 
         Pagina<ServicoResponse> pagina = useCase.listar(null, null);
 
@@ -162,7 +162,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("listar corrige página negativa e limita o tamanho a 100")
     void listarCorrigePaginacao() {
-        when(servicoPortOut.listar(1, 100)).thenReturn(new Pagina<>(List.of(), 1, 100, 0));
+        when(servicoPortOut.listarAtivos(1, 100)).thenReturn(new Pagina<>(List.of(), 1, 100, 0));
 
         assertThat(useCase.listar(-3, 500).tamanho()).isEqualTo(100);
     }
@@ -170,7 +170,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("buscarPorId devolve o serviço")
     void buscarPorId() {
-        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(servico("Troca de óleo", "80.00")));
+        when(servicoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(servico("Troca de óleo", "80.00")));
 
         assertThat(useCase.buscarPorId(ID).preco()).isEqualByComparingTo("80.00");
     }
@@ -179,7 +179,7 @@ class ServicoUseCaseTest {
     @DisplayName("atualizar mantendo o nome não confere duplicidade, troca o preço e conta a operação")
     void atualizarMesmoNome() {
         Servico atual = servico("Troca de óleo", "80.00");
-        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
+        when(servicoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(atual));
         when(servicoPortOut.salvar(atual)).thenReturn(atual);
 
         ServicoResponse response = useCase.atualizar(ID, new ServicoRequest("TROCA DE ÓLEO", "Com filtro",
@@ -195,7 +195,7 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("atualizar para o nome de outro serviço responde 409 sem gravar")
     void atualizarNomeDuplicado() {
-        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(servico("Troca de óleo", "80.00")));
+        when(servicoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(servico("Troca de óleo", "80.00")));
         when(servicoPortOut.existePorNomeNormalizado("alinhamento")).thenReturn(true);
 
         assertErro(ConflitoException.class, "Já existe um serviço cadastrado com este nome",
@@ -206,30 +206,31 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("atualizar serviço inexistente responde 404 sem validar o request")
     void atualizarInexistente() {
-        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
+        when(servicoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
         assertErro(RecursoNaoEncontradoException.class, "Serviço não encontrado", () -> useCase.atualizar(ID, new ServicoRequest(null, null, null)));
     }
 
     @Test
-    @DisplayName("excluir remove o serviço e conta a operação")
-    void excluir() {
+    @DisplayName("desativar grava o serviço inativo, sem apagar, e conta a operação")
+    void desativar() {
         Servico atual = servico("Troca de óleo", "80.00");
-        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
+        when(servicoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(atual));
 
-        useCase.excluir(ID);
+        useCase.desativar(ID);
 
-        verify(servicoPortOut).excluir(atual);
-        assertThat(operacoes("excluido")).isEqualTo(1);
+        verify(servicoPortOut).salvar(atual);
+        assertThat(atual.isAtivo()).isFalse();
+        assertThat(operacoes("desativado")).isEqualTo(1);
     }
 
     @Test
-    @DisplayName("excluir serviço inexistente responde 404")
-    void excluirInexistente() {
-        when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
+    @DisplayName("desativar serviço inexistente ou já desativado responde 404")
+    void desativarInexistente() {
+        when(servicoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
-        assertErro(RecursoNaoEncontradoException.class, "Serviço não encontrado", () -> useCase.excluir(ID));
-        verify(servicoPortOut, never()).excluir(any());
+        assertErro(RecursoNaoEncontradoException.class, "Serviço não encontrado", () -> useCase.desativar(ID));
+        verify(servicoPortOut, never()).salvar(any());
     }
 
     @Test
@@ -262,7 +263,7 @@ class ServicoUseCaseTest {
     }
 
     private static Servico servico(String nome, String preco) {
-        Servico servico = Servico.reconstituir(ID, nome, "troca de oleo", null, new BigDecimal(preco), null, null);
+        Servico servico = Servico.reconstituir(ID, nome, "troca de oleo", null, new BigDecimal(preco), true, null, null);
         return servico;
     }
 

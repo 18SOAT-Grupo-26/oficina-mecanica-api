@@ -62,7 +62,8 @@ class PecaInsumoUseCaseTest {
             PecaInsumo e = inv.getArgument(0);
             // como o banco: devolve a peça gravada, agora com id
             return PecaInsumo.reconstituir(ID, e.getNome(), e.getNomeNormalizado(), e.getDescricao(),
-                    e.getQuantidade(), e.getReservado(), e.getPreco(), e.getCriadoEm(), e.getAtualizadoEm());
+                    e.getQuantidade(), e.getReservado(), e.getPreco(), e.isAtivo(), e.getCriadoEm(),
+                    e.getAtualizadoEm());
         });
 
         PecaInsumoResponse response = useCase.criar(REQUEST);
@@ -80,7 +81,7 @@ class PecaInsumoUseCaseTest {
 
         ConflitoException ex = assertThrows(ConflitoException.class, () -> useCase.criar(REQUEST));
 
-        verify(pecaInsumoPortOut, never()).excluir(any());
+        verify(pecaInsumoPortOut, never()).salvar(any());
     }
 
     @Test
@@ -96,21 +97,21 @@ class PecaInsumoUseCaseTest {
     @DisplayName("listar aplica paginação padrão e limita o tamanho máximo")
     void listarAplicaLimites() {
         PecaInsumo entity = entidade(ID, "Filtro");
-        when(pecaInsumoPortOut.listar(1, 20)).thenReturn(new Pagina<>(List.of(entity), 1, 20, 1));
-        when(pecaInsumoPortOut.listar(1, 100)).thenReturn(new Pagina<>(List.of(), 1, 100, 0));
+        when(pecaInsumoPortOut.listarAtivos(1, 20)).thenReturn(new Pagina<>(List.of(entity), 1, 20, 1));
+        when(pecaInsumoPortOut.listarAtivos(1, 100)).thenReturn(new Pagina<>(List.of(), 1, 100, 0));
 
         Pagina<PecaInsumoResponse> padrao = useCase.listar(null, null);
         useCase.listar(-1, 500);
 
         assertThat(padrao.itens()).hasSize(1);
         assertThat(padrao.itens().get(0).nome()).isEqualTo("Filtro");
-        verify(pecaInsumoPortOut).listar(1, 100);
+        verify(pecaInsumoPortOut).listarAtivos(1, 100);
     }
 
     @Test
     @DisplayName("buscarPorId retorna insumo")
     void buscarPorIdRetornaInsumo() {
-        when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(entidade(ID, "Filtro")));
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(entidade(ID, "Filtro")));
 
         assertThat(useCase.buscarPorId(ID).nome()).isEqualTo("Filtro");
     }
@@ -118,7 +119,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("buscarPorId lança 404 quando não existe")
     void buscarPorIdNaoEncontrado() {
-        when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
         RecursoNaoEncontradoException ex = assertThrows(RecursoNaoEncontradoException.class, () -> useCase.buscarPorId(ID));
 
@@ -128,7 +129,7 @@ class PecaInsumoUseCaseTest {
     @DisplayName("atualizar mantém o próprio nome sem checar duplicidade")
     void atualizarMesmoNome() {
         PecaInsumo entity = entidade(ID, "Filtro de Ar");
-        when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(entity));
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(entity));
         when(pecaInsumoPortOut.salvar(any())).thenAnswer(inv -> inv.getArgument(0));
 
         PecaInsumoResponse response = useCase.atualizar(ID,
@@ -142,7 +143,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("atualizar com nome de outro insumo lança 409")
     void atualizarNomeDuplicado() {
-        when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(entidade(ID, "Filtro")));
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(entidade(ID, "Filtro")));
         when(pecaInsumoPortOut.existePorNomeNormalizado("correia")).thenReturn(true);
 
         ConflitoException ex = assertThrows(ConflitoException.class, () ->
@@ -151,23 +152,24 @@ class PecaInsumoUseCaseTest {
     }
 
     @Test
-    @DisplayName("excluir remove o insumo")
-    void excluirRemoveInsumo() {
+    @DisplayName("desativar grava o insumo inativo, sem apagar")
+    void desativarGravaInsumoInativo() {
         PecaInsumo entity = entidade(ID, "Filtro");
-        when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(entity));
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(entity));
 
-        useCase.excluir(ID);
+        useCase.desativar(ID);
 
-        verify(pecaInsumoPortOut).excluir(entity);
+        verify(pecaInsumoPortOut).salvar(entity);
+        assertThat(entity.isAtivo()).isFalse();
     }
 
     @Test
-    @DisplayName("excluir lança 404 para insumo inexistente")
-    void excluirNaoEncontrado() {
-        when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
+    @DisplayName("desativar lança 404 para insumo inexistente ou já desativado")
+    void desativarNaoEncontrado() {
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNaoEncontradoException.class, () -> useCase.excluir(ID));
-        verify(pecaInsumoPortOut, never()).excluir(any());
+        assertThrows(RecursoNaoEncontradoException.class, () -> useCase.desativar(ID));
+        verify(pecaInsumoPortOut, never()).salvar(any());
     }
 
     private static PecaInsumo entidade(Long id, String nome) {
@@ -179,6 +181,7 @@ class PecaInsumoUseCaseTest {
                 5,
                 0,
                 new BigDecimal("10.00"),
+                true,
                 null,
                 null);
         return e;
@@ -226,7 +229,7 @@ class PecaInsumoUseCaseTest {
     @DisplayName("atualizar ajusta quantidade e preço e conta a operação")
     void atualizarQuantidadeEPreco() {
         PecaInsumo atual = peca("Filtro de óleo", "filtro de oleo", 10, 2, "30.00");
-        when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(atual));
         when(pecaInsumoPortOut.salvar(atual)).thenReturn(atual);
 
         PecaInsumoResponse response = useCase.atualizar(ID, request("Filtro de óleo", 25, 2, "32.5"));
@@ -241,7 +244,7 @@ class PecaInsumoUseCaseTest {
     @DisplayName("atualizar trocando o nome confere a duplicidade do nome novo")
     void atualizarTrocandoNome() {
         PecaInsumo atual = peca("Filtro de óleo", "filtro de oleo", 10, 0, "30.00");
-        when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(atual));
         when(pecaInsumoPortOut.existePorNomeNormalizado("filtro de ar")).thenReturn(false);
         when(pecaInsumoPortOut.salvar(atual)).thenReturn(atual);
 
@@ -251,7 +254,7 @@ class PecaInsumoUseCaseTest {
     @Test
     @DisplayName("atualizar insumo inexistente responde 404")
     void atualizarInexistente() {
-        when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
 
         var alteracao = request("Filtro", 1, 0, "1");
 
@@ -262,15 +265,15 @@ class PecaInsumoUseCaseTest {
     }
 
     @Test
-    @DisplayName("excluir conta a operação")
-    void excluirContaOperacao() {
+    @DisplayName("desativar conta a operação")
+    void desativarContaOperacao() {
         PecaInsumo atual = peca("Filtro de óleo", "filtro de oleo", 10, 0, "30.00");
-        when(pecaInsumoPortOut.buscarPorId(ID)).thenReturn(Optional.of(atual));
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(atual));
 
-        useCase.excluir(ID);
+        useCase.desativar(ID);
 
-        verify(pecaInsumoPortOut).excluir(atual);
-        assertThat(operacoes("excluido")).isEqualTo(1);
+        verify(pecaInsumoPortOut).salvar(atual);
+        assertThat(operacoes("desativado")).isEqualTo(1);
     }
 
     private static PecaInsumoRequest request(String nome, Integer quantidade, Integer reservado, String preco) {
@@ -287,6 +290,7 @@ class PecaInsumoUseCaseTest {
                 quantidade,
                 reservado,
                 new BigDecimal(preco),
+                true,
                 null,
                 null);
         return peca;

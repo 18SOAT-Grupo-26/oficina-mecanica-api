@@ -23,6 +23,7 @@ public interface PecaInsumoPersistenceMapper {
                 entity.getQuantidade(),
                 entity.getReservado(),
                 entity.getPreco(),
+                entity.isAtivo(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt());
     }

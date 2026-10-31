@@ -17,13 +17,11 @@ public interface PecaInsumoPortOut {
 
     boolean baixar(Long id, int quantidade);
 
-    Optional<PecaInsumo> buscarPorId(Long id);
+    Optional<PecaInsumo> buscarAtivoPorId(Long id);
 
     List<PecaInsumo> buscarPorIds(Collection<Long> ids);
 
     boolean existePorNomeNormalizado(String nomeNormalizado);
 
-    void excluir(PecaInsumo pecaInsumo);
-
-    Pagina<PecaInsumo> listar(int pagina, int tamanho);
+    Pagina<PecaInsumo> listarAtivos(int pagina, int tamanho);
 }

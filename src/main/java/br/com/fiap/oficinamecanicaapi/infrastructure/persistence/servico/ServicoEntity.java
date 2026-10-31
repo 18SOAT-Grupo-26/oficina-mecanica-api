@@ -28,4 +28,7 @@ public class ServicoEntity extends EntidadeComDatas {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal preco;
 
+    @Column(nullable = false)
+    private boolean ativo;
+
 }

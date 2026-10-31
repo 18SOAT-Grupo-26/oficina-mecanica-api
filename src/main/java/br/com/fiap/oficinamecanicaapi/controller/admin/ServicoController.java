@@ -42,8 +42,8 @@ public class ServicoController implements ServicoAPI {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> excluir(Long id) {
-        useCase.excluir(id);
+    public ResponseEntity<Void> desativar(Long id) {
+        useCase.desativar(id);
         return ResponseEntity.noContent().build();
     }
 }

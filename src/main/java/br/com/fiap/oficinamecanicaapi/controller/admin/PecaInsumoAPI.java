@@ -46,10 +46,9 @@ public interface PecaInsumoAPI {
     @PutMapping("/{id}")
     ResponseEntity<PecaInsumoResponse> atualizar(@PathVariable Long id, @RequestBody PecaInsumoRequest request);
 
-    @Operation(summary = "Excluir insumo", tags = "Insumo")
-    @ApiResponse(responseCode = "204", description = "Insumo excluído")
+    @Operation(summary = "Remover insumo (soft delete)", tags = "Insumo")
+    @ApiResponse(responseCode = "204", description = "Insumo desativado; as OS que já o usam não mudam")
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "409", description = "O insumo está em uma ordem de serviço e não pode ser excluído", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @DeleteMapping("/{id}")
-    ResponseEntity<Void> excluir(@PathVariable Long id);
+    ResponseEntity<Void> desativar(@PathVariable Long id);
 }
