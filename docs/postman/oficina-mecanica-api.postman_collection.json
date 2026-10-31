@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "7ebc0463-1563-47a3-b17a-4fba01aa7ef6",
+    "_postman_id": "adb51475-b8b2-411b-bc71-01958757ac60",
     "name": "Oficina Mecânica API",
     "description": "Endpoints implementados da API da oficina mecânica.\n\n**Como usar**\n1. Suba a aplicação (`docker compose up`).\n2. Preencha `adminUsuario` e `adminSenha` (variáveis da collection) com o `ADMIN_USUARIO`/`ADMIN_SENHA` do seu `.env` e rode **Auth → Login administrador**: o token fica salvo em `{{token}}` e é enviado como Bearer nas demais pastas.\n3. As requisições de cadastro salvam os ids (`pecaInsumoId`, `servicoId`, `clienteId`, `veiculoId`, `ordemId`) usados pelas seguintes.\n\nA collection inteira pode ser executada no **Runner**, na ordem das pastas. CPF, placa, nomes e username são gerados a cada execução para não violar as constraints UNIQUE.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
@@ -11,119 +11,331 @@
       "name": "Auth",
       "item": [
         {
-          "name": "Login administrador",
-          "event": [
+          "name": "Admin",
+          "item": [
             {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"token\", token.replace(/^Bearer\\s+/, \"\"));\npm.test(\"Token recebido\", function () {\n    pm.expect(pm.collectionVariables.get(\"token\")).to.not.be.empty;\n});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "",
-                "value": "",
-                "disabled": true
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"identificador\": \"{{adminUsuario}}\",\n  \"senha\": \"{{adminSenha}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
+              "name": "Cadastrar Administrador",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.set(\"username\", \"operador_\" + pm.variables.get(\"sufixo\"));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});"
+                    ]
+                  }
                 }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
               ],
-              "path": [
-                "auth",
-                "login"
-              ]
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"Funcionário de Teste\",\n  \"email\": \"{{adminUsuario}}@oficina.com\",\n  \"nomeUsuario\": \"{{adminUsuario\",\n  \"senha\": \"{{adminSenha}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"ADMIN\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/usuarios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "usuarios"
+                  ]
+                },
+                "description": "Cadastra um usuário de teste (perfil FUNCIONARIO). Só ADMIN cadastra usuários: usa o token do **Login administrador**. O script gera username e e-mail únicos a cada execução.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial."
+              },
+              "response": []
             },
-            "description": "Login com o administrador inicial, criado pela API a partir de ADMIN_USUARIO/ADMIN_SENHA do .env. Preencha as variáveis da collection `adminUsuario` e `adminSenha` com esses valores (vão vazias no arquivo). O script guarda o token em `{{token}}`, usado pelas demais pastas."
-          },
-          "response": []
+            {
+              "name": "Login Administrador",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"token\", token.replace(/^Bearer\\s+/, \"\"));\npm.test(\"Token recebido\", function () {\n    pm.expect(pm.collectionVariables.get(\"token\")).to.not.be.empty;\n});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"identificador\": \"{{adminUsuario}}\",\n  \"senha\": \"{{adminSenha}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Login com o administrador inicial, criado pela API a partir de ADMIN_USUARIO/ADMIN_SENHA do .env. Preencha as variáveis da collection `adminUsuario` e `adminSenha` com esses valores (vão vazias no arquivo). O script guarda o token em `{{token}}`, usado pelas demais pastas."
+              },
+              "response": []
+            }
+          ]
         },
         {
-          "name": "Cadastrar usuário",
-          "event": [
+          "name": "Funcionário",
+          "item": [
             {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.collectionVariables.set(\"username\", \"operador_\" + pm.variables.get(\"sufixo\"));"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nome\": \"Funcionário de Teste\",\n  \"email\": \"{{username}}@oficina.com\",\n  \"nomeUsuario\": \"{{username}}\",\n  \"senha\": \"{{password}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"FUNCIONARIO\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/usuarios",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "usuarios"
-              ]
-            },
-            "description": "Cadastra um usuário de teste (perfil FUNCIONARIO). Só ADMIN cadastra usuários: usa o token do **Login administrador**. O script gera username e e-mail únicos a cada execução.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
+              "name": "Cadastrar Funcionário",
+              "event": [
                 {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.set(\"username\", \"operador_\" + pm.variables.get(\"sufixo\"));"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});"
+                    ]
+                  }
                 }
-              ]
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"Funcionário de Teste\",\n  \"email\": \"{{funcionarioUsuario}}@oficina.com\",\n  \"nomeUsuario\": \"{{funcionarioUsuario}}\",\n  \"senha\": \"{{funcionarioSenha}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"FUNCIONARIO\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/usuarios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "usuarios"
+                  ]
+                },
+                "description": "Cadastra um usuário de teste (perfil FUNCIONARIO). Só ADMIN cadastra usuários: usa o token do **Login administrador**. O script gera username e e-mail únicos a cada execução.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial."
+              },
+              "response": []
+            },
+            {
+              "name": "Login Funcionário",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"token\", token.replace(/^Bearer\\s+/, \"\"));\npm.test(\"Token recebido\", function () {\n    pm.expect(pm.collectionVariables.get(\"token\")).to.not.be.empty;\n});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"identificador\": \"{{funcionarioUsuario}}\",\n  \"senha\": \"{{funcionarioSenha}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Login com o administrador inicial, criado pela API a partir de ADMIN_USUARIO/ADMIN_SENHA do .env. Preencha as variáveis da collection `adminUsuario` e `adminSenha` com esses valores (vão vazias no arquivo). O script guarda o token em `{{token}}`, usado pelas demais pastas."
+              },
+              "response": []
             }
-          },
-          "response": []
+          ]
+        },
+        {
+          "name": "Cliente",
+          "item": [
+            {
+              "name": "Cadastrar usuário cliente",
+              "event": [
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.collectionVariables.set(\"clienteUsuario\", \"cliente\" + Date.now());"
+                    ]
+                  }
+                },
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"Cliente de Teste\",\n  \"email\": \"{{clienteUsuario}}@email.com\",\n  \"nomeUsuario\": \"{{clienteUsuario}}\",\n  \"senha\": \"{{clienteSenha}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"CLIENTE\",\n  \"clienteId\": {{clienteId}}\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/usuarios",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "usuarios"
+                  ]
+                },
+                "description": "Cria o login do cliente cadastrado em **Clientes → Cadastrar cliente** (`{{clienteId}}`), com o token do **Login administrador**. O `clienteId` é obrigatório para o perfil CLIENTE; um segundo login para o mesmo cliente responde 409. O script gera um username único a cada execução."
+              },
+              "response": []
+            },
+            {
+              "name": "Login cliente",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"token\", token.replace(/^Bearer\\s+/, \"\"));"
+                    ]
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"identificador\": \"{{clienteUsuario}}\",\n  \"senha\": \"{{clienteSenha}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                },
+                "description": "Guarda o token do cliente em `{{tokenCliente}}`, separado do token do administrador."
+              },
+              "response": []
+            }
+          ]
         },
         {
           "name": "Validar token",
@@ -133,9 +345,7 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});"
                 ]
               }
             }
@@ -158,17 +368,7 @@
                 "validacao"
               ]
             },
-            "description": "Retorna `true` se o token enviado no header `Authorization` for válido.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{token}}",
-                  "type": "string"
-                }
-              ]
-            }
+            "description": "Retorna `true` se o token enviado no header `Authorization` for válido."
           },
           "response": []
         }
@@ -195,6 +395,9 @@
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -242,6 +445,9 @@
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [
               {
@@ -288,6 +494,9 @@
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [
               {
@@ -296,13 +505,19 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/pecas-insumos/{{pecaInsumoId}}",
+              "raw": "{{baseUrl}}/pecas-insumos/:pecaInsumoId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "pecas-insumos",
-                "{{pecaInsumoId}}"
+                ":pecaInsumoId"
+              ],
+              "variable": [
+                {
+                  "key": "pecaInsumoId",
+                  "value": "{{pecaInsumoId}}"
+                }
               ]
             }
           },
@@ -322,6 +537,9 @@
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "PUT",
             "header": [
               {
@@ -343,13 +561,19 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/pecas-insumos/{{pecaInsumoId}}",
+              "raw": "{{baseUrl}}/pecas-insumos/:pecaInsumoId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "pecas-insumos",
-                "{{pecaInsumoId}}"
+                ":pecaInsumoId"
+              ],
+              "variable": [
+                {
+                  "key": "pecaInsumoId",
+                  "value": "{{pecaInsumoId}}"
+                }
               ]
             },
             "description": "Substitui todos os campos."
@@ -370,23 +594,24 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 201\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "if (pm.response.code === 201) {",
-                  "    pm.collectionVariables.set(\"servicoId\", pm.response.json().id);",
-                  "}"
+                  "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});\n\nif (pm.response.code === 201) {\n    pm.collectionVariables.set(\"servicoId\", pm.response.json().id);\n}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -419,16 +644,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/servicos?pagina=1&tamanho=20",
               "host": [
@@ -462,24 +693,36 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
+              "raw": "{{baseUrl}}/servicos/:servicoId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "servicos",
-                "{{servicoId}}"
+                ":servicoId"
+              ],
+              "variable": [
+                {
+                  "key": "servicoId",
+                  "value": "{{servicoId}}"
+                }
               ]
             }
           },
@@ -493,19 +736,24 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -518,13 +766,19 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
+              "raw": "{{baseUrl}}/servicos/:servicoId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "servicos",
-                "{{servicoId}}"
+                ":servicoId"
+              ],
+              "variable": [
+                {
+                  "key": "servicoId",
+                  "value": "{{servicoId}}"
+                }
               ]
             },
             "description": "Substitui todos os campos."
@@ -554,23 +808,24 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 201\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "if (pm.response.code === 201) {",
-                  "    pm.collectionVariables.set(\"clienteId\", pm.response.json().id);",
-                  "}"
+                  "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});\n\nif (pm.response.code === 201) {\n    pm.collectionVariables.set(\"clienteId\", pm.response.json().id);\n}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -603,16 +858,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/clientes?pagina=1&tamanho=20",
               "host": [
@@ -646,24 +907,36 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "raw": "{{baseUrl}}/clientes/:clienteId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "clientes",
-                "{{clienteId}}"
+                ":clienteId"
+              ],
+              "variable": [
+                {
+                  "key": "clienteId",
+                  "value": "{{clienteId}}"
+                }
               ]
             }
           },
@@ -677,19 +950,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Um cliente com o documento\", function () {",
-                  "    pm.expect(pm.response.json().itens).to.have.lengthOf(1);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\npm.test(\"Um cliente com o documento\", function () {\n    pm.expect(pm.response.json().itens).to.have.lengthOf(1);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/clientes?documento={{clienteDocumento}}",
               "host": [
@@ -717,19 +993,24 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -742,13 +1023,19 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "raw": "{{baseUrl}}/clientes/:clienteId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "clientes",
-                "{{clienteId}}"
+                ":clienteId"
+              ],
+              "variable": [
+                {
+                  "key": "clienteId",
+                  "value": "{{clienteId}}"
+                }
               ]
             },
             "description": "Substitui todos os campos."
@@ -778,23 +1065,24 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 201\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "",
-                  "if (pm.response.code === 201) {",
-                  "    pm.collectionVariables.set(\"veiculoId\", pm.response.json().id);",
-                  "}"
+                  "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});\n\nif (pm.response.code === 201) {\n    pm.collectionVariables.set(\"veiculoId\", pm.response.json().id);\n}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -827,16 +1115,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/veiculos?pagina=1&tamanho=20",
               "host": [
@@ -876,24 +1170,36 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "raw": "{{baseUrl}}/veiculos/:veiculoId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "veiculos",
-                "{{veiculoId}}"
+                ":veiculoId"
+              ],
+              "variable": [
+                {
+                  "key": "veiculoId",
+                  "value": "{{veiculoId}}"
+                }
               ]
             }
           },
@@ -907,19 +1213,22 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test(\"Um veículo com a placa\", function () {",
-                  "    pm.expect(pm.response.json().itens).to.have.lengthOf(1);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\npm.test(\"Um veículo com a placa\", function () {\n    pm.expect(pm.response.json().itens).to.have.lengthOf(1);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/veiculos?placa={{veiculoPlaca}}",
               "host": [
@@ -947,19 +1256,24 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 200\", function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});"
+                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
               }
             ],
             "body": {
@@ -972,13 +1286,19 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "raw": "{{baseUrl}}/veiculos/:veiculoId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "veiculos",
-                "{{veiculoId}}"
+                ":veiculoId"
+              ],
+              "variable": [
+                {
+                  "key": "veiculoId",
+                  "value": "{{veiculoId}}"
+                }
               ]
             },
             "description": "Substitui todos os campos."
@@ -999,24 +1319,36 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 204\", function () {",
-                  "    pm.response.to.have.status(204);",
-                  "});"
+                  "pm.test(\"Status 204\", function () {\n    pm.response.to.have.status(204);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/ordens-servico/{{ordemId}}",
+              "raw": "{{baseUrl}}/ordens-servico/:ordemId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "ordens-servico",
-                "{{ordemId}}"
+                ":ordemId"
+              ],
+              "variable": [
+                {
+                  "key": "ordemId",
+                  "value": "{{ordemId}}"
+                }
               ]
             },
             "description": "Delete lógico. A OS vai para CANCELADA e continua no histórico; com o orçamento pendente, a reserva das peças é liberada. Só vale até AGUARDANDO_APROVACAO (depois disso, 409)."
@@ -1031,24 +1363,36 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 204\", function () {",
-                  "    pm.response.to.have.status(204);",
-                  "});"
+                  "pm.test(\"Status 204\", function () {\n    pm.response.to.have.status(204);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/veiculos/{{veiculoId}}",
+              "raw": "{{baseUrl}}/veiculos/:veiculoId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "veiculos",
-                "{{veiculoId}}"
+                ":veiculoId"
+              ],
+              "variable": [
+                {
+                  "key": "veiculoId",
+                  "value": "{{veiculoId}}"
+                }
               ]
             },
             "description": "Delete lógico."
@@ -1063,24 +1407,36 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 204\", function () {",
-                  "    pm.response.to.have.status(204);",
-                  "});"
+                  "pm.test(\"Status 204\", function () {\n    pm.response.to.have.status(204);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/clientes/{{clienteId}}",
+              "raw": "{{baseUrl}}/clientes/:clientId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "clientes",
-                "{{clienteId}}"
+                ":clientId"
+              ],
+              "variable": [
+                {
+                  "key": "clientId",
+                  "value": "{{clienteId}}"
+                }
               ]
             },
             "description": "Delete lógico."
@@ -1095,24 +1451,36 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 204\", function () {",
-                  "    pm.response.to.have.status(204);",
-                  "});"
+                  "pm.test(\"Status 204\", function () {\n    pm.response.to.have.status(204);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
+              "raw": "{{baseUrl}}/servicos/:servicoId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "servicos",
-                "{{servicoId}}"
+                ":servicoId"
+              ],
+              "variable": [
+                {
+                  "key": "servicoId",
+                  "value": "{{servicoId}}"
+                }
               ]
             },
             "description": "Delete lógico."
@@ -1127,24 +1495,36 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 204\", function () {",
-                  "    pm.response.to.have.status(204);",
-                  "});"
+                  "pm.test(\"Status 204\", function () {\n    pm.response.to.have.status(204);\n});"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "DELETE",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
-              "raw": "{{baseUrl}}/pecas-insumos/{{pecaInsumoId}}",
+              "raw": "{{baseUrl}}/pecas-insumos/:pecaInsumoId",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "pecas-insumos",
-                "{{pecaInsumoId}}"
+                ":pecaInsumoId"
+              ],
+              "variable": [
+                {
+                  "key": "pecaInsumoId",
+                  "value": "{{pecaInsumoId}}"
+                }
               ]
             },
             "description": "Delete lógico."
@@ -1231,12 +1611,11 @@
         {
           "name": "Consultar OS",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
@@ -1264,12 +1643,11 @@
         {
           "name": "Atualizar dados da OS",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "PUT",
             "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -1315,21 +1693,17 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Status 201\", function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "pm.collectionVariables.set(\"ordemId\", pm.response.json().id);"
+                  "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});\npm.collectionVariables.set(\"ordemId\", pm.response.json().id);"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -1363,12 +1737,11 @@
         {
           "name": "Mudar Status da OS",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "PATCH",
             "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
               {
                 "key": "Content-Type",
                 "value": "application/json"
@@ -1410,12 +1783,11 @@
         {
           "name": "Rejeitar orçamento",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
@@ -1445,12 +1817,11 @@
         {
           "name": "Enviar orçamento",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
@@ -1480,12 +1851,11 @@
         {
           "name": "Aprovar orçamento",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
@@ -1515,12 +1885,11 @@
         {
           "name": "Consultar Tempo médio de execução",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
@@ -1544,10 +1913,6 @@
           "request": {
             "method": "GET",
             "header": [
-              {
-                "key": "accept",
-                "value": "*/*"
-              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
@@ -1593,113 +1958,20 @@
     },
     {
       "name": "Acompanhar Ordem de Serviço",
-      "description": "Perfil: `CLIENTE`. O cliente vem do token, nunca da URL: ele só enxerga as próprias OS. Rode antes **Clientes → Cadastrar cliente** e **Ordem de Serviço → Criar OS** para esse cliente.",
       "item": [
         {
-          "name": "Cadastrar usuário cliente",
-          "event": [
-            {
-              "listen": "prerequest",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.collectionVariables.set(\"clienteUsuario\", \"cliente\" + Date.now());"
-                ]
-              }
-            },
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 201\", function () {\n    pm.response.to.have.status(201);\n});"
-                ]
-              }
-            }
-          ],
+          "name": "Listar minhas OS",
           "request": {
-            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
               }
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nome\": \"Cliente de Teste\",\n  \"email\": \"{{clienteUsuario}}@email.com\",\n  \"nomeUsuario\": \"{{clienteUsuario}}\",\n  \"senha\": \"{{clienteSenha}}\",\n  \"trocaSenhaObrigatoria\": false,\n  \"perfil\": \"CLIENTE\",\n  \"clienteId\": {{clienteId}}\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/usuarios",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "usuarios"
-              ]
-            },
-            "description": "Cria o login do cliente cadastrado em **Clientes → Cadastrar cliente** (`{{clienteId}}`), com o token do **Login administrador**. O `clienteId` é obrigatório para o perfil CLIENTE; um segundo login para o mesmo cliente responde 409. O script gera um username único a cada execução."
-          },
-          "response": []
-        },
-        {
-          "name": "Login cliente",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test(\"Status 200\", function () {\n    pm.response.to.have.status(200);\n});\n\nconst token = pm.response.json().token || \"\";\npm.collectionVariables.set(\"tokenCliente\", token.replace(/^Bearer\\s+/, \"\"));"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"identificador\": \"{{clienteUsuario}}\",\n  \"senha\": \"{{clienteSenha}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "auth",
-                "login"
-              ]
-            },
-            "description": "Guarda o token do cliente em `{{tokenCliente}}`, separado do token do administrador."
-          },
-          "response": []
-        },
-        {
-          "name": "Listar minhas OS",
-          "request": {
-            "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{baseUrl}}/minhas-ordens",
               "host": [
@@ -1709,25 +1981,23 @@
                 "minhas-ordens"
               ]
             },
-            "description": "OS do cliente logado, com status, itens e histórico.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{tokenCliente}}",
-                  "type": "string"
-                }
-              ]
-            }
+            "description": "OS do cliente logado, com status, itens e histórico."
           },
           "response": []
         },
         {
           "name": "Consultar minha OS",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
             "url": {
               "raw": "{{baseUrl}}/minhas-ordens/:ordemId",
               "host": [
@@ -1744,21 +2014,12 @@
                 }
               ]
             },
-            "description": "A OS de outro cliente responde 404, como se não existisse.",
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{tokenCliente}}",
-                  "type": "string"
-                }
-              ]
-            }
+            "description": "A OS de outro cliente responde 404, como se não existisse."
           },
           "response": []
         }
-      ]
+      ],
+      "description": "Perfil: `CLIENTE`. O cliente vem do token, nunca da URL: ele só enxerga as próprias OS. Rode antes **Clientes → Cadastrar cliente** e **Ordem de Serviço → Criar OS** para esse cliente."
     }
   ],
   "auth": {
@@ -1805,19 +2066,35 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:8081/api/v1"
-    },
-    {
-      "key": "username",
       "value": ""
     },
     {
-      "key": "password",
-      "value": "Oficina@2026"
+      "key": "adminUsuario",
+      "value": ""
+    },
+    {
+      "key": "adminSenha",
+      "value": ""
+    },
+    {
+      "key": "funcionarioUsuario",
+      "value": ""
+    },
+    {
+      "key": "funcionarioSenha",
+      "value": ""
+    },
+    {
+      "key": "clienteUsuario",
+      "value": ""
+    },
+    {
+      "key": "clienteSenha",
+      "value": ""
     },
     {
       "key": "token",
-      "secret": true
+      "value": ""
     },
     {
       "key": "pecaInsumoId",
@@ -1845,30 +2122,6 @@
     },
     {
       "key": "ordemId",
-      "value": ""
-    },
-    {
-      "key": "adminUsuario",
-      "value": "",
-      "type": "string",
-      "description": "ADMIN_USUARIO do seu .env (não versionar o valor)"
-    },
-    {
-      "key": "adminSenha",
-      "value": "",
-      "type": "string",
-      "description": "ADMIN_SENHA do seu .env (não versionar o valor)"
-    },
-    {
-      "key": "clienteUsuario",
-      "value": ""
-    },
-    {
-      "key": "clienteSenha",
-      "value": "Cliente@123"
-    },
-    {
-      "key": "tokenCliente",
       "value": ""
     }
   ]
