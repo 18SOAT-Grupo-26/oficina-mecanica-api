@@ -56,17 +56,13 @@ public class ClienteUseCase implements ClienteUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public ClienteResponse buscarPorDocumento(String documento) {
-        return clientePortOut.buscarAtivoPorDocumento(new Documento(documento))
-                .map(clienteMapper::toResponse)
-                .orElseThrow(ClienteUseCase::clienteNaoEncontrado);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Pagina<ClienteResponse> listar(Integer pagina, Integer tamanho) {
-        return clientePortOut.listarAtivos(Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho))
-                .map(clienteMapper::toResponse);
+    public Pagina<ClienteResponse> listar(String documento, Integer pagina, Integer tamanho) {
+        int numero = Pagina.paginaValida(pagina);
+        int itensPorPagina = Pagina.tamanhoValido(tamanho);
+        Pagina<Cliente> clientes = documento == null
+                ? clientePortOut.listarAtivos(numero, itensPorPagina)
+                : Pagina.deNoMaximoUm(clientePortOut.buscarAtivoPorDocumento(new Documento(documento)), numero, itensPorPagina);
+        return clientes.map(clienteMapper::toResponse);
     }
 
     @Override

@@ -27,18 +27,13 @@ public class ClienteController implements ClienteAPI {
     }
 
     @Override
-    public ResponseEntity<Pagina<ClienteResponse>> listar(Integer pagina, Integer tamanho) {
-        return ResponseEntity.ok(useCase.listar(pagina, tamanho));
+    public ResponseEntity<Pagina<ClienteResponse>> listar(String documento, Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(documento, pagina, tamanho));
     }
 
     @Override
     public ResponseEntity<ClienteResponse> buscarPorId(Long id) {
         return ResponseEntity.ok(useCase.buscarPorId(id));
-    }
-
-    @Override
-    public ResponseEntity<ClienteResponse> buscarPorDocumento(String documento) {
-        return ResponseEntity.ok(useCase.buscarPorDocumento(documento));
     }
 
     @Override

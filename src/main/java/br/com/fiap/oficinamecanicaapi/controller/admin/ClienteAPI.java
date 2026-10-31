@@ -22,10 +22,12 @@ public interface ClienteAPI {
     @PostMapping
     ResponseEntity<ClienteResponse> criar(@Valid @RequestBody ClienteRequest request);
 
-    @Operation(summary = "Listar clientes ativos", tags = "Cliente")
-    @ApiResponse(responseCode = "200", description = "Página de clientes ativos")
+    @Operation(summary = "Listar clientes ativos, opcionalmente por CPF ou CNPJ", tags = "Cliente")
+    @ApiResponse(responseCode = "200", description = "Página de clientes ativos (com documento, no máximo um; vazia se não houver)")
+    @ApiResponse(responseCode = "400", description = "Documento inválido", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping
-    ResponseEntity<Pagina<ClienteResponse>> listar(@Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer pagina,
+    ResponseEntity<Pagina<ClienteResponse>> listar(@Parameter(description = "CPF ou CNPJ, com ou sem máscara") @RequestParam(required = false) String documento,
+                                                   @Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer pagina,
                                                    @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer tamanho);
 
     @Operation(summary = "Buscar cliente por id", tags = "Cliente")
@@ -33,13 +35,6 @@ public interface ClienteAPI {
     @ApiResponse(responseCode = "404", description = "Cliente não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/{id}")
     ResponseEntity<ClienteResponse> buscarPorId(@PathVariable Long id);
-
-    @Operation(summary = "Buscar cliente por CPF ou CNPJ", tags = "Cliente")
-    @ApiResponse(responseCode = "200", description = "Cliente encontrado", content = @Content(schema = @Schema(implementation = ClienteResponse.class)))
-    @ApiResponse(responseCode = "400", description = "Documento inválido", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "404", description = "Cliente não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @GetMapping("/documento/{documento}")
-    ResponseEntity<ClienteResponse> buscarPorDocumento(@PathVariable String documento);
 
     @Operation(summary = "Atualizar cliente", tags = "Cliente")
     @ApiResponse(responseCode = "200", description = "Cliente atualizado", content = @Content(schema = @Schema(implementation = ClienteResponse.class)))

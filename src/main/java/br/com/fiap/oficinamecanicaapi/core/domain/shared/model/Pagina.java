@@ -1,6 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.shared.model;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -20,6 +21,15 @@ public record Pagina<T>(
 
     public <R> Pagina<R> map(Function<T, R> conversor) {
         return new Pagina<>(itens.stream().map(conversor).toList(), pagina, tamanho, total);
+    }
+
+    /**
+     * Busca por chave única (documento, placa) no formato de listagem: no máximo um item, e só na primeira página.
+     * Sem resultado, a página vem vazia em vez de 404, como em qualquer filtro.
+     */
+    public static <T> Pagina<T> deNoMaximoUm(Optional<T> item, int pagina, int tamanho) {
+        List<T> itens = pagina == PAGINA_PADRAO ? item.stream().toList() : List.of();
+        return new Pagina<>(itens, pagina, tamanho, item.isPresent() ? 1 : 0);
     }
 
     /**

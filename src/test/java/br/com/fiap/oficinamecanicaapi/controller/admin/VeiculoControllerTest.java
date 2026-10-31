@@ -122,7 +122,7 @@ class VeiculoControllerTest {
     @DisplayName("Deve listar veículos filtrando por cliente e repassando a paginação")
     void deveListarVeiculosDoCliente() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.listar(CLIENTE_ID, 1, 10)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 10, 1));
+        when(useCase.listar(CLIENTE_ID, null, 1, 10)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 10, 1));
 
         mockMvc.perform(get("/veiculos").param("clienteId", "1").param("pagina", "1").param("tamanho", "10")
                         .header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -143,14 +143,14 @@ class VeiculoControllerTest {
     }
 
     @Test
-    @DisplayName("Deve buscar veículo por placa")
-    void deveBuscarPorPlaca() throws Exception {
+    @DisplayName("Deve filtrar a listagem de veículos por placa")
+    void deveListarPorPlaca() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.buscarPorPlaca(PLACA)).thenReturn(RESPONSE);
+        when(useCase.listar(null, PLACA, null, null)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 20, 1));
 
-        mockMvc.perform(get("/veiculos/placa/{placa}", PLACA).header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(get("/veiculos").param("placa", PLACA).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.placa").value(PLACA));
+                .andExpect(jsonPath("$.itens[0].placa").value(PLACA));
     }
 
     @Test

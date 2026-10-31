@@ -62,17 +62,14 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public VeiculoResponse buscarPorPlaca(String placa) {
-        return veiculoPortOut.buscarAtivoPorPlaca(new Placa(placa))
-                .map(veiculoMapper::toResponse)
-                .orElseThrow(VeiculoUseCase::veiculoNaoEncontrado);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Pagina<VeiculoResponse> listar(Long clienteId, Integer pagina, Integer tamanho) {
-        return veiculoPortOut.listarAtivos(clienteId, Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho))
-                .map(veiculoMapper::toResponse);
+    public Pagina<VeiculoResponse> listar(Long clienteId, String placa, Integer pagina, Integer tamanho) {
+        int numero = Pagina.paginaValida(pagina);
+        int itensPorPagina = Pagina.tamanhoValido(tamanho);
+        Pagina<Veiculo> veiculos = placa == null
+                ? veiculoPortOut.listarAtivos(clienteId, numero, itensPorPagina)
+                : Pagina.deNoMaximoUm(veiculoPortOut.buscarAtivoPorPlaca(new Placa(placa))
+                        .filter(veiculo -> clienteId == null || clienteId.equals(veiculo.getClienteId())), numero, itensPorPagina);
+        return veiculos.map(veiculoMapper::toResponse);
     }
 
     @Override

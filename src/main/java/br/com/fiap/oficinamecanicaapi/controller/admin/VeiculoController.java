@@ -27,18 +27,13 @@ public class VeiculoController implements VeiculoAPI {
     }
 
     @Override
-    public ResponseEntity<Pagina<VeiculoResponse>> listar(Long clienteId, Integer pagina, Integer tamanho) {
-        return ResponseEntity.ok(useCase.listar(clienteId, pagina, tamanho));
+    public ResponseEntity<Pagina<VeiculoResponse>> listar(Long clienteId, String placa, Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(clienteId, placa, pagina, tamanho));
     }
 
     @Override
     public ResponseEntity<VeiculoResponse> buscarPorId(Long id) {
         return ResponseEntity.ok(useCase.buscarPorId(id));
-    }
-
-    @Override
-    public ResponseEntity<VeiculoResponse> buscarPorPlaca(String placa) {
-        return ResponseEntity.ok(useCase.buscarPorPlaca(placa));
     }
 
     @Override

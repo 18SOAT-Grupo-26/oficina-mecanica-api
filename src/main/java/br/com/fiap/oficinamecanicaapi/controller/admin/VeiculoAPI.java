@@ -23,10 +23,12 @@ public interface VeiculoAPI {
     @PostMapping
     ResponseEntity<VeiculoResponse> criar(@Valid @RequestBody VeiculoRequest request);
 
-    @Operation(summary = "Listar veículos ativos, opcionalmente por cliente", tags = "Veículo")
-    @ApiResponse(responseCode = "200", description = "Página de veículos ativos")
+    @Operation(summary = "Listar veículos ativos, opcionalmente por cliente ou placa", tags = "Veículo")
+    @ApiResponse(responseCode = "200", description = "Página de veículos ativos (com placa, no máximo um; vazia se não houver)")
+    @ApiResponse(responseCode = "400", description = "Placa inválida", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping
     ResponseEntity<Pagina<VeiculoResponse>> listar(@RequestParam(required = false) Long clienteId,
+                                                   @Parameter(description = "Placa antiga ou Mercosul, com ou sem hífen") @RequestParam(required = false) String placa,
                                                    @Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer pagina,
                                                    @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer tamanho);
 
@@ -35,13 +37,6 @@ public interface VeiculoAPI {
     @ApiResponse(responseCode = "404", description = "Veículo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping("/{id}")
     ResponseEntity<VeiculoResponse> buscarPorId(@PathVariable Long id);
-
-    @Operation(summary = "Buscar veículo por placa", tags = "Veículo")
-    @ApiResponse(responseCode = "200", description = "Veículo encontrado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))
-    @ApiResponse(responseCode = "400", description = "Placa inválida", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "404", description = "Veículo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @GetMapping("/placa/{placa}")
-    ResponseEntity<VeiculoResponse> buscarPorPlaca(@PathVariable String placa);
 
     @Operation(summary = "Atualizar veículo", tags = "Veículo")
     @ApiResponse(responseCode = "200", description = "Veículo atualizado", content = @Content(schema = @Schema(implementation = VeiculoResponse.class)))

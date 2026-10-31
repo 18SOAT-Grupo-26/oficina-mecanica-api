@@ -112,7 +112,7 @@ class ClienteControllerTest {
     @DisplayName("Deve listar clientes repassando página e tamanho")
     void deveListarClientes() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.listar(1, 5)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 5, 6));
+        when(useCase.listar(null, 1, 5)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 5, 6));
 
         mockMvc.perform(get("/clientes").param("pagina", "1").param("tamanho", "5")
                         .header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -154,14 +154,14 @@ class ClienteControllerTest {
     }
 
     @Test
-    @DisplayName("Deve buscar cliente por documento")
-    void deveBuscarPorDocumento() throws Exception {
+    @DisplayName("Deve filtrar a listagem de clientes por documento")
+    void deveListarPorDocumento() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.buscarPorDocumento(CPF)).thenReturn(RESPONSE);
+        when(useCase.listar(CPF, null, null)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 20, 1));
 
-        mockMvc.perform(get("/clientes/documento/{documento}", CPF).header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(get("/clientes").param("documento", CPF).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.documento").value(CPF));
+                .andExpect(jsonPath("$.itens[0].documento").value(CPF));
     }
 
     @Test

@@ -8,12 +8,11 @@ public interface VeiculoUseCasePortIn {
 
     VeiculoResponse buscarPorId(Long id);
 
-    VeiculoResponse buscarPorPlaca(String placa);
-
     /**
-     * {@code clienteId} opcional: quando informado, lista só os veículos desse cliente.
+     * Filtros opcionais: {@code clienteId} lista só os veículos desse cliente; {@code placa} (com ou sem hífen)
+     * traz no máximo esse veículo.
      */
-    Pagina<VeiculoResponse> listar(Long clienteId, Integer pagina, Integer tamanho);
+    Pagina<VeiculoResponse> listar(Long clienteId, String placa, Integer pagina, Integer tamanho);
 
     VeiculoResponse atualizar(Long id, VeiculoRequest request);
 
