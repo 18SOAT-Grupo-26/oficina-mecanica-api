@@ -56,12 +56,7 @@ class PecaInsumoPersistenceAdapterTest {
     @DisplayName("salvar deve converter o domínio em entidade, preservando id, estoque e datas")
     void salvar() {
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        PecaInsumo peca = new PecaInsumo();
-        peca.setId(1L);
-        peca.setNome("Filtro de óleo");
-        peca.setQuantidade(10);
-        peca.setReservado(2);
-        peca.setCriadoEm(CRIADO_EM);
+        PecaInsumo peca = PecaInsumo.reconstituir(1L, "Filtro de óleo", null, null, 10, 2, null, CRIADO_EM, null);
 
         PecaInsumo salvo = adapter.salvar(peca);
 

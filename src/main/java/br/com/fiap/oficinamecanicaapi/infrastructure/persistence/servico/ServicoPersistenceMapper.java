@@ -11,7 +11,17 @@ public interface ServicoPersistenceMapper {
     @Mapping(target = "updatedAt", source = "atualizadoEm")
     ServicoEntity toEntity(Servico servico);
 
-    @Mapping(target = "criadoEm", source = "createdAt")
-    @Mapping(target = "atualizadoEm", source = "updatedAt")
-    Servico toDomain(ServicoEntity entity);
+    /**
+     * O modelo não tem setters; a reconstrução passa pela fábrica do domínio.
+     */
+    default Servico toDomain(ServicoEntity entity) {
+        return Servico.reconstituir(
+                entity.getId(),
+                entity.getNome(),
+                entity.getNomeNormalizado(),
+                entity.getDescricao(),
+                entity.getPreco(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt());
+    }
 }

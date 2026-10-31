@@ -60,8 +60,9 @@ class PecaInsumoUseCaseTest {
         when(pecaInsumoPortOut.existePorNomeNormalizado("oleo do motor")).thenReturn(false);
         when(pecaInsumoPortOut.salvar(any())).thenAnswer(inv -> {
             PecaInsumo e = inv.getArgument(0);
-            e.setId(ID);
-            return e;
+            // como o banco: devolve a peça gravada, agora com id
+            return PecaInsumo.reconstituir(ID, e.getNome(), e.getNomeNormalizado(), e.getDescricao(),
+                    e.getQuantidade(), e.getReservado(), e.getPreco(), e.getCriadoEm(), e.getAtualizadoEm());
         });
 
         PecaInsumoResponse response = useCase.criar(REQUEST);
@@ -170,13 +171,16 @@ class PecaInsumoUseCaseTest {
     }
 
     private static PecaInsumo entidade(Long id, String nome) {
-        PecaInsumo e = new PecaInsumo();
-        e.setId(id);
-        e.setNome(nome);
-        e.setNomeNormalizado(nome.toLowerCase());
-        e.setQuantidade(5);
-        e.setReservado(0);
-        e.setPreco(new BigDecimal("10.00"));
+        PecaInsumo e = PecaInsumo.reconstituir(
+                id,
+                nome,
+                nome.toLowerCase(),
+                null,
+                5,
+                0,
+                new BigDecimal("10.00"),
+                null,
+                null);
         return e;
     }
 
@@ -275,13 +279,16 @@ class PecaInsumoUseCaseTest {
 
     private static PecaInsumo peca(String nome, String nomeNormalizado, int quantidade, int reservado,
                                          String preco) {
-        PecaInsumo peca = new PecaInsumo();
-        peca.setId(ID);
-        peca.setNome(nome);
-        peca.setNomeNormalizado(nomeNormalizado);
-        peca.setQuantidade(quantidade);
-        peca.setReservado(reservado);
-        peca.setPreco(new BigDecimal(preco));
+        PecaInsumo peca = PecaInsumo.reconstituir(
+                ID,
+                nome,
+                nomeNormalizado,
+                null,
+                quantidade,
+                reservado,
+                new BigDecimal(preco),
+                null,
+                null);
         return peca;
     }
 

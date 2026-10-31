@@ -224,10 +224,10 @@ callbacks em cada entidade sem levar JPA para o domínio.
   padronização de logs (`action=... chave=valor`) segue o mesmo caminho.
 - Nenhuma entidade JPA fica no `core`, e o `UsuarioUseCase` usa o `UsuarioPortOut` em vez dos repositórios. Todos os
   repositórios ficam em `infrastructure/persistence/<contexto>/*JpaRepository`, junto da entidade e do adapter (os de
-  `usuario`, `servico` e `pecainsumo` saíram de `persistence/repository/` em 31/10). Ainda ficam fora do padrão:
-  `Servico` e `PecaInsumo`, que são modelos anêmicos (getters e setters, com a validação no caso de uso, e não no
-  modelo como em `Cliente`); e, na
-  segurança, `Perfil` implementa `GrantedAuthority` e o JWT é gerado em `core/usecase/auth`
+  `usuario`, `servico` e `pecainsumo` saíram de `persistence/repository/` em 31/10). `Servico` e `PecaInsumo`
+  seguem o padrão de `Cliente`: fábricas `novo`/`reconstituir`, `atualizar` com as regras e nenhum setter (as regras
+  comuns do catálogo ficam em `RegrasCatalogo`). Ainda fica fora do padrão, na segurança: `Perfil` implementa
+  `GrantedAuthority` e o JWT é gerado em `core/usecase/auth`
   ([ADR 004](0004-seguranca.md)). O que o pente fino de 29/10 achou já foi corrigido: os DTOs `*Request`/`*Response`
   saíram de `core/domain/<contexto>/model` para `core/port/in/<contexto>/`, ao lado do port in de que são contrato
   (31/10), o `JwtAuthenticationFilter` usa o port in
