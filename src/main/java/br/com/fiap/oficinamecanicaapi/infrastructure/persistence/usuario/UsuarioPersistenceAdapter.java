@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.out.usuario.UsuarioPortOut;
-import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +28,8 @@ public class UsuarioPersistenceAdapter implements UsuarioPortOut {
     @Transactional
     public void cadastrar(Usuario usuario) {
         var perfilEntity = perfilRepository.findByNome(usuario.perfil().name())
-                .orElseThrow(() -> new DadoInvalidoException("Perfil não encontrado: " + usuario.perfil().name()));
+                // os perfis vêm das migrations (V2 e V10): faltar um é erro de configuração do servidor (500)
+                .orElseThrow(() -> new IllegalStateException("Perfil não encontrado: " + usuario.perfil().name()));
         usuarioRepository.save(mapper.toEntityCadastro(usuario, perfilEntity));
     }
 

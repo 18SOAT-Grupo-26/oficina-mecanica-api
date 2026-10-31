@@ -3,7 +3,6 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.usuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
-import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,12 +60,12 @@ class UsuarioPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("cadastrar deve rejeitar com 400 o perfil que não existe na tabela de perfis, sem gravar")
+    @DisplayName("cadastrar deve falhar como erro de servidor (500) quando o perfil não existe na tabela, sem gravar")
     void cadastrarComPerfilInexistente() {
         when(perfilRepository.findByNome("CLIENTE")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> adapter.cadastrar(CLIENTE))
-                .isInstanceOf(DadoInvalidoException.class)
+                .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Perfil não encontrado: CLIENTE");
         verify(usuarioRepository, never()).save(any());
     }
