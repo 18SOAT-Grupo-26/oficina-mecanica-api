@@ -249,9 +249,29 @@ algo falhar. Ative uma vez por clone:
 git config core.hooksPath .githooks
 ```
 
+Enquanto roda, ele mostra o progresso, uma linha por classe de teste, e a subida do banco e do Spring nos testes de
+integração:
+
+```
+▶ Testes unitários
+  ✔ ClienteUseCaseTest                       21 testes  1.3 s
+  ✘ NormalizadorNomeTest                     1 falha(s) de 9
+▶ Testes de integração
+    PostgreSQL (Testcontainers) no ar em 1.1 s
+    Flyway: migrations aplicadas até a V10
+    Spring iniciado em 9.3 s
+  ✔ FluxoOrdemServicoIT                      5 testes  0.9 s
+▶ Cobertura
+[pre-push] OK: cobertura total de linhas 98.0%
+```
+
+- Se um teste falhar, o hook mostra o teste, o valor esperado e o recebido, e bloqueia o push.
+- **O Docker precisa estar aberto.** Sem ele, os testes de integração são pulados e o hook bloqueia o push, porque o
+  envio não pode passar sem eles.
+- `PRE_PUSH_QUIET=1 git push` roda sem o progresso na tela: só o resultado.
 - O log completo fica em `.git/pre-push.log`.
-- Usa `mvn`; sem Maven instalado, usa a imagem Docker `maven:3-amazoncorretto-25-alpine`. No Windows, o hook roda pelo
-  Git Bash (já incluído no Git for Windows).
+- Usa `mvn`; sem Maven instalado, usa a imagem Docker `maven:3-amazoncorretto-25-alpine`, com acesso ao Docker do host
+  para os testes de integração. No Windows, o hook roda pelo Git Bash (já incluído no Git for Windows).
 - Em emergência, `git push --no-verify` pula o hook (o CI roda a mesma validação no PR).
 
 Para ver os problemas do Sonar enquanto programa, instale a extensão **SonarQube for IDE** e conecte-a ao SonarCloud

@@ -186,7 +186,8 @@ Os testes de integração entraram na `develop` no #111, com o `maven-failsafe-p
 
 - **Mocks podem esconder erro de integração.** Um teste de caso de uso passa mesmo que o adapter real se comporte
   diferente do mock. Por isso o comportamento do banco tem os `*IT`.
-- **Os `*IT` precisam de Docker.** Sem ele, são pulados em silêncio na máquina local. Só o CI garante que rodaram.
+- **Os `*IT` precisam de Docker.** Sem ele, o `mvn verify` local pula os `*IT` (extensão `DockerDisponivel`) e fica
+  verde. O hook `pre-push` não aceita isso e bloqueia o push quando algum `*IT` foi pulado, e no PR o CI roda tudo.
 - **Concorrência sem teste automatizado.** Nenhum teste dispara duas reservas ou duas aprovações ao mesmo tempo. A
   garantia do RNF08 sob concorrência vem do desenho do SQL (ADR 003), e não de um teste. O próximo passo é um `*IT` com
   duas threads disputando a última unidade da mesma peça.

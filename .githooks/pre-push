@@ -3,6 +3,7 @@
 # Ativação (uma vez por clone): git config core.hooksPath .githooks
 # Emergência: git push --no-verify (o CI roda a mesma validação no PR).
 # Argumentos extras para o Maven: PRE_PUSH_MVN_ARGS="-Djacoco.minimo.linhas=0.90" git push
+# Sem o progresso na tela (só o log): PRE_PUSH_QUIET=1 git push
 
 set -u
 
@@ -11,28 +12,127 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 # "clean" evita que classes de outra branch, esquecidas em target/, inflem testes e cobertura
 GOALS="-B clean verify ${PRE_PUSH_MVN_ARGS:-}"
 
+# no Maven via Docker, os *IT só rodam se o container enxergar o Docker do host (Testcontainers)
+VIA_DOCKER=0
 if command -v mvn >/dev/null 2>&1; then
-    RUN="mvn $GOALS"
+    MAVEN=mvn
 elif [ -x ./mvnw ]; then
-    RUN="./mvnw $GOALS"
+    MAVEN=./mvnw
 elif command -v docker >/dev/null 2>&1; then
-    RUN="docker run --rm -v $PWD:/app -w /app maven:3-amazoncorretto-25-alpine mvn $GOALS"
+    VIA_DOCKER=1
 else
     echo "[pre-push] Maven nem Docker encontrados; instale um deles ou use git push --no-verify." >&2
     exit 1
 fi
 
-# log fora de target/, que é apagado pelo clean
-LOG="$(git rev-parse --git-dir)/pre-push.log"
+# $GOALS fica sem aspas de propósito: são vários argumentos para o Maven
+rodar_maven() {
+    if [ "$VIA_DOCKER" = "0" ]; then
+        # shellcheck disable=SC2086
+        "$MAVEN" $GOALS
+        return
+    fi
+    # o container roda como root: no fim, devolve o target/ ao usuário, senão o próximo "mvn clean" local falha
+    docker run --rm -v "$PWD":/app -w /app -v /var/run/docker.sock:/var/run/docker.sock \
+        -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal --add-host=host.docker.internal:host-gateway \
+        -e GOALS="$GOALS" -e DONO="$(id -u):$(id -g)" \
+        maven:3-amazoncorretto-25-alpine sh -c 'mvn $GOALS; s=$?; chown -R "$DONO" target; exit $s'
+}
+
+# log e status fora de target/, que é apagado pelo clean
+GIT_DIR="$(git rev-parse --git-dir)"
+LOG="$GIT_DIR/pre-push.log"
+STATUS="$GIT_DIR/pre-push.status"
+
+# Mostra o progresso a partir das linhas que o próprio Maven imprime: fase, uma linha por classe de teste,
+# subida do PostgreSQL (Testcontainers), migrations e contexto do Spring nos testes de integração.
+progresso() {
+    awk '
+        function curto(fqcn,   n, partes) { n = split(fqcn, partes, "."); return partes[n] }
+        function linha(simbolo, classe, detalhe) {
+            if (length(classe) > 40) classe = substr(classe, 1, 39) "…"
+            printf "  %s %-40s %s\n", simbolo, classe, detalhe; fflush()
+        }
+        /--- surefire:/              { print "▶ Testes unitários"; fflush(); next }
+        /--- failsafe:.*integration-test/ { print "▶ Testes de integração"; fflush(); integracao = 1; next }
+        /--- jacoco:.*:check/        { print "▶ Cobertura"; fflush(); next }
+        /Container postgres:.* started in PT/ {
+            t = $0; sub(/.*started in PT/, "", t); sub(/S.*/, "", t)
+            printf "    PostgreSQL (Testcontainers) no ar em %.1f s\n", t; fflush(); next
+        }
+        /Migrating schema .* to version "/ {
+            v = $0; sub(/.*to version "/, "", v); sub(/ - .*/, "", v); ultima = v; next
+        }
+        integracao && /Started [A-Za-z0-9_]+ in [0-9.]+ seconds/ {
+            if (ultima != "") { printf "    Flyway: migrations aplicadas até a V%s\n", ultima; ultima = "" }
+            t = $0; sub(/.* in /, "", t); sub(/ seconds.*/, "", t)
+            printf "    Spring iniciado em %.1f s\n", t; fflush(); next
+        }
+        /Tests run: [0-9]+, Failures: [0-9]+, Errors: [0-9]+, Skipped: [0-9]+, Time elapsed: .* -- in / {
+            l = $0; sub(/ <<< [A-Z]+!/, "", l)
+            split(l, a, /Tests run: |, Failures: |, Errors: |, Skipped: |, Time elapsed: | s -- in /)
+            total = a[2]; falhas = a[3] + a[4]; pulados = a[5]; tempo = a[6]; classe = curto(a[7])
+            # classe que só agrupa @Nested: os testes já apareceram nas linhas das aninhadas
+            if (total == 0 && falhas == 0) next
+            if (falhas > 0)       linha("✘", classe, falhas " falha(s) de " total)
+            else if (pulados > 0) linha("⚠", classe, pulados " pulado(s) de " total)
+            else                  linha("✔", classe, sprintf("%d testes  %.1f s", total, tempo))
+            next
+        }
+        /^\[(INFO|WARNING|ERROR)\] Tests run: [0-9]+, Failures: [0-9]+, Errors: [0-9]+, Skipped: [0-9]+$/ {
+            t = $0; sub(/^\[[A-Z]+\] /, "", t); print "    total: " t; fflush(); next
+        }
+    '
+}
 
 echo "[pre-push] Rodando testes e cobertura antes do push (log em $LOG)..."
-if ! $RUN >"$LOG" 2>&1; then
+rm -f "$STATUS"
+if [ "${PRE_PUSH_QUIET:-0}" = "1" ]; then
+    rodar_maven >"$LOG" 2>&1
+    echo $? >"$STATUS"
+else
+    { rodar_maven; echo $? >"$STATUS"; } 2>&1 | tee "$LOG" | progresso
+fi
+
+if [ "$(cat "$STATUS" 2>/dev/null)" != "0" ]; then
+    if grep -q 'Could not find a valid Docker environment' "$LOG"; then
+        # sem Docker, todos os *IT quebram na subida do contexto: a lista de erros só esconderia a causa
+        echo "" >&2
+        grep -E '^\[(ERROR|WARNING)\] Tests run: [0-9]+, Failures: [0-9]+, Errors: [0-9]+, Skipped: [0-9]+$' "$LOG" | tail -n 1 >&2
+        echo "[pre-push] Push bloqueado: os testes de integração precisam do Docker, e o Testcontainers não o encontrou." >&2
+        echo "[pre-push] Ligue o Docker e tente de novo (em emergência, git push --no-verify; o CI roda tudo no PR)." >&2
+        exit 1
+    fi
     # só o que explica a falha: testes quebrados, regras de cobertura violadas e erros do Maven
-    grep -E 'Tests run:.*(Failures|Errors): [1-9]|<<< (FAILURE|ERROR)|Rule violated|^\[ERROR\] [^ ]' "$LOG" | head -n 30 >&2
+    echo "" >&2
+    grep -E 'Tests run:.*(Failures|Errors): [1-9]|<<< (FAILURE|ERROR)|AssertionFailedError|^expected: |^ but was: |^Expecting|Rule violated|^\[ERROR\] [^ ]' "$LOG" |
+        grep -vE 'Help 1|re-run Maven|Re-run Maven|dump files|For more information|individual test results|^\[ERROR\] (Failures|Errors): *$' |
+        awk '!visto[$0]++' | head -n 30 >&2
     echo "" >&2
     echo "[pre-push] Push bloqueado: testes falharam ou a cobertura de um domínio crítico ficou abaixo do mínimo." >&2
     echo "[pre-push] Log completo em $LOG; cobertura em target/site/jacoco/index.html." >&2
     exit 1
+fi
+
+# Os *IT são pulados (não falham) quando o Testcontainers não acha o Docker; sem eles, o push não pode passar.
+IT_TOTAL=0
+IT_PULADOS=0
+for relatorio in target/failsafe-reports/*.txt; do
+    [ -f "$relatorio" ] || continue
+    total=$(sed -n 's/^Tests run: \([0-9]*\),.*/\1/p' "$relatorio" | head -n 1)
+    pulados=$(sed -n 's/^Tests run:.*Skipped: \([0-9]*\),.*/\1/p' "$relatorio" | head -n 1)
+    IT_TOTAL=$((IT_TOTAL + ${total:-0}))
+    IT_PULADOS=$((IT_PULADOS + ${pulados:-0}))
+done
+if [ "$IT_TOTAL" -eq 0 ] || [ "$IT_PULADOS" -gt 0 ]; then
+    echo "" >&2
+    echo "[pre-push] Os testes de integração não rodaram ($IT_PULADOS de $IT_TOTAL pulados): o Testcontainers não achou o Docker." >&2
+    if [ "$VIA_DOCKER" = "1" ]; then
+        echo "[pre-push] Aviso: com o Maven via Docker, os *IT dependem do acesso ao Docker do host. Instale o Maven para rodá-los; o CI roda tudo no PR." >&2
+    else
+        echo "[pre-push] Push bloqueado: ligue o Docker e tente de novo (em emergência, git push --no-verify; o CI roda tudo no PR)." >&2
+        exit 1
+    fi
 fi
 
 CSV=target/site/jacoco/jacoco.csv

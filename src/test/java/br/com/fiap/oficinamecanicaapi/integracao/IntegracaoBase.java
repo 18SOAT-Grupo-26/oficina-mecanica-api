@@ -2,7 +2,7 @@ package br.com.fiap.oficinamecanicaapi.integracao;
 
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.condition.EnabledIf;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -12,7 +12,6 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.DockerClientFactory;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,12 +22,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *
  * <p>O AdministradorInicial cria o ADMIN "admin" na subida do contexto, com os api.admin.* abaixo;
  * a limpeza preserva esse usuário. Outros usuários são cadastrados com o token dele, como na aplicação.
- * Sem Docker na máquina, os testes são pulados (não falham).
+ * Sem Docker na máquina, os testes são pulados, e não reprovados (ver {@link DockerDisponivel}).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(PostgresTestcontainersConfig.class)
-@EnabledIf("br.com.fiap.oficinamecanicaapi.integracao.IntegracaoBase#dockerDisponivel")
+@ExtendWith(DockerDisponivel.class)
 @TestPropertySource(properties = {
         // vazio de propósito: a SegredoJwtConfig gera uma chave aleatória, e o API_SECRET de um .env local não vaza
         "api.secret=",
@@ -49,14 +48,6 @@ public abstract class IntegracaoBase {
 
     @Autowired
     protected JdbcTemplate jdbcTemplate;
-
-    public static boolean dockerDisponivel() {
-        try {
-            return DockerClientFactory.instance().isDockerAvailable();
-        } catch (Exception _) {
-            return false;
-        }
-    }
 
     /**
      * DELETE na ordem das FKs, e não TRUNCATE ... CASCADE: desde a V10 usuarios.cliente_id aponta para clientes,
