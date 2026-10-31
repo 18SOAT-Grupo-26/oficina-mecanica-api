@@ -192,8 +192,8 @@ Todas ficam no `.env` (copiado do [`.env.example`](.env.example)). O Compose rep
 
 | Comando      | O que roda | Precisa de |
 |--------------|------------|------------|
-| `mvn test`   | testes unitários (`*Test`): domínio, casos de uso, controllers, segurança e arquitetura | só Java e Maven |
-| `mvn verify` | unitários + testes de integração (`*IT`), cobertura JaCoCo e a meta de 80% | Docker aberto (Testcontainers sobe um PostgreSQL 18 só para o teste) |
+| `mvn test`   | testes unitários (`*Test`): domínio, casos de uso, controllers, segurança e arquitetura | Java e Maven, ou Docker (comando abaixo) |
+| `mvn verify` | unitários + testes de integração (`*IT`), cobertura JaCoCo e a meta de 80% | Docker aberto (Testcontainers sobe um PostgreSQL 18 só para o teste) e Java e Maven, ou só Docker (comando abaixo) |
 
 Os testes de integração ficam no pacote da classe que exercitam (ex.: `SegurancaIT`, `FluxoOrdemServicoIT`,
 `MigracoesIT`) e usam a base `src/test/java/.../integracao/IntegracaoBase.java`. Sem Docker, eles são pulados.
@@ -215,6 +215,22 @@ docker run --rm -v "${PWD}:/app" -v "$env:USERPROFILE\.m2:/root/.m2" -w /app mav
 ```
 
 O volume `.m2` guarda as dependências entre execuções.
+
+O `mvn verify` também roda num container. Ele precisa do socket do Docker para o Testcontainers subir o PostgreSQL:
+
+```bash
+# bash / Git Bash
+docker run --rm -v "$PWD":/app -v "$HOME/.m2":/root/.m2 -v /var/run/docker.sock:/var/run/docker.sock \
+  -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal --add-host=host.docker.internal:host-gateway \
+  -w /app maven:3-amazoncorretto-25-alpine mvn verify
+```
+
+```powershell
+# PowerShell
+docker run --rm -v "${PWD}:/app" -v "$env:USERPROFILE\.m2:/root/.m2" -v /var/run/docker.sock:/var/run/docker.sock `
+  -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal --add-host=host.docker.internal:host-gateway `
+  -w /app maven:3-amazoncorretto-25-alpine mvn verify
+```
 
 ## Qualidade de código e cobertura (Sonar + JaCoCo)
 
