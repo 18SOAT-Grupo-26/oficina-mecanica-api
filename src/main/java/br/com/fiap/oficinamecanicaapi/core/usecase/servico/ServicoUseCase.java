@@ -7,7 +7,9 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.servico.mapper.ServicoMapper;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.NormalizadorNome;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -42,7 +44,7 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
 
     @Override
     @Transactional
-    public ServicoResponse criar(ServicoRequest request) throws ApplicationException {
+    public ServicoResponse criar(ServicoRequest request) {
         validarCampos(request);
         String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
         validarNomeDisponivel(nomeNormalizado);
@@ -66,13 +68,13 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public ServicoResponse buscarPorId(Long id) throws ApplicationException {
+    public ServicoResponse buscarPorId(Long id) {
         return servicoMapper.toResponse(buscarServico(id));
     }
 
     @Override
     @Transactional
-    public ServicoResponse atualizar(Long id, ServicoRequest request) throws ApplicationException {
+    public ServicoResponse atualizar(Long id, ServicoRequest request) {
         Servico servico = buscarServico(id);
         validarCampos(request);
 
@@ -95,7 +97,7 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
 
     @Override
     @Transactional
-    public void excluir(Long id) throws ApplicationException {
+    public void excluir(Long id) {
         Servico servico = buscarServico(id);
         servicoPortOut.excluir(servico);
 
@@ -105,34 +107,34 @@ public class ServicoUseCase implements ServicoUseCasePortIn {
 
     private Servico buscarServico(Long id) {
         return servicoPortOut.buscarPorId(id)
-                .orElseThrow(() -> new ApplicationException(404, "Serviço não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Serviço não encontrado"));
     }
 
     private void validarNomeDisponivel(String nomeNormalizado) {
         if (servicoPortOut.existePorNomeNormalizado(nomeNormalizado)) {
-            throw new ApplicationException(409, "Já existe um serviço cadastrado com este nome");
+            throw new ConflitoException("Já existe um serviço cadastrado com este nome");
         }
     }
 
     private static void validarCampos(ServicoRequest request) {
         String nome = request.nome() == null ? null : request.nome().trim();
         if (nome == null || nome.isEmpty()) {
-            throw new ApplicationException(422, "O campo nome é obrigatório");
+            throw new DadoInvalidoException("O campo nome é obrigatório");
         }
         if (nome.length() < NOME_MIN_LENGTH) {
-            throw new ApplicationException(422, "O nome deve ter no mínimo 3 caracteres");
+            throw new DadoInvalidoException("O nome deve ter no mínimo 3 caracteres");
         }
 
         if (request.preco() == null) {
-            throw new ApplicationException(422, "O campo preco é obrigatório");
+            throw new DadoInvalidoException("O campo preco é obrigatório");
         }
         if (request.preco().signum() <= 0
                 || request.preco().stripTrailingZeros().scale() > PRECO_MAX_CASAS_DECIMAIS) {
-            throw new ApplicationException(422, "Preço inválido");
+            throw new DadoInvalidoException("Preço inválido");
         }
 
         if (request.descricao() != null && request.descricao().length() > DESCRICAO_MAX_LENGTH) {
-            throw new ApplicationException(422, "A descrição deve ter no máximo 500 caracteres");
+            throw new DadoInvalidoException("A descrição deve ter no máximo 500 caracteres");
         }
     }
 

@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthToken;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.CadastroRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.SigninRequest;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,19 +22,18 @@ public class AuthController implements AuthAPI {
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> cadastrarUsuario(CadastroRequest request) throws ApplicationException {
+    public ResponseEntity<Void> cadastrarUsuario(CadastroRequest request) {
         authService.cadastrarUsuario(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override
-    public ResponseEntity<AuthToken> gerarToken(SigninRequest request)
-            throws ApplicationException {
+    public ResponseEntity<AuthToken> gerarToken(SigninRequest request) {
         return ResponseEntity.ok(authService.autenticar(request));
     }
 
     @Override
-    public ResponseEntity<Boolean> validarToken(String token) throws ApplicationException {
+    public ResponseEntity<Boolean> validarToken(String token) {
         return ResponseEntity.ok(authService.validarToken(token));
     }
 }

@@ -3,7 +3,8 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.config;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,7 +69,7 @@ class AdministradorInicialTest {
     @DisplayName("Deve falhar a subida quando o cadastro do administrador for recusado (ex.: senha fraca)")
     void deveFalharQuandoRecusado() {
         when(usuarioUseCase.existeAdministrador()).thenReturn(false);
-        doThrow(new ApplicationException(400, "A senha deve conter uma letra maiúscula"))
+        doThrow(new DadoInvalidoException("A senha deve conter uma letra maiúscula"))
                 .when(usuarioUseCase).cadastrar(ADMINISTRADOR);
         AdministradorInicial administradorInicial = administrador(EMAIL, USUARIO, SENHA);
 
@@ -81,7 +82,7 @@ class AdministradorInicialTest {
     @DisplayName("Deve seguir normal quando outra instância criar o administrador ao mesmo tempo")
     void deveIgnorarCriacaoConcorrente() {
         when(usuarioUseCase.existeAdministrador()).thenReturn(false, true);
-        doThrow(new ApplicationException(409, "Já existe um usuário cadastrado com este e-mail"))
+        doThrow(new ConflitoException("Já existe um usuário cadastrado com este e-mail"))
                 .when(usuarioUseCase).cadastrar(ADMINISTRADOR);
 
         AdministradorInicial administradorInicial = administrador(EMAIL, USUARIO, SENHA);

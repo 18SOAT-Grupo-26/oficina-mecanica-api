@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.GetLocalTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,10 +43,9 @@ class VeiculoTest {
     @Test
     @DisplayName("Deve rejeitar ano anterior a 1900 com erro 400")
     void deveRejeitarAnoMuitoAntigo() {
-        ApplicationException exception = assertThrows(ApplicationException.class,
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class,
                 () -> Veiculo.novo(PLACA, MARCA, MODELO, Veiculo.ANO_MINIMO - 1, CLIENTE_ID));
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
         assertThat(exception.getMessage()).startsWith("Ano inválido");
     }
 
@@ -55,20 +54,19 @@ class VeiculoTest {
     void deveRejeitarAnoFuturo() {
         int anoInvalido = Year.now(GetLocalTime.FUSO).getValue() + 2;
 
-        ApplicationException exception = assertThrows(ApplicationException.class,
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class,
                 () -> Veiculo.novo(PLACA, MARCA, MODELO, anoInvalido, CLIENTE_ID));
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
     }
 
     @Test
     @DisplayName("Deve rejeitar veículo sem marca, modelo, placa ou cliente com erro 400")
     void deveRejeitarCamposObrigatorios() {
-        assertThrows(ApplicationException.class, () -> Veiculo.novo(PLACA, " ", MODELO, ANO, CLIENTE_ID));
-        assertThrows(ApplicationException.class, () -> Veiculo.novo(PLACA, MARCA, null, ANO, CLIENTE_ID));
-        assertThrows(ApplicationException.class, () -> Veiculo.novo(null, MARCA, MODELO, ANO, CLIENTE_ID));
-        assertThrows(ApplicationException.class, () -> Veiculo.novo(PLACA, MARCA, MODELO, ANO, null));
-        assertThrows(ApplicationException.class, () -> Veiculo.novo(PLACA, MARCA, MODELO, null, CLIENTE_ID));
+        assertThrows(DadoInvalidoException.class, () -> Veiculo.novo(PLACA, " ", MODELO, ANO, CLIENTE_ID));
+        assertThrows(DadoInvalidoException.class, () -> Veiculo.novo(PLACA, MARCA, null, ANO, CLIENTE_ID));
+        assertThrows(DadoInvalidoException.class, () -> Veiculo.novo(null, MARCA, MODELO, ANO, CLIENTE_ID));
+        assertThrows(DadoInvalidoException.class, () -> Veiculo.novo(PLACA, MARCA, MODELO, ANO, null));
+        assertThrows(DadoInvalidoException.class, () -> Veiculo.novo(PLACA, MARCA, MODELO, null, CLIENTE_ID));
     }
 
     @Test

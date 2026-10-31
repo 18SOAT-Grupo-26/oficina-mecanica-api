@@ -10,7 +10,8 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoResponse
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,14 +73,15 @@ class PecaInsumoControllerTest {
     }
 
     @Test
-    @DisplayName("Deve responder 422 com a mensagem da validação do caso de uso")
+    @DisplayName("Deve responder 400 com a mensagem da validação do caso de uso, como o resto da API")
     void deveRepassarErroDeValidacao() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.criar(REQUEST)).thenThrow(new ApplicationException(422, "Preço inválido"));
+        when(useCase.criar(REQUEST)).thenThrow(new DadoInvalidoException("Preço inválido"));
 
         mockMvc.perform(post(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(REQUEST_JSON))
-                .andExpect(status().isUnprocessableEntity())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value(400))
                 .andExpect(jsonPath("$.message").value("Preço inválido"));
     }
 
@@ -122,7 +124,7 @@ class PecaInsumoControllerTest {
     @DisplayName("Deve responder 404 quando não existir")
     void deveResponderNaoEncontrado() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.buscarPorId(ID)).thenThrow(new ApplicationException(404, "Insumo não encontrado"));
+        when(useCase.buscarPorId(ID)).thenThrow(new RecursoNaoEncontradoException("Insumo não encontrado"));
 
         mockMvc.perform(get(ROTA + "/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isNotFound())

@@ -3,7 +3,7 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.config;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DominioException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,8 +56,8 @@ public class AdministradorInicial implements ApplicationRunner {
         try {
             usuarioUseCase.cadastrar(new Usuario(nome, email, usuario, senha, false, Perfil.ADMIN));
             log.info("action=admin_inicial_criado");
-        } catch (ApplicationException | DataIntegrityViolationException e) {
-            // outra instância subindo ao mesmo tempo pode ter criado o administrador primeiro (409 ou constraint)
+        } catch (DominioException | DataIntegrityViolationException e) {
+            // outra instância subindo ao mesmo tempo pode ter criado o administrador primeiro (conflito ou constraint)
             if (usuarioUseCase.existeAdministrador()) {
                 log.info("action=admin_inicial_ignorado motivo=criado_por_outra_instancia");
                 return;

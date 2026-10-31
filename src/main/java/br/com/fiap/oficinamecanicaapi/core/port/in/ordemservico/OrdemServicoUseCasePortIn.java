@@ -1,6 +1,5 @@
 package br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 
 import java.util.List;
 
@@ -15,47 +14,47 @@ public interface OrdemServicoUseCasePortIn {
     /**
      * Abre a OS para o cliente e o veículo, já com os itens que vierem; ela vai sozinha de RECEBIDA para EM_DIAGNOSTICO.
      */
-    OrdemServicoResponse criar(OrdemServicoRequest request) throws ApplicationException;
+    OrdemServicoResponse criar(OrdemServicoRequest request);
 
-    OrdemServicoResponse consultar(Long id) throws ApplicationException;
+    OrdemServicoResponse consultar(Long id);
 
-    List<OrdemServicoResponse> listar(Long idCliente) throws ApplicationException;
+    List<OrdemServicoResponse> listar(Long idCliente);
 
     /**
      * Consulta feita pelo próprio cliente: a OS de outro cliente responde 404, como se não existisse.
      */
-    OrdemServicoResponse consultarDoCliente(Long id, Long idCliente) throws ApplicationException;
+    OrdemServicoResponse consultarDoCliente(Long id, Long idCliente);
 
     /**
      * Atualização completa dos dados (cliente, veículo, itens): todos os campos são obrigatórios, e
      * lista vazia remove os itens daquele type. Campo igual ao atual não conta como alteração.
      */
-    OrdemServicoResponse atualizar(Long id, OrdemServicoRequest request) throws ApplicationException;
+    OrdemServicoResponse atualizar(Long id, OrdemServicoRequest request);
 
     /**
      * Leva a OS ao status pedido, que precisa ser o próximo da sequência (não volta, não pula, não repete).
      */
-    OrdemServicoResponse alterarStatus(Long id, OrdemServicoRequest.Status request) throws ApplicationException;
+    OrdemServicoResponse alterarStatus(Long id, OrdemServicoRequest.Status request);
 
     /**
      * O orçamento foi enviado ao cliente: a OS vai para AGUARDANDO_APROVACAO.
      */
-    OrdemServicoResponse registrarOrcamentoEnviado(Long id) throws ApplicationException;
+    OrdemServicoResponse registrarOrcamentoEnviado(Long id);
 
     /**
      * O cliente aprovou o orçamento: a OS vai para EM_EXECUCAO.
      */
-    OrdemServicoResponse registrarOrcamentoAprovado(Long id) throws ApplicationException;
+    OrdemServicoResponse registrarOrcamentoAprovado(Long id);
 
     /**
      * O cliente rejeitou o orçamento: a OS vai para CANCELADA.
      */
-    OrdemServicoResponse registrarOrcamentoRejeitado(Long id) throws ApplicationException;
+    OrdemServicoResponse registrarOrcamentoRejeitado(Long id);
 
     TempoMedioExecucaoResponse consultarTempoMedioExecucao();
 
     /**
      * Soft delete da OS: leva a CANCELADA, como o {@link #alterarStatus} com CANCELADA, sem removê-la.
      */
-    void cancelar(Long id) throws ApplicationException;
+    void cancelar(Long id);
 }

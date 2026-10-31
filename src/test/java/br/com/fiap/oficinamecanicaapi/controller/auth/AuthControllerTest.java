@@ -10,7 +10,8 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.NaoAutenticadoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,7 +122,7 @@ class AuthControllerTest {
     @DisplayName("Deve responder 409 quando o e-mail ou o nome de usuário já existir")
     void deveResponderConflitoNoCadastro() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        doThrow(new ApplicationException(409, "Já existe um usuário cadastrado com este e-mail"))
+        doThrow(new ConflitoException("Já existe um usuário cadastrado com este e-mail"))
                 .when(authService).cadastrarUsuario(CADASTRO);
 
         mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -146,7 +147,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve responder 401 com a mensagem genérica quando as credenciais não conferem")
     void deveRecusarCredenciais() throws Exception {
-        when(authService.autenticar(LOGIN)).thenThrow(new ApplicationException(401, "Credenciais inválidas"));
+        when(authService.autenticar(LOGIN)).thenThrow(new NaoAutenticadoException("Credenciais inválidas"));
 
         mockMvc.perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(LOGIN_JSON))
                 .andExpect(status().isUnauthorized())

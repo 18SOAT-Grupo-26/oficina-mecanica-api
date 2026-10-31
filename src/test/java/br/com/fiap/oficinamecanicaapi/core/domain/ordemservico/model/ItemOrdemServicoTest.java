@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -72,8 +72,7 @@ class ItemOrdemServicoTest {
     }
 
     private static void assertErro400(Executable acao, String mensagem) {
-        ApplicationException exception = assertThrows(ApplicationException.class, acao);
-        assertThat(exception.getErrorCode()).isEqualTo(400);
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class, acao);
         assertThat(exception.getMessage()).isEqualTo(mensagem);
     }
 }

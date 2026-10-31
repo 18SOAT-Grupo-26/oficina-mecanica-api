@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -27,22 +27,20 @@ class RegistroHistoricoTest {
     void deveAceitarStatusAntigoVazioSoNaAbertura() {
         assertThat(new RegistroHistorico(null, RECEBIDA, AGORA).statusAntigo()).isNull();
 
-        ApplicationException semAntigo = assertThrows(ApplicationException.class,
+        DadoInvalidoException semAntigo = assertThrows(DadoInvalidoException.class,
                 () -> new RegistroHistorico(null, EM_DIAGNOSTICO, AGORA));
-        assertThat(semAntigo.getErrorCode()).isEqualTo(400);
         assertThat(semAntigo.getMessage()).isEqualTo("O registro de histórico exige o status antigo, exceto na abertura");
     }
 
     @Test
     @DisplayName("Deve rejeitar registro sem status atualizado ou sem data/hora com erro 400")
     void deveRejeitarCamposNulos() {
-        ApplicationException semStatus = assertThrows(ApplicationException.class,
+        DadoInvalidoException semStatus = assertThrows(DadoInvalidoException.class,
                 () -> new RegistroHistorico(RECEBIDA, null, AGORA));
-        ApplicationException semData = assertThrows(ApplicationException.class,
+        DadoInvalidoException semData = assertThrows(DadoInvalidoException.class,
                 () -> new RegistroHistorico(RECEBIDA, EM_DIAGNOSTICO, null));
 
-        assertThat(semStatus.getErrorCode()).isEqualTo(400);
-        assertThat(semData.getErrorCode()).isEqualTo(400);
+        assertThat(semStatus.getMessage()).isEqualTo("O registro de histórico exige status atualizado e data/hora");
         assertThat(semData.getMessage()).isEqualTo("O registro de histórico exige status atualizado e data/hora");
     }
 }

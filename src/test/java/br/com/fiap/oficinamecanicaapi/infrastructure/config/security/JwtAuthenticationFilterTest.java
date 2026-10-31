@@ -5,7 +5,8 @@ import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.NaoAutenticadoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -116,7 +117,7 @@ class JwtAuthenticationFilterTest {
     @DisplayName("Token recusado (expirado ou inválido) deve deixar a requisição sem autenticação, sem barrar a cadeia")
     void tokenRecusado() throws Exception {
         request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN);
-        when(jwtTokenProvider.validarToken(TOKEN)).thenThrow(new ApplicationException(401, "Token expirado. Faça login novamente."));
+        when(jwtTokenProvider.validarToken(TOKEN)).thenThrow(new NaoAutenticadoException("Token expirado. Faça login novamente."));
 
         filtro.doFilter(request, response, chain);
 
@@ -131,7 +132,7 @@ class JwtAuthenticationFilterTest {
         request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + TOKEN);
         when(jwtTokenProvider.validarToken(TOKEN)).thenReturn(true);
         when(jwtTokenProvider.extrairNomeUsuario(TOKEN)).thenReturn("ana");
-        when(usuarioUseCase.buscarPorIdentificador("ana")).thenThrow(new ApplicationException(404, "Usuário não encontrado"));
+        when(usuarioUseCase.buscarPorIdentificador("ana")).thenThrow(new RecursoNaoEncontradoException("Usuário não encontrado"));
 
         filtro.doFilter(request, response, chain);
 

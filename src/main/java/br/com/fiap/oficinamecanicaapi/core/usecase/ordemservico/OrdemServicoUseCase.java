@@ -17,7 +17,9 @@ import br.com.fiap.oficinamecanicaapi.core.port.out.pecainsumo.PecaInsumoPortOut
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.veiculo.VeiculoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.ordemservico.mapper.OrdemServicoMapper;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -106,22 +108,22 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public OrdemServicoResponse consultar(Long id) throws ApplicationException {
+    public OrdemServicoResponse consultar(Long id) {
         return mapper.toResponse(buscar(id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrdemServicoResponse> listar(Long idCliente) throws ApplicationException {
+    public List<OrdemServicoResponse> listar(Long idCliente) {
         return mapper.toResponseList(listarOrdens(idCliente));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public OrdemServicoResponse consultarDoCliente(Long id, Long idCliente) throws ApplicationException {
+    public OrdemServicoResponse consultarDoCliente(Long id, Long idCliente) {
         OrdemServico os = buscar(id);
         if (!os.getIdCliente().equals(idCliente)) {
-            throw new ApplicationException(404, "Ordem de serviço não encontrada");
+            throw new RecursoNaoEncontradoException("Ordem de serviço não encontrada");
         }
         return mapper.toResponse(os);
     }
@@ -149,7 +151,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
     @Override
     public OrdemServicoResponse alterarStatus(Long id, OrdemServicoRequest.Status request) {
         if (request == null || request.status() == null) {
-            throw new ApplicationException(400, "O status de destino é obrigatório");
+            throw new DadoInvalidoException("O status de destino é obrigatório");
         }
         OrdemServico os = buscar(id);
         StatusOrdemServico statusAnterior = os.getStatus();
@@ -209,19 +211,19 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
      */
     private static void exigirCamposObrigatorios(OrdemServicoRequest request) {
         if (request == null) {
-            throw new ApplicationException(400, "Os dados da OS são obrigatórios");
+            throw new DadoInvalidoException("Os dados da OS são obrigatórios");
         }
         if (request.documentoCliente() == null || request.documentoCliente().isBlank()) {
-            throw new ApplicationException(400, "O cliente da OS é obrigatório");
+            throw new DadoInvalidoException("O cliente da OS é obrigatório");
         }
         if (request.idVeiculo() == null) {
-            throw new ApplicationException(400, "O veículo da OS é obrigatório");
+            throw new DadoInvalidoException("O veículo da OS é obrigatório");
         }
         if (request.servicos() == null) {
-            throw new ApplicationException(400, "Os serviços da OS são obrigatórios (envie uma lista vazia se não houver)");
+            throw new DadoInvalidoException("Os serviços da OS são obrigatórios (envie uma lista vazia se não houver)");
         }
         if (request.pecas() == null) {
-            throw new ApplicationException(400, "As peças da OS são obrigatórias (envie uma lista vazia se não houver)");
+            throw new DadoInvalidoException("As peças da OS são obrigatórias (envie uma lista vazia se não houver)");
         }
     }
 
@@ -230,27 +232,27 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
      */
     private void exigirMesmoCliente(OrdemServico os, String documentoCliente) {
         if (!buscarCliente(documentoCliente).getId().equals(os.getIdCliente())) {
-            throw new ApplicationException(409, "O cliente da OS não pode ser alterado; cancele a OS e abra outra");
+            throw new ConflitoException("O cliente da OS não pode ser alterado; cancele a OS e abra outra");
         }
     }
 
     private static void exigirMesmoVeiculo(OrdemServico os, Long idVeiculo) {
         if (!idVeiculo.equals(os.getIdVeiculo())) {
-            throw new ApplicationException(409, "O veículo da OS não pode ser alterado; cancele a OS e abra outra");
+            throw new ConflitoException("O veículo da OS não pode ser alterado; cancele a OS e abra outra");
         }
     }
 
     private Cliente buscarCliente(String documentoCliente) {
         Documento documento = new Documento(documentoCliente);
         return clientePortOut.buscarAtivoPorDocumento(documento)
-                .orElseThrow(() -> new ApplicationException(404, "Cliente não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado"));
     }
 
     private Veiculo buscarVeiculoDoCliente(Long idVeiculo, Long idCliente) {
         Veiculo veiculo = veiculoPortOut.buscarAtivoPorId(idVeiculo)
-                .orElseThrow(() -> new ApplicationException(404, "Veículo não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Veículo não encontrado"));
         if (!veiculo.getClienteId().equals(idCliente)) {
-            throw new ApplicationException(409, "O veículo não pertence ao cliente da OS");
+            throw new ConflitoException("O veículo não pertence ao cliente da OS");
         }
         return veiculo;
     }
@@ -273,7 +275,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
         }
         desejado.forEach((idServico, quantidade) -> {
             Servico servico = servicoPortOut.buscarPorId(idServico)
-                    .orElseThrow(() -> new ApplicationException(404, "Serviço não encontrado no catálogo"));
+                    .orElseThrow(() -> new RecursoNaoEncontradoException("Serviço não encontrado no catálogo"));
             os.incluirServico(servico.getId(), servico.getNome(), new ValorMonetario(servico.getPreco()), quantidade);
         });
     }
@@ -304,7 +306,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
 
     private PecaInsumo buscarPeca(Long idPeca) {
         return pecaInsumoPortOut.buscarPorId(idPeca)
-                .orElseThrow(() -> new ApplicationException(404, "Peça não encontrada no catálogo"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Peça não encontrada no catálogo"));
     }
 
     /**
@@ -313,7 +315,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
     private static void exigirSaldo(PecaInsumo peca, int quantidade) {
         int saldo = valorOuZero(peca.getQuantidade()) - valorOuZero(peca.getReservado());
         if (quantidade > saldo) {
-            throw new ApplicationException(409, "Saldo insuficiente para a peça " + peca.getNome()
+            throw new ConflitoException("Saldo insuficiente para a peça " + peca.getNome()
                     + ": disponível " + saldo + ", solicitado " + quantidade);
         }
     }
@@ -327,7 +329,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
         Map<Long, Integer> porId = new LinkedHashMap<>();
         for (T item : itens) {
             if (porId.put(id.apply(item), quantidade.applyAsInt(item)) != null) {
-                throw new ApplicationException(409, mensagemRepetido + id.apply(item));
+                throw new ConflitoException(mensagemRepetido + id.apply(item));
             }
         }
         return porId;
@@ -360,13 +362,13 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
                 }
             }
             case EM_DIAGNOSTICO ->
-                    throw new ApplicationException(409, "EM_DIAGNOSTICO é automático: a OS entra nele ao ser aberta");
+                    throw new ConflitoException("EM_DIAGNOSTICO é automático: a OS entra nele ao ser aberta");
             case AGUARDANDO_APROVACAO ->
-                    throw new ApplicationException(409, "AGUARDANDO_APROVACAO é automático: vem do envio do orçamento");
+                    throw new ConflitoException("AGUARDANDO_APROVACAO é automático: vem do envio do orçamento");
             case EM_EXECUCAO ->
-                    throw new ApplicationException(409, "EM_EXECUCAO é automático: vem da aprovação do orçamento");
+                    throw new ConflitoException("EM_EXECUCAO é automático: vem da aprovação do orçamento");
             case RECEBIDA ->
-                    throw new ApplicationException(409, "Transição inválida: " + os.getStatus() + " → RECEBIDA");
+                    throw new ConflitoException("Transição inválida: " + os.getStatus() + " → RECEBIDA");
         }
     }
 
@@ -414,7 +416,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
                 String motivo = acao == AcaoEstoque.RESERVAR
                         ? "Saldo insuficiente para reservar a peça "
                         : "Não há reserva suficiente para atualizar o estoque da peça ";
-                throw new ApplicationException(409, motivo + movimentacao.descricao());
+                throw new ConflitoException(motivo + movimentacao.descricao());
             }
             log.debug("action=estoque_movimentado tipo={} pecaId={} quantidade={}",
                     tipo, movimentacao.id(), movimentacao.quantidade());
@@ -444,7 +446,7 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
 
     private OrdemServico buscar(Long id) {
         return ordemServicoPortOut.buscarPorId(id)
-                .orElseThrow(() -> new ApplicationException(404, "Ordem de serviço não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Ordem de serviço não encontrada"));
     }
 
     private OffsetDateTime agora() {

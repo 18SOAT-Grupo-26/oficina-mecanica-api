@@ -11,7 +11,8 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoUseC
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.TempoMedioExecucaoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -128,7 +129,7 @@ class OrdemServicoControllerTest {
     @DisplayName("Deve responder 404 quando a OS não existe")
     void deveResponderOsNaoEncontrada() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.consultar(ID)).thenThrow(new ApplicationException(404, "Ordem de serviço não encontrada"));
+        when(useCase.consultar(ID)).thenThrow(new RecursoNaoEncontradoException("Ordem de serviço não encontrada"));
 
         mockMvc.perform(get("/ordens-servico/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isNotFound())
@@ -251,7 +252,7 @@ class OrdemServicoControllerTest {
     @DisplayName("Deve responder 409 no DELETE quando a OS não pode mais ser cancelada")
     void deveResponderConflitoAoCancelar() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        doThrow(new ApplicationException(409, "Transição inválida: EM_EXECUCAO → CANCELADA"))
+        doThrow(new ConflitoException("Transição inválida: EM_EXECUCAO → CANCELADA"))
                 .when(useCase).cancelar(ID);
 
         mockMvc.perform(delete("/ordens-servico/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
@@ -275,7 +276,7 @@ class OrdemServicoControllerTest {
     void deveResponderTransicaoInvalida() throws Exception {
         autenticarComo(Perfil.ADMIN);
         when(useCase.alterarStatus(ID, new OrdemServicoRequest.Status(FINALIZADA)))
-                .thenThrow(new ApplicationException(409, "Transição inválida: AGUARDANDO_APROVACAO → FINALIZADA"));
+                .thenThrow(new ConflitoException("Transição inválida: AGUARDANDO_APROVACAO → FINALIZADA"));
 
         mockMvc.perform(patch("/ordens-servico/{id}/status", ID).header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content("""

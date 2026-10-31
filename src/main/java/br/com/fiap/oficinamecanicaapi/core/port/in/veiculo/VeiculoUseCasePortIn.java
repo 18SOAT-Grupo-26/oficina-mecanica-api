@@ -1,22 +1,21 @@
 package br.com.fiap.oficinamecanicaapi.core.port.in.veiculo;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 
 public interface VeiculoUseCasePortIn {
 
-    VeiculoResponse criar(VeiculoRequest request) throws ApplicationException;
+    VeiculoResponse criar(VeiculoRequest request);
 
-    VeiculoResponse buscarPorId(Long id) throws ApplicationException;
+    VeiculoResponse buscarPorId(Long id);
 
-    VeiculoResponse buscarPorPlaca(String placa) throws ApplicationException;
+    VeiculoResponse buscarPorPlaca(String placa);
 
     /**
      * {@code clienteId} opcional: quando informado, lista só os veículos desse cliente.
      */
     Pagina<VeiculoResponse> listar(Long clienteId, Integer pagina, Integer tamanho);
 
-    VeiculoResponse atualizar(Long id, VeiculoRequest request) throws ApplicationException;
+    VeiculoResponse atualizar(Long id, VeiculoRequest request);
 
-    void desativar(Long id) throws ApplicationException;
+    void desativar(Long id);
 }

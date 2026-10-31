@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import lombok.Getter;
 
 /**
@@ -13,7 +13,7 @@ public class ItemPeca extends ItemOrdemServico {
 
     private ItemPeca(Long id, Long idPeca, String descricao, ValorMonetario precoUnitario, int quantidade) {
         if (idPeca == null) {
-            throw new ApplicationException(400, "A peça do item é obrigatória");
+            throw new DadoInvalidoException("A peça do item é obrigatória");
         }
         super(id, descricao, precoUnitario, quantidade);
         this.idPeca = idPeca;

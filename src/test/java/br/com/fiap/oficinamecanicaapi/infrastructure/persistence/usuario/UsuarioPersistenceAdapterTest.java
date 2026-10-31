@@ -3,7 +3,7 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.usuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -66,9 +66,8 @@ class UsuarioPersistenceAdapterTest {
         when(perfilRepository.findByNome("CLIENTE")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> adapter.cadastrar(CLIENTE))
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage("Perfil não encontrado: CLIENTE")
-                .extracting("errorCode").isEqualTo(400);
+                .isInstanceOf(DadoInvalidoException.class)
+                .hasMessage("Perfil não encontrado: CLIENTE");
         verify(usuarioRepository, never()).save(any());
     }
 

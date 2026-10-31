@@ -2,7 +2,7 @@ package br.com.fiap.oficinamecanicaapi.core.domain.cliente.model;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Endereco;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import lombok.Getter;
 
 import java.time.OffsetDateTime;
@@ -61,16 +61,16 @@ public class Cliente {
 
     private void aplicarDados(String nome, Documento documento, String email, String telefone, Endereco endereco) {
         if (nome == null || nome.isBlank()) {
-            throw new ApplicationException(400, "O nome do cliente é obrigatório");
+            throw new DadoInvalidoException("O nome do cliente é obrigatório");
         }
         if (documento == null) {
-            throw new ApplicationException(400, "O documento do cliente é obrigatório");
+            throw new DadoInvalidoException("O documento do cliente é obrigatório");
         }
         if (email == null || !email.trim().matches(EMAIL_REGEX)) {
-            throw new ApplicationException(400, "E-mail inválido — deve conter '@' e um domínio válido");
+            throw new DadoInvalidoException("E-mail inválido — deve conter '@' e um domínio válido");
         }
         if (telefone == null || telefone.isBlank()) {
-            throw new ApplicationException(400, "O telefone do cliente é obrigatório");
+            throw new DadoInvalidoException("O telefone do cliente é obrigatório");
         }
         this.nome = nome.trim();
         this.documento = documento;

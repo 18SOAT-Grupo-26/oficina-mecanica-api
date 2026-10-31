@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.usecase.auth;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.LimiteExcedidoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,10 +45,9 @@ class LimiteTentativasLoginTest {
     void deveBloquearAoAtingirLimite() {
         registrarFalhas(IDENTIFICADOR, MAX_TENTATIVAS);
 
-        ApplicationException ex = assertThrows(ApplicationException.class,
+        LimiteExcedidoException ex = assertThrows(LimiteExcedidoException.class,
                 () -> limite.verificarBloqueio(IDENTIFICADOR));
 
-        assertThat(ex.getErrorCode()).isEqualTo(429);
     }
 
     @Test
@@ -75,7 +74,7 @@ class LimiteTentativasLoginTest {
     void deveIgnorarMaiusculasEEspacos() {
         registrarFalhas(" ANA@Oficina.com.br ", MAX_TENTATIVAS);
 
-        assertThrows(ApplicationException.class, () -> limite.verificarBloqueio(IDENTIFICADOR));
+        assertThrows(LimiteExcedidoException.class, () -> limite.verificarBloqueio(IDENTIFICADOR));
     }
 
     @Test

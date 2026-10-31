@@ -10,7 +10,8 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,7 +98,7 @@ class VeiculoControllerTest {
     @DisplayName("Deve responder 404 ao cadastrar veículo para cliente inexistente")
     void deveResponderClienteNaoEncontrado() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.criar(REQUEST)).thenThrow(new ApplicationException(404, "Cliente não encontrado"));
+        when(useCase.criar(REQUEST)).thenThrow(new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         mockMvc.perform(post("/veiculos").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(REQUEST_JSON))
@@ -110,7 +111,7 @@ class VeiculoControllerTest {
     void deveResponderConflito() throws Exception {
         autenticarComo(Perfil.ADMIN);
         when(useCase.criar(REQUEST)).thenThrow(
-                new ApplicationException(409, "Já existe um veículo cadastrado com esta placa"));
+                new ConflitoException("Já existe um veículo cadastrado com esta placa"));
 
         mockMvc.perform(post("/veiculos").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(REQUEST_JSON))

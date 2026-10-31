@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +22,7 @@ public class ServicoController implements ServicoAPI {
     }
 
     @Override
-    public ResponseEntity<ServicoResponse> criar(ServicoRequest request) throws ApplicationException {
+    public ResponseEntity<ServicoResponse> criar(ServicoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
     }
 
@@ -33,18 +32,18 @@ public class ServicoController implements ServicoAPI {
     }
 
     @Override
-    public ResponseEntity<ServicoResponse> buscarPorId(Long id) throws ApplicationException {
+    public ResponseEntity<ServicoResponse> buscarPorId(Long id) {
         return ResponseEntity.ok(useCase.buscarPorId(id));
     }
 
     @Override
-    public ResponseEntity<ServicoResponse> atualizar(Long id, ServicoRequest request) throws ApplicationException {
+    public ResponseEntity<ServicoResponse> atualizar(Long id, ServicoRequest request) {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> excluir(Long id) throws ApplicationException {
+    public ResponseEntity<Void> excluir(Long id) {
         useCase.excluir(id);
         return ResponseEntity.noContent().build();
     }

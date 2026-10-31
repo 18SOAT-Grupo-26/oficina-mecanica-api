@@ -6,7 +6,10 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.out.servico.ServicoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.servico.mapper.ServicoMapper;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DominioException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,10 +87,9 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("criar rejeita nome com menos de 3 caracteres (422)")
     void criarRejeitaNomeCurto() {
-        ApplicationException ex = assertThrows(ApplicationException.class,
+        DadoInvalidoException ex = assertThrows(DadoInvalidoException.class,
                 () -> useCase.criar(request("ab", null, "10")));
 
-        assertThat(ex.getErrorCode()).isEqualTo(422);
         assertThat(ex.getMessage()).isEqualTo("O nome deve ter no mínimo 3 caracteres");
         verify(servicoPortOut, never()).salvar(any());
     }
@@ -97,10 +99,9 @@ class ServicoUseCaseTest {
     void criarRejeitaNomeDuplicado() {
         when(servicoPortOut.existePorNomeNormalizado("troca de oleo")).thenReturn(true);
 
-        ApplicationException ex = assertThrows(ApplicationException.class,
+        ConflitoException ex = assertThrows(ConflitoException.class,
                 () -> useCase.criar(request("  TROCA   de óleo", null, "10")));
 
-        assertThat(ex.getErrorCode()).isEqualTo(409);
         assertThat(ex.getMessage()).isEqualTo("Já existe um serviço cadastrado com este nome");
         verify(servicoPortOut, never()).salvar(any());
     }
@@ -108,10 +109,9 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("criar rejeita preço zero ou negativo (422)")
     void criarRejeitaPrecoNaoPositivo() {
-        ApplicationException ex = assertThrows(ApplicationException.class,
+        DadoInvalidoException ex = assertThrows(DadoInvalidoException.class,
                 () -> useCase.criar(request("Alinhamento", null, "0")));
 
-        assertThat(ex.getErrorCode()).isEqualTo(422);
         assertThat(ex.getMessage()).isEqualTo("Preço inválido");
         verify(servicoPortOut, never()).salvar(any());
     }
@@ -119,10 +119,9 @@ class ServicoUseCaseTest {
     @Test
     @DisplayName("criar rejeita preço com mais de duas casas decimais (422)")
     void criarRejeitaPrecoComTresCasas() {
-        ApplicationException ex = assertThrows(ApplicationException.class,
+        DadoInvalidoException ex = assertThrows(DadoInvalidoException.class,
                 () -> useCase.criar(request("Alinhamento", null, "10.123")));
 
-        assertThat(ex.getErrorCode()).isEqualTo(422);
         assertThat(ex.getMessage()).isEqualTo("Preço inválido");
         verify(servicoPortOut, never()).salvar(any());
     }
@@ -132,10 +131,9 @@ class ServicoUseCaseTest {
     void criarRejeitaDescricaoLonga() {
         String descricao = "a".repeat(501);
 
-        ApplicationException ex = assertThrows(ApplicationException.class,
+        DadoInvalidoException ex = assertThrows(DadoInvalidoException.class,
                 () -> useCase.criar(request("Alinhamento", descricao, "10")));
 
-        assertThat(ex.getErrorCode()).isEqualTo(422);
         assertThat(ex.getMessage()).isEqualTo("A descrição deve ter no máximo 500 caracteres");
         verify(servicoPortOut, never()).salvar(any());
     }
@@ -145,9 +143,8 @@ class ServicoUseCaseTest {
     void buscarPorIdNaoEncontrado() {
         when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
 
-        ApplicationException ex = assertThrows(ApplicationException.class, () -> useCase.buscarPorId(ID));
+        RecursoNaoEncontradoException ex = assertThrows(RecursoNaoEncontradoException.class, () -> useCase.buscarPorId(ID));
 
-        assertThat(ex.getErrorCode()).isEqualTo(404);
     }
 
     @Test
@@ -200,7 +197,7 @@ class ServicoUseCaseTest {
         when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.of(servico("Troca de óleo", "80.00")));
         when(servicoPortOut.existePorNomeNormalizado("alinhamento")).thenReturn(true);
 
-        assertErro(409, "Já existe um serviço cadastrado com este nome",
+        assertErro(ConflitoException.class, "Já existe um serviço cadastrado com este nome",
                 () -> useCase.atualizar(ID, new ServicoRequest("Alinhamento", null, new BigDecimal("50"))));
         verify(servicoPortOut, never()).salvar(any());
     }
@@ -210,7 +207,7 @@ class ServicoUseCaseTest {
     void atualizarInexistente() {
         when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
 
-        assertErro(404, "Serviço não encontrado", () -> useCase.atualizar(ID, new ServicoRequest(null, null, null)));
+        assertErro(RecursoNaoEncontradoException.class, "Serviço não encontrado", () -> useCase.atualizar(ID, new ServicoRequest(null, null, null)));
     }
 
     @Test
@@ -230,7 +227,7 @@ class ServicoUseCaseTest {
     void excluirInexistente() {
         when(servicoPortOut.buscarPorId(ID)).thenReturn(Optional.empty());
 
-        assertErro(404, "Serviço não encontrado", () -> useCase.excluir(ID));
+        assertErro(RecursoNaoEncontradoException.class, "Serviço não encontrado", () -> useCase.excluir(ID));
         verify(servicoPortOut, never()).excluir(any());
     }
 
@@ -243,7 +240,7 @@ class ServicoUseCaseTest {
         useCase.criar(new ServicoRequest("Balanceamento", null, new BigDecimal("60")));
         var semPreco = new ServicoRequest("Balanceamento", null, null);
         assertThatThrownBy(() -> useCase.criar(semPreco))
-                .isInstanceOf(ApplicationException.class);
+                .isInstanceOf(DadoInvalidoException.class);
 
         assertThat(operacoes("criado")).isEqualTo(1);
     }
@@ -259,7 +256,7 @@ class ServicoUseCaseTest {
     void criarValidaCampos(String nome, String preco, String mensagem) {
         ServicoRequest request = new ServicoRequest(nome, null, preco == null ? null : new BigDecimal(preco));
 
-        assertErro(422, mensagem, () -> useCase.criar(request));
+        assertErro(DadoInvalidoException.class, mensagem, () -> useCase.criar(request));
         verifyNoInteractions(servicoPortOut);
     }
 
@@ -278,11 +275,10 @@ class ServicoUseCaseTest {
         return contador == null ? 0 : contador.count();
     }
 
-    private static void assertErro(int codigo, String mensagem,
+    private static void assertErro(Class<? extends DominioException> tipo, String mensagem,
                                    org.assertj.core.api.ThrowableAssert.ThrowingCallable acao) {
         assertThatThrownBy(acao)
-                .isInstanceOf(ApplicationException.class)
-                .hasMessage(mensagem)
-                .extracting("errorCode").isEqualTo(codigo);
+                .isInstanceOf(tipo)
+                .hasMessage(mensagem);
     }
 }

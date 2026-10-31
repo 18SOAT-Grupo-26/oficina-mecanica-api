@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 
 /**
  * Objeto de valor da placa do veículo.
@@ -16,7 +16,7 @@ public record Placa(String valor) {
     public Placa {
         String normalizada = valor == null ? null : valor.replaceAll("[^A-Za-z0-9]", "").toUpperCase();
         if (normalizada == null || !normalizada.matches(FORMATO)) {
-            throw new ApplicationException(400, MENSAGEM_INVALIDA);
+            throw new DadoInvalidoException(MENSAGEM_INVALIDA);
         }
         valor = normalizada;
     }

@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +22,7 @@ public class VeiculoController implements VeiculoAPI {
     }
 
     @Override
-    public ResponseEntity<VeiculoResponse> criar(VeiculoRequest request) throws ApplicationException {
+    public ResponseEntity<VeiculoResponse> criar(VeiculoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
     }
 
@@ -33,23 +32,23 @@ public class VeiculoController implements VeiculoAPI {
     }
 
     @Override
-    public ResponseEntity<VeiculoResponse> buscarPorId(Long id) throws ApplicationException {
+    public ResponseEntity<VeiculoResponse> buscarPorId(Long id) {
         return ResponseEntity.ok(useCase.buscarPorId(id));
     }
 
     @Override
-    public ResponseEntity<VeiculoResponse> buscarPorPlaca(String placa) throws ApplicationException {
+    public ResponseEntity<VeiculoResponse> buscarPorPlaca(String placa) {
         return ResponseEntity.ok(useCase.buscarPorPlaca(placa));
     }
 
     @Override
-    public ResponseEntity<VeiculoResponse> atualizar(Long id, VeiculoRequest request) throws ApplicationException {
+    public ResponseEntity<VeiculoResponse> atualizar(Long id, VeiculoRequest request) {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
     @PreAuthorize("hasRole('ADMIN')") // funcionário não exclui cadastros
-    public ResponseEntity<Void> desativar(Long id) throws ApplicationException {
+    public ResponseEntity<Void> desativar(Long id) {
         useCase.desativar(id);
         return ResponseEntity.noContent().build();
     }

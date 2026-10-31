@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.shared.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.CnpjValidator;
 import br.com.fiap.oficinamecanicaapi.shared.utils.CpfValidator;
 
@@ -19,7 +19,7 @@ public record Documento(String valor) {
     public Documento {
         String normalizado = CnpjValidator.normalize(valor);
         if (!isValido(normalizado)) {
-            throw new ApplicationException(400, MENSAGEM_INVALIDO);
+            throw new DadoInvalidoException(MENSAGEM_INVALIDO);
         }
         valor = normalizado;
     }

@@ -11,7 +11,8 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,7 +100,7 @@ class ClienteControllerTest {
     void deveResponderConflito() throws Exception {
         autenticarComo(Perfil.ADMIN);
         when(useCase.criar(REQUEST)).thenThrow(
-                new ApplicationException(409, "Já existe um cliente cadastrado com este documento"));
+                new ConflitoException("Já existe um cliente cadastrado com este documento"));
 
         mockMvc.perform(post("/clientes").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(REQUEST_JSON))
@@ -135,7 +136,7 @@ class ClienteControllerTest {
     @DisplayName("Deve responder 404 quando o cliente não existir")
     void deveResponderNaoEncontrado() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.buscarPorId(ID)).thenThrow(new ApplicationException(404, "Cliente não encontrado"));
+        when(useCase.buscarPorId(ID)).thenThrow(new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         mockMvc.perform(get("/clientes/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isNotFound())

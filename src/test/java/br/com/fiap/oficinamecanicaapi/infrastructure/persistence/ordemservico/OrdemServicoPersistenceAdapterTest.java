@@ -1,7 +1,7 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServico;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -82,9 +82,8 @@ class OrdemServicoPersistenceAdapterTest {
         when(repository.findById(ID_OS)).thenReturn(Optional.empty());
         OrdemServico os = new OrdemServicoPersistenceMapper().toDomain(OrdemServicoPersistenceMapperTest.entidadeEmExecucao());
 
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> adapter.salvar(os));
+        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class, () -> adapter.salvar(os));
 
-        assertThat(exception.getErrorCode()).isEqualTo(404);
         verify(repository, never()).saveAndFlush(any());
     }
 

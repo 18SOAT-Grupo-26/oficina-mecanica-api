@@ -1,6 +1,11 @@
 package br.com.fiap.oficinamecanicaapi.shared.handler;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DominioException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.LimiteExcedidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.NaoAutenticadoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -10,7 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.QueryTimeoutException;
@@ -38,6 +43,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class HandlerExceptionTest {
+
+    private static final String MENSAGEM = "mensagem";
 
     private final HandlerException handler = new HandlerException();
     private final SimpleMeterRegistry registry = new SimpleMeterRegistry();
@@ -84,18 +91,28 @@ class HandlerExceptionTest {
         assertThat(response.getBody().getMessage()).doesNotContain("jdbc", "postgresql");
     }
 
-    @ParameterizedTest(name = "código {0} → HTTP {1}")
-    @CsvSource({"400,400", "401,401", "404,404", "409,409", "422,422", "500,500", "503,503", "999,500"})
-    @DisplayName("ApplicationException deve virar o status do errorCode; código desconhecido vira 500")
-    void applicationException(int codigo, int statusEsperado) {
-        var ex = new ApplicationException(codigo, "mensagem");
+    static Stream<Arguments> excecoesDeDominio() {
+        return Stream.of(
+                Arguments.of(new DadoInvalidoException(MENSAGEM), HttpStatus.BAD_REQUEST),
+                Arguments.of(new NaoAutenticadoException(MENSAGEM), HttpStatus.UNAUTHORIZED),
+                Arguments.of(new RecursoNaoEncontradoException(MENSAGEM), HttpStatus.NOT_FOUND),
+                Arguments.of(new ConflitoException(MENSAGEM), HttpStatus.CONFLICT),
+                Arguments.of(new LimiteExcedidoException(MENSAGEM), HttpStatus.TOO_MANY_REQUESTS));
+    }
 
-        ResponseEntity<ErrorTemplate> response = handler.handleApplicationException(ex);
+    @ParameterizedTest(name = "{0} → HTTP {1}")
+    @MethodSource("excecoesDeDominio")
+    @DisplayName("Cada exceção de domínio deve virar o seu status, com o mesmo ErrorTemplate e a métrica tipo=negocio")
+    void excecaoDeDominio(DominioException ex, HttpStatus statusEsperado) {
+        ResponseEntity<ErrorTemplate> response = handler.handleDominio(ex);
 
-        assertThat(response.getStatusCode().value()).isEqualTo(statusEsperado);
-        assertThat(response.getBody().getErrorCode()).isEqualTo(codigo);
-        assertThat(response.getBody().getMessage()).isEqualTo("mensagem");
-        assertThat(response.getBody().getTraceId()).isEqualTo(ex.getTraceId());
+        assertThat(response.getStatusCode()).isEqualTo(statusEsperado);
+        assertThat(response.getBody().getErrorCode()).isEqualTo(statusEsperado.value());
+        assertThat(response.getBody().getMessage()).isEqualTo(MENSAGEM);
+        assertThat(response.getBody().getTraceId()).isNotBlank();
+        assertThat(response.getBody().getTimestamp()).isNotNull();
+        assertThat(registry.get("oficina.erros").tag("status", String.valueOf(statusEsperado.value()))
+                .tag("tipo", "negocio").counter().count()).isEqualTo(1);
     }
 
     @Test

@@ -1,6 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model;
 
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -34,18 +34,16 @@ class ValorMonetarioTest {
     @Test
     @DisplayName("Deve rejeitar valor nulo com erro 400")
     void deveRejeitarValorNulo() {
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> new ValorMonetario(null));
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class, () -> new ValorMonetario(null));
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
         assertThat(exception.getMessage()).isEqualTo("O valor monetário é obrigatório");
     }
 
     @Test
     @DisplayName("Deve rejeitar valor negativo com erro 400")
     void deveRejeitarValorNegativo() {
-        ApplicationException exception = assertThrows(ApplicationException.class, () -> ValorMonetario.de("-0.01"));
+        DadoInvalidoException exception = assertThrows(DadoInvalidoException.class, () -> ValorMonetario.de("-0.01"));
 
-        assertThat(exception.getErrorCode()).isEqualTo(400);
         assertThat(exception.getMessage()).isEqualTo("O valor monetário não pode ser negativo");
     }
 

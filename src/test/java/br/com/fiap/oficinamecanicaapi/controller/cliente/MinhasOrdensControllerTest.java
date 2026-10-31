@@ -8,7 +8,7 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoResp
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.infrastructure.config.security.SecurityConfig;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,7 +79,7 @@ class MinhasOrdensControllerTest {
     void deveResponder404ParaOsDeOutroCliente() throws Exception {
         autenticarComo(Perfil.CLIENTE, ID_CLIENTE);
         when(useCase.consultarDoCliente(ID, ID_CLIENTE))
-                .thenThrow(new ApplicationException(404, "Ordem de serviço não encontrada"));
+                .thenThrow(new RecursoNaoEncontradoException("Ordem de serviço não encontrada"));
 
         mockMvc.perform(get("/minhas-ordens/{id}", ID).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isNotFound());

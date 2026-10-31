@@ -2,7 +2,7 @@ package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.OrdemServico;
 import br.com.fiap.oficinamecanicaapi.core.port.out.ordemservico.OrdemServicoPortOut;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +56,7 @@ public class OrdemServicoPersistenceAdapter implements OrdemServicoPortOut {
 
     private OrdemServicoEntity carregarParaAtualizar(OrdemServico ordemServico) {
         OrdemServicoEntity entity = repository.findById(ordemServico.getId())
-                .orElseThrow(() -> new ApplicationException(404, "Ordem de serviço não encontrada"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Ordem de serviço não encontrada"));
         mapper.copiar(ordemServico, entity);
         return entity;
     }

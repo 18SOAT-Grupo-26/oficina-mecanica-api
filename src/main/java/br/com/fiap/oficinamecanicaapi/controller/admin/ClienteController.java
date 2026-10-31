@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.cliente.ClienteUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,7 +22,7 @@ public class ClienteController implements ClienteAPI {
     }
 
     @Override
-    public ResponseEntity<ClienteResponse> criar(ClienteRequest request) throws ApplicationException {
+    public ResponseEntity<ClienteResponse> criar(ClienteRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
     }
 
@@ -33,23 +32,23 @@ public class ClienteController implements ClienteAPI {
     }
 
     @Override
-    public ResponseEntity<ClienteResponse> buscarPorId(Long id) throws ApplicationException {
+    public ResponseEntity<ClienteResponse> buscarPorId(Long id) {
         return ResponseEntity.ok(useCase.buscarPorId(id));
     }
 
     @Override
-    public ResponseEntity<ClienteResponse> buscarPorDocumento(String documento) throws ApplicationException {
+    public ResponseEntity<ClienteResponse> buscarPorDocumento(String documento) {
         return ResponseEntity.ok(useCase.buscarPorDocumento(documento));
     }
 
     @Override
-    public ResponseEntity<ClienteResponse> atualizar(Long id, ClienteRequest request) throws ApplicationException {
+    public ResponseEntity<ClienteResponse> atualizar(Long id, ClienteRequest request) {
         return ResponseEntity.ok(useCase.atualizar(id, request));
     }
 
     @Override
     @PreAuthorize("hasRole('ADMIN')") // funcionário não exclui cadastros
-    public ResponseEntity<Void> desativar(Long id) throws ApplicationException {
+    public ResponseEntity<Void> desativar(Long id) {
         useCase.desativar(id);
         return ResponseEntity.noContent().build();
     }

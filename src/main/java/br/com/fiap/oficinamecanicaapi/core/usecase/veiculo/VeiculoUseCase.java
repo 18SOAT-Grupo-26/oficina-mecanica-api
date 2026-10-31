@@ -9,7 +9,8 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.out.cliente.ClientePortOut;
 import br.com.fiap.oficinamecanicaapi.core.port.out.veiculo.VeiculoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.veiculo.mapper.VeiculoMapper;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,7 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
 
     @Override
     @Transactional
-    public VeiculoResponse criar(VeiculoRequest request) throws ApplicationException {
+    public VeiculoResponse criar(VeiculoRequest request) {
         Placa placa = new Placa(request.placa());
         validarClienteAtivo(request.clienteId());
         validarPlacaDisponivel(placa);
@@ -55,13 +56,13 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public VeiculoResponse buscarPorId(Long id) throws ApplicationException {
+    public VeiculoResponse buscarPorId(Long id) {
         return veiculoMapper.toResponse(buscarVeiculoAtivo(id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public VeiculoResponse buscarPorPlaca(String placa) throws ApplicationException {
+    public VeiculoResponse buscarPorPlaca(String placa) {
         return veiculoPortOut.buscarAtivoPorPlaca(new Placa(placa))
                 .map(veiculoMapper::toResponse)
                 .orElseThrow(VeiculoUseCase::veiculoNaoEncontrado);
@@ -76,7 +77,7 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
 
     @Override
     @Transactional
-    public VeiculoResponse atualizar(Long id, VeiculoRequest request) throws ApplicationException {
+    public VeiculoResponse atualizar(Long id, VeiculoRequest request) {
         Veiculo veiculo = buscarVeiculoAtivo(id);
 
         Placa placa = new Placa(request.placa());
@@ -98,7 +99,7 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
 
     @Override
     @Transactional
-    public void desativar(Long id) throws ApplicationException {
+    public void desativar(Long id) {
         Veiculo veiculo = buscarVeiculoAtivo(id);
         veiculo.desativar();
         veiculoPortOut.salvar(veiculo);
@@ -113,18 +114,18 @@ public class VeiculoUseCase implements VeiculoUseCasePortIn {
 
     private void validarClienteAtivo(Long clienteId) {
         if (clienteId == null || clientePortOut.buscarAtivoPorId(clienteId).isEmpty()) {
-            throw new ApplicationException(404, "Cliente não encontrado");
+            throw new RecursoNaoEncontradoException("Cliente não encontrado");
         }
     }
 
     private void validarPlacaDisponivel(Placa placa) {
         if (veiculoPortOut.existePorPlaca(placa)) {
-            throw new ApplicationException(409, "Já existe um veículo cadastrado com esta placa");
+            throw new ConflitoException("Já existe um veículo cadastrado com esta placa");
         }
     }
 
-    private static ApplicationException veiculoNaoEncontrado() {
-        return new ApplicationException(404, "Veículo não encontrado");
+    private static RecursoNaoEncontradoException veiculoNaoEncontrado() {
+        return new RecursoNaoEncontradoException("Veículo não encontrado");
     }
 
     private void contar(String operacao) {

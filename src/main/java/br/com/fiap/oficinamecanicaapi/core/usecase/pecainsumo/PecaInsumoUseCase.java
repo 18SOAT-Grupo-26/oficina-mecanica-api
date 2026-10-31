@@ -7,7 +7,9 @@ import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoResponse
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoUseCasePortIn;
 import br.com.fiap.oficinamecanicaapi.core.port.out.pecainsumo.PecaInsumoPortOut;
 import br.com.fiap.oficinamecanicaapi.core.usecase.pecainsumo.mapper.PecaInsumoMapper;
-import br.com.fiap.oficinamecanicaapi.shared.exception.ApplicationException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
 import br.com.fiap.oficinamecanicaapi.shared.utils.NormalizadorNome;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
@@ -44,7 +46,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
 
     @Override
     @Transactional
-    public PecaInsumoResponse criar(PecaInsumoRequest request) throws ApplicationException {
+    public PecaInsumoResponse criar(PecaInsumoRequest request) {
         validarCampos(request);
         String nomeNormalizado = NormalizadorNome.normalizar(request.nome());
         validarNomeDisponivel(nomeNormalizado);
@@ -69,13 +71,13 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public PecaInsumoResponse buscarPorId(Long id) throws ApplicationException {
+    public PecaInsumoResponse buscarPorId(Long id) {
         return pecaInsumoMapper.toResponse(buscarInsumo(id));
     }
 
     @Override
     @Transactional
-    public PecaInsumoResponse atualizar(Long id, PecaInsumoRequest request) throws ApplicationException {
+    public PecaInsumoResponse atualizar(Long id, PecaInsumoRequest request) {
         PecaInsumo insumo = buscarInsumo(id);
         validarCampos(request);
 
@@ -103,7 +105,7 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
 
     @Override
     @Transactional
-    public void excluir(Long id) throws ApplicationException {
+    public void excluir(Long id) {
         PecaInsumo insumo = buscarInsumo(id);
         pecaInsumoPortOut.excluir(insumo);
 
@@ -113,47 +115,46 @@ public class PecaInsumoUseCase implements PecaInsumoUseCasePortIn {
 
     private PecaInsumo buscarInsumo(Long id) {
         return pecaInsumoPortOut.buscarPorId(id)
-                .orElseThrow(() -> new ApplicationException(404, "Insumo não encontrado"));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Insumo não encontrado"));
     }
 
     private void validarNomeDisponivel(String nomeNormalizado) {
         if (pecaInsumoPortOut.existePorNomeNormalizado(nomeNormalizado)) {
-            throw new ApplicationException(409, "Já existe um insumo cadastrado com este nome");
+            throw new ConflitoException("Já existe um insumo cadastrado com este nome");
         }
     }
 
     private static void validarCampos(PecaInsumoRequest request) {
         String nome = request.nome() == null ? null : request.nome().trim();
         if (nome == null || nome.isEmpty()) {
-            throw new ApplicationException(422, "O campo nome é obrigatório");
+            throw new DadoInvalidoException("O campo nome é obrigatório");
         }
         if (nome.length() < NOME_MIN_LENGTH) {
-            throw new ApplicationException(422, "O nome deve ter no mínimo 3 caracteres");
+            throw new DadoInvalidoException("O nome deve ter no mínimo 3 caracteres");
         }
 
         if (request.quantidade() == null) {
-            throw new ApplicationException(422, "O campo quantidade é obrigatório");
+            throw new DadoInvalidoException("O campo quantidade é obrigatório");
         }
         if (request.quantidade() < 0) {
-            throw new ApplicationException(422, "Quantidade inválida");
+            throw new DadoInvalidoException("Quantidade inválida");
         }
 
         if (request.preco() == null) {
-            throw new ApplicationException(422, "O campo preco é obrigatório");
+            throw new DadoInvalidoException("O campo preco é obrigatório");
         }
         if (request.preco().signum() <= 0
                 || request.preco().stripTrailingZeros().scale() > PRECO_MAX_CASAS_DECIMAIS) {
-            throw new ApplicationException(422, "Preço inválido");
+            throw new DadoInvalidoException("Preço inválido");
         }
 
         int reservado = request.reservado() == null ? 0 : request.reservado();
         if (reservado < 0 || reservado > request.quantidade()) {
-            throw new ApplicationException(422,
-                    "Quantidade reservada inválida. Deve ser entre 0 e a quantidade em estoque");
+            throw new DadoInvalidoException("Quantidade reservada inválida. Deve ser entre 0 e a quantidade em estoque");
         }
 
         if (request.descricao() != null && request.descricao().length() > DESCRICAO_MAX_LENGTH) {
-            throw new ApplicationException(422, "A descrição deve ter no máximo 500 caracteres");
+            throw new DadoInvalidoException("A descrição deve ter no máximo 500 caracteres");
         }
     }
 
