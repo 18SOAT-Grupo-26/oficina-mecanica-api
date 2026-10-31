@@ -333,11 +333,10 @@ A autenticação usa JWT. As regras de acesso estão em [ADR 004](docs/adr/0004-
 | Método | Rota | Acesso |
 |--------|------|--------|
 | `POST` | `/api/v1/auth/login` | público |
-| `GET`  | `/api/v1/auth/validate` | público (valida o token do header `Authorization`) |
-| `POST` | `/api/v1/auth/cadastro` | `ADMIN` |
-| `GET`, `POST`, `PUT` | `/api/v1/clientes`, `/veiculos`, `/insumos` | `ADMIN`, `FUNCIONARIO` |
-| `DELETE` | `/api/v1/clientes`, `/veiculos`, `/insumos` | `ADMIN` |
-| `*` | `/api/v1/servico` | `ADMIN` |
+| `GET`  | `/api/v1/auth/validacao` | público (valida o token do header `Authorization`) |
+| `POST` | `/api/v1/usuarios` | `ADMIN` |
+| `GET`, `POST`, `PUT` | `/api/v1/clientes`, `/veiculos`, `/servicos`, `/pecas-insumos` | `ADMIN`, `FUNCIONARIO` |
+| `DELETE` | `/api/v1/clientes`, `/veiculos`, `/servicos`, `/pecas-insumos` | `ADMIN` |
 | `GET`, `POST`, `PUT`, `PATCH` | `/api/v1/ordens-servico` | `ADMIN`, `FUNCIONARIO` |
 | `DELETE` | `/api/v1/ordens-servico/{id}` (cancelar OS) | `ADMIN` |
 | `GET` | `/api/v1/minhas-ordens`, `/api/v1/minhas-ordens/{id}` | `CLIENTE` (só as OS do próprio cliente) |
@@ -366,7 +365,7 @@ TOKEN=$(curl -s -X POST http://localhost:8081/api/v1/auth/login -H "Content-Type
    `trocaSenhaObrigatoria` precisa ser `false`:
 
 ```bash
-curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -H "Authorization: $TOKEN" -d '{
+curl -X POST http://localhost:8081/api/v1/usuarios -H "Content-Type: application/json" -H "Authorization: $TOKEN" -d '{
   "nome": "Bruno Funcionário", "email": "bruno@oficina.com.br",
   "nomeUsuario": "bruno", "senha": "Bruno@123", "trocaSenhaObrigatoria": false, "perfil": "FUNCIONARIO"
 }'
@@ -376,7 +375,7 @@ O usuário `CLIENTE` é ligado a um cliente já cadastrado pelo `clienteId` (obr
 para os outros; um login por cliente). Ele só enxerga as OS desse cliente, em `/minhas-ordens`:
 
 ```bash
-curl -X POST http://localhost:8081/api/v1/auth/cadastro -H "Content-Type: application/json" -H "Authorization: $TOKEN" -d '{
+curl -X POST http://localhost:8081/api/v1/usuarios -H "Content-Type: application/json" -H "Authorization: $TOKEN" -d '{
   "nome": "Maria da Silva", "email": "maria@email.com",
   "nomeUsuario": "maria", "senha": "Maria@123", "trocaSenhaObrigatoria": false, "perfil": "CLIENTE", "clienteId": 1
 }'

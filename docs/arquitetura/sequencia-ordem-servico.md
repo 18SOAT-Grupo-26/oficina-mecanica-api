@@ -90,7 +90,7 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     Note over F,DB: Gerar o orçamento: EM_DIAGNOSTICO → AGUARDANDO_APROVACAO
-    F->>C: PATCH /ordens-servico/{id}/gerar-orcamento
+    F->>C: POST /ordens-servico/{id}/orcamento/envio
     C->>UC: registrarOrcamentoEnviado(id)
     rect rgba(80, 140, 220, 0.12)
         UC->>OSP: buscarPorId(id)
@@ -113,7 +113,7 @@ sequenceDiagram
     Note over F,DB: O cliente decide fora do sistema e o funcionário registra a decisão
 
     alt cliente aprovou: AGUARDANDO_APROVACAO → EM_EXECUCAO
-        F->>C: PATCH /ordens-servico/{id}/aprovar-orcamento
+        F->>C: POST /ordens-servico/{id}/orcamento/aprovacao
         C->>UC: registrarOrcamentoAprovado(id)
         rect rgba(80, 140, 220, 0.12)
             UC->>OSP: buscarPorId(id)
@@ -128,7 +128,7 @@ sequenceDiagram
         end
         C-->>F: 200 OK (EM_EXECUCAO)
     else cliente rejeitou: AGUARDANDO_APROVACAO → CANCELADA
-        F->>C: PATCH /ordens-servico/{id}/rejeitar-orcamento
+        F->>C: POST /ordens-servico/{id}/orcamento/rejeicao
         C->>UC: registrarOrcamentoRejeitado(id)
         rect rgba(80, 140, 220, 0.12)
             UC->>OSP: buscarPorId(id)

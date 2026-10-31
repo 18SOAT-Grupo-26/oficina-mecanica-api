@@ -103,13 +103,12 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/cadastro",
+              "raw": "{{baseUrl}}/usuarios",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "auth",
-                "cadastro"
+                "usuarios"
               ]
             },
             "description": "Cadastra um usuário de teste (perfil FUNCIONARIO). Só ADMIN cadastra usuários: usa o token do **Login administrador**. O script gera username e e-mail únicos a cada execução.\n\nSenha: 8 a 64 caracteres, com maiúscula, minúscula, número e caractere especial.",
@@ -150,13 +149,13 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/auth/validate",
+              "raw": "{{baseUrl}}/auth/validacao",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "auth",
-                "validate"
+                "validacao"
               ]
             },
             "description": "Retorna `true` se o token enviado no header `Authorization` for válido.",
@@ -217,12 +216,12 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/insumos",
+              "raw": "{{baseUrl}}/pecas-insumos",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "insumos"
+                "pecas-insumos"
               ]
             },
             "description": "`reservado` é opcional (padrão 0) e deve ficar entre 0 e `quantidade`. O nome é único."
@@ -251,12 +250,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/insumos?pagina=1&tamanho=20",
+              "raw": "{{baseUrl}}/pecas-insumos?pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "insumos"
+                "pecas-insumos"
               ],
               "query": [
                 {
@@ -297,12 +296,12 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/insumos/{{pecaInsumoId}}",
+              "raw": "{{baseUrl}}/pecas-insumos/{{pecaInsumoId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "insumos",
+                "pecas-insumos",
                 "{{pecaInsumoId}}"
               ]
             }
@@ -344,12 +343,12 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/insumos/{{pecaInsumoId}}",
+              "raw": "{{baseUrl}}/pecas-insumos/{{pecaInsumoId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "insumos",
+                "pecas-insumos",
                 "{{pecaInsumoId}}"
               ]
             },
@@ -400,12 +399,12 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/servico",
+              "raw": "{{baseUrl}}/servicos",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "servico"
+                "servicos"
               ]
             },
             "description": "`pecasInsumoIds` deve conter ids de peças existentes. O nome é único."
@@ -431,12 +430,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/servico?pagina=1&tamanho=20",
+              "raw": "{{baseUrl}}/servicos?pagina=1&tamanho=20",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "servico"
+                "servicos"
               ],
               "query": [
                 {
@@ -474,12 +473,12 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/servico/{{servicoId}}",
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "servico",
+                "servicos",
                 "{{servicoId}}"
               ]
             }
@@ -519,12 +518,12 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/servico/{{servicoId}}",
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "servico",
+                "servicos",
                 "{{servicoId}}"
               ]
             },
@@ -671,7 +670,7 @@
           "response": []
         },
         {
-          "name": "Buscar cliente por documento",
+          "name": "Filtrar clientes por documento",
           "event": [
             {
               "listen": "test",
@@ -680,6 +679,9 @@
                 "exec": [
                   "pm.test(\"Status 200\", function () {",
                   "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Um cliente com o documento\", function () {",
+                  "    pm.expect(pm.response.json().itens).to.have.lengthOf(1);",
                   "});"
                 ]
               }
@@ -689,17 +691,21 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/clientes/documento/{{clienteDocumento}}",
+              "raw": "{{baseUrl}}/clientes?documento={{clienteDocumento}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "clientes",
-                "documento",
-                "{{clienteDocumento}}"
+                "clientes"
+              ],
+              "query": [
+                {
+                  "key": "documento",
+                  "value": "{{clienteDocumento}}"
+                }
               ]
             },
-            "description": "CPF ou CNPJ, com ou sem máscara."
+            "description": "Filtro da listagem: CPF ou CNPJ, com ou sem máscara. Traz no máximo um cliente; sem resultado, a página vem vazia."
           },
           "response": []
         },
@@ -894,7 +900,7 @@
           "response": []
         },
         {
-          "name": "Buscar veículo por placa",
+          "name": "Filtrar veículos por placa",
           "event": [
             {
               "listen": "test",
@@ -903,6 +909,9 @@
                 "exec": [
                   "pm.test(\"Status 200\", function () {",
                   "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Um veículo com a placa\", function () {",
+                  "    pm.expect(pm.response.json().itens).to.have.lengthOf(1);",
                   "});"
                 ]
               }
@@ -912,16 +921,21 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/veiculos/placa/{{veiculoPlaca}}",
+              "raw": "{{baseUrl}}/veiculos?placa={{veiculoPlaca}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "veiculos",
-                "placa",
-                "{{veiculoPlaca}}"
+                "veiculos"
+              ],
+              "query": [
+                {
+                  "key": "placa",
+                  "value": "{{veiculoPlaca}}"
+                }
               ]
-            }
+            },
+            "description": "Filtro da listagem: placa antiga ou Mercosul, com ou sem hífen. Traz no máximo um veículo; sem resultado, a página vem vazia."
           },
           "response": []
         },
@@ -1092,12 +1106,12 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/servico/{{servicoId}}",
+              "raw": "{{baseUrl}}/servicos/{{servicoId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "servico",
+                "servicos",
                 "{{servicoId}}"
               ]
             }
@@ -1123,12 +1137,12 @@
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/insumos/{{pecaInsumoId}}",
+              "raw": "{{baseUrl}}/pecas-insumos/{{pecaInsumoId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "insumos",
+                "pecas-insumos",
                 "{{pecaInsumoId}}"
               ]
             }
@@ -1394,7 +1408,7 @@
         {
           "name": "Rejeitar orçamento",
           "request": {
-            "method": "PATCH",
+            "method": "POST",
             "header": [
               {
                 "key": "accept",
@@ -1406,14 +1420,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/ordens-servico/:ordemId/rejeitar-orcamento",
+              "raw": "{{baseUrl}}/ordens-servico/:ordemId/orcamento/rejeicao",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "ordens-servico",
                 ":ordemId",
-                "rejeitar-orcamento"
+                "orcamento",
+                "rejeicao"
               ],
               "variable": [
                 {
@@ -1426,9 +1441,9 @@
           "response": []
         },
         {
-          "name": "Gerar Orçamento",
+          "name": "Enviar orçamento",
           "request": {
-            "method": "PATCH",
+            "method": "POST",
             "header": [
               {
                 "key": "accept",
@@ -1440,14 +1455,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/ordens-servico/:ordemId/gerar-orcamento",
+              "raw": "{{baseUrl}}/ordens-servico/:ordemId/orcamento/envio",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "ordens-servico",
                 ":ordemId",
-                "gerar-orcamento"
+                "orcamento",
+                "envio"
               ],
               "variable": [
                 {
@@ -1460,9 +1476,9 @@
           "response": []
         },
         {
-          "name": "Aprovar Orçamento",
+          "name": "Aprovar orçamento",
           "request": {
-            "method": "PATCH",
+            "method": "POST",
             "header": [
               {
                 "key": "accept",
@@ -1474,14 +1490,15 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/ordens-servico/:ordemId/aprovar-orcamento",
+              "raw": "{{baseUrl}}/ordens-servico/:ordemId/orcamento/aprovacao",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "ordens-servico",
                 ":ordemId",
-                "aprovar-orcamento"
+                "orcamento",
+                "aprovacao"
               ],
               "variable": [
                 {
@@ -1620,13 +1637,12 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/auth/cadastro",
+              "raw": "{{baseUrl}}/usuarios",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
-                "auth",
-                "cadastro"
+                "usuarios"
               ]
             },
             "description": "Cria o login do cliente cadastrado em **Clientes → Cadastrar cliente** (`{{clienteId}}`), com o token do **Login administrador**. O `clienteId` é obrigatório para o perfil CLIENTE; um segundo login para o mesmo cliente responde 409. O script gera um username único a cada execução."

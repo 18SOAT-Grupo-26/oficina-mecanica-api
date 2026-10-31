@@ -97,7 +97,7 @@ sequenceDiagram
 
 ### 3. Rotas públicas e "negar por padrão"
 
-- `RotasPublicas` é o **único lugar** que libera rota sem token: `/auth/login`, `/auth/validate`, a documentação do
+- `RotasPublicas` é o **único lugar** que libera rota sem token: `/auth/login`, `/auth/validacao`, a documentação do
   Swagger e o `/actuator/**`, que expõe só `health` e `prometheus`. As rotas de `/auth` são listadas uma a uma, sem
   curinga.
 - O resto cai no `anyRequest().authenticated()`. Uma rota nova **já nasce protegida**, e liberar uma rota é uma mudança
@@ -114,7 +114,7 @@ perfil vira a authority `ROLE_<PERFIL>` (`Perfil implements GrantedAuthority`).
 
 | Recurso                                                 | ADMIN | FUNCIONARIO | CLIENTE              |
 |---------------------------------------------------------|:-----:|:-----------:|:--------------------:|
-| `POST /auth/cadastro` (cadastrar usuário)               |   ✓   |      —      |          —           |
+| `POST /usuarios` (cadastrar usuário)                    |   ✓   |      —      |          —           |
 | Clientes, veículos, serviços e peças: criar, ler, editar |   ✓   |      ✓      |          —           |
 | Clientes, veículos, serviços e peças: excluir           |   ✓   |      —      |          —           |
 | Ordens de serviço e orçamento (`/ordens-servico`)       |   ✓   |      ✓      |          —           |
