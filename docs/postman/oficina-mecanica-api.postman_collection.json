@@ -1697,12 +1697,7 @@
           "name": "Listar minhas OS",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{tokenCliente}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/minhas-ordens",
               "host": [
@@ -1712,7 +1707,17 @@
                 "minhas-ordens"
               ]
             },
-            "description": "OS do cliente logado, com status, itens e histórico."
+            "description": "OS do cliente logado, com status, itens e histórico.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
           "response": []
         },
@@ -1720,12 +1725,7 @@
           "name": "Consultar minha OS",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{tokenCliente}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{baseUrl}}/minhas-ordens/:ordemId",
               "host": [
@@ -1742,7 +1742,17 @@
                 }
               ]
             },
-            "description": "A OS de outro cliente responde 404, como se não existisse."
+            "description": "A OS de outro cliente responde 404, como se não existisse.",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCliente}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
           "response": []
         }
