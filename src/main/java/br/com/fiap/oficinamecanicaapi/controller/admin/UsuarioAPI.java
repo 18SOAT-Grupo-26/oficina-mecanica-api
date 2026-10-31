@@ -15,8 +15,9 @@ public interface UsuarioAPI {
 
     @Operation(summary = "Cadastrar usuário (somente ADMIN)", tags = "Usuário")
     @ApiResponse(responseCode = "201", description = "Usuário cadastrado", content = @Content)
-    @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "409", description = "E-mail ou documento já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "400", description = "Dados inválidos (inclui senha fora da política e clienteId ausente ou indevido para o perfil)", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "404", description = "Cliente do perfil CLIENTE não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "E-mail ou nome de usuário já cadastrado, ou cliente que já tem usuário", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PostMapping
     ResponseEntity<Void> cadastrar(@RequestBody @Valid CadastroRequest request);
 }

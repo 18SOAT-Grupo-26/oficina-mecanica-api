@@ -122,8 +122,29 @@ class OpenApiConfigTest {
                 .flatMap(path -> path.getValue().values().stream())
                 .forEach(operacao -> {
                     assertThat(operacao).doesNotContainKey("security");
-                    assertThat(respostas(operacao)).containsKey("500").doesNotContainKeys("401", "403");
+                    assertThat(respostas(operacao)).containsKey("500").doesNotContainKey("403");
                 });
+    }
+
+    @Test
+    @DisplayName("O 401 das rotas públicas é o específico de cada uma, e não o 'Token ausente' das protegidas")
+    void rotasPublicasDevemDocumentarO401Especifico() {
+        assertThat(descricao("$.paths['/auth/login'].post", "401")).isEqualTo("Credenciais inválidas");
+        assertThat(descricao("$.paths['/auth/validacao'].get", "401")).isEqualTo("Token inválido ou expirado");
+    }
+
+    @Test
+    @DisplayName("Toda operação com corpo deve documentar 422, e as sem corpo não")
+    void operacoesComCorpoDevemDocumentar422() {
+        List<Map<String, Object>> operacoes = documentacao.read(OPERACOES);
+
+        assertThat(operacoes).isNotEmpty().allSatisfy(operacao -> {
+            if (operacao.containsKey("requestBody")) {
+                assertThat(respostas(operacao)).containsKey("422");
+            } else {
+                assertThat(respostas(operacao)).doesNotContainKey("422");
+            }
+        });
     }
 
     @Test
@@ -143,6 +164,19 @@ class OpenApiConfigTest {
                 .containsKeys("201", "400", "409");
         assertThat(respostas(documentacao.read("$.paths['/veiculos'].post")))
                 .containsKeys("201", "400", "404", "409");
+        assertThat(respostas(documentacao.read("$.paths['/pecas-insumos/{id}'].delete")))
+                .containsKeys("204", "404", "409");
+    }
+
+    @Test
+    @DisplayName("As listagens do catálogo não devem documentar 409 nem 422, que não acontecem num GET")
+    void listagensNaoDevemDocumentarConflito() {
+        assertThat(respostas(documentacao.read("$.paths['/pecas-insumos'].get"))).doesNotContainKeys("409", "422");
+        assertThat(respostas(documentacao.read("$.paths['/servicos'].get"))).doesNotContainKeys("409", "422");
+    }
+
+    private String descricao(String operacao, String status) {
+        return documentacao.read(operacao + ".responses['" + status + "'].description");
     }
 
     @SuppressWarnings("unchecked")
