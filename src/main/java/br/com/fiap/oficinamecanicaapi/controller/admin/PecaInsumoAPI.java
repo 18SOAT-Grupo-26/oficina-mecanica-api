@@ -14,19 +14,16 @@ import org.springframework.web.bind.annotation.*;
 
 public interface PecaInsumoAPI {
 
-    @Operation(summary = "Create Insumo", tags = "Insumo")
-    @ApiResponse(responseCode = "201", description = "Insumo created successfully", content = @Content(schema = @Schema(implementation = PecaInsumoResponse.class)))
+    @Operation(summary = "Cadastrar insumo", tags = "Insumo")
+    @ApiResponse(responseCode = "201", description = "Insumo cadastrado", content = @Content(schema = @Schema(implementation = PecaInsumoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Dados da requisição inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "409", description = "Insumo with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "422", description = "Body ausente ou ilegível", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "Já existe um insumo ativo com o mesmo nome", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PostMapping
     ResponseEntity<PecaInsumoResponse> criar(@RequestBody PecaInsumoRequest request);
 
-    @Operation(summary = "Listar insumos", tags = "Insumo")
-    @ApiResponse(responseCode = "200", description = "Página de insumos")
-    @ApiResponse(responseCode = "400", description = "Bad request", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "409", description = "Insumo with the same name already exists", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "422", description = "Invalid request data", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @Operation(summary = "Listar insumos ativos", tags = "Insumo")
+    @ApiResponse(responseCode = "200", description = "Página de insumos ativos")
+    @ApiResponse(responseCode = "400", description = "Parâmetro de paginação inválido", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @GetMapping
     ResponseEntity<Pagina<PecaInsumoResponse>> listar(@Parameter(description = "Página, a partir de 1 (padrão: 1)") @RequestParam(required = false) Integer pagina,
                                                       @Parameter(description = "Itens por página (padrão: 20, máximo: 100)") @RequestParam(required = false) Integer tamanho);
@@ -42,7 +39,7 @@ public interface PecaInsumoAPI {
     @ApiResponse(responseCode = "200", description = "Insumo atualizado", content = @Content(schema = @Schema(implementation = PecaInsumoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Insumo não encontrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "409", description = "Nome de insumo já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
+    @ApiResponse(responseCode = "409", description = "Já existe um insumo ativo com o mesmo nome", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PutMapping("/{id}")
     ResponseEntity<PecaInsumoResponse> atualizar(@PathVariable Long id, @RequestBody PecaInsumoRequest request);
 

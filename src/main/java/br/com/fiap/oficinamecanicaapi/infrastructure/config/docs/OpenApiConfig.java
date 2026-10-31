@@ -20,8 +20,8 @@ import org.springframework.context.annotation.Configuration;
 import java.util.TreeMap;
 
 /**
- * Documentação OpenAPI. As respostas comuns a todas as operações (401/403 nas rotas protegidas e 500 em todas)
- * e o esquema de segurança JWT são aplicados aqui; cada interface {@code *API} declara só as respostas
+ * Documentação OpenAPI. As respostas comuns (401/403 nas rotas protegidas, 422 nas operações com corpo e 500 em
+ * todas) e o esquema de segurança JWT são aplicados aqui; cada interface {@code *API} declara só as respostas
  * específicas do endpoint.
  */
 @Configuration
@@ -55,6 +55,9 @@ public class OpenApiConfig {
                     operacao.addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH));
                     respostas.putIfAbsent("401", new ApiResponse().description("Token ausente ou inválido"));
                     respostas.putIfAbsent("403", respostaDeErro("Usuário sem perfil autorizado para esta operação"));
+                }
+                if (operacao.getRequestBody() != null) {
+                    respostas.putIfAbsent("422", respostaDeErro("Body ausente ou ilegível"));
                 }
                 respostas.putIfAbsent("500", respostaDeErro("Erro interno inesperado"));
                 operacao.setResponses(ordenadas(respostas));

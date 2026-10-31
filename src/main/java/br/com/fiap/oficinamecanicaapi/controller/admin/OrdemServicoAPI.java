@@ -25,7 +25,6 @@ public interface OrdemServicoAPI {
             tags = "Ordem de Serviço")
     @ApiResponse(responseCode = "201", description = "OS criada", content = @Content(schema = @Schema(implementation = OrdemServicoResponse.class)))
     @ApiResponse(responseCode = "400", description = "Cliente, veículo, serviços ou peças ausentes, ou campos inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "422", description = "Body ausente ou ilegível", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "404", description = "Cliente, veículo, serviço ou peça não cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @ApiResponse(responseCode = "409", description = "Veículo de outro cliente, item repetido ou saldo insuficiente", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
     @PostMapping
