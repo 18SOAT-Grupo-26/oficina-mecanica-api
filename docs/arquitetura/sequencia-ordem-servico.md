@@ -10,7 +10,7 @@ Convenções dos diagramas:
 - Os `*PortOut` são interfaces do `core`. Quem fala com o PostgreSQL são os `*PersistenceAdapter` em
   `infrastructure/persistence/<contexto>/`, que aparecem aqui só pelo SQL que geram.
 - A área destacada é a transação do caso de uso (`@Transactional` no `OrdemServicoUseCase`). Qualquer
-  `ApplicationException` dentro dela desfaz tudo, e o `HandlerException` devolve o `ErrorTemplate` com o status
+  exceção de domínio (`DominioException`) dentro dela desfaz tudo, e o `HandlerException` devolve o `ErrorTemplate` com o status
   (400, 404 ou 409).
 
 ## 1. Abertura da OS
