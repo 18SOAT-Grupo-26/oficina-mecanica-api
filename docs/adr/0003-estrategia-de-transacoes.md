@@ -47,12 +47,12 @@ Fluxos cobertos por esta ADR:
 | Fluxo                         | Rota                                           | Escritas envolvidas                              |
 |-------------------------------|------------------------------------------------|--------------------------------------------------|
 | Abrir ou editar a OS          | `POST` e `PUT /ordens-servico`                 | OS, itens de serviço e de peça, histórico        |
-| Gerar orçamento               | `PATCH /ordens-servico/{id}/gerar-orcamento`   | Status da OS, histórico, reserva de cada peça    |
-| Aprovar orçamento             | `PATCH /ordens-servico/{id}/aprovar-orcamento` | Status da OS, histórico, baixa de cada peça      |
-| Rejeitar orçamento            | `PATCH /ordens-servico/{id}/rejeitar-orcamento` | Status da OS (`CANCELADA`), liberação das peças |
+| Enviar orçamento              | `POST /ordens-servico/{id}/orcamento/envio`    | Status da OS, histórico, reserva de cada peça    |
+| Aprovar orçamento             | `POST /ordens-servico/{id}/orcamento/aprovacao` | Status da OS, histórico, baixa de cada peça      |
+| Rejeitar orçamento            | `POST /ordens-servico/{id}/orcamento/rejeicao` | Status da OS (`CANCELADA`), liberação das peças |
 | Cancelar, finalizar, entregar | `PATCH /ordens-servico/{id}/status`            | Status da OS, histórico e, no cancelamento com orçamento pendente, liberação das peças |
 | Cancelar (só `ADMIN`)         | `DELETE /ordens-servico/{id}`                  | O mesmo cancelamento do `PATCH .../status`: a OS vira `CANCELADA` e não é apagada (#109) |
-| Cadastro de usuário           | `POST /auth/cadastro`                          | Usuário                                          |
+| Cadastro de usuário           | `POST /usuarios`                                | Usuário                                          |
 
 ## Decisão
 
@@ -123,8 +123,8 @@ A OS valida a transição no domínio (`StatusOrdemServico.podeTransitarPara`), 
 requisições sequenciais, a regra funciona: a segunda recebe 409 porque o status já mudou. Em requisições
 **simultâneas**, as duas leem o mesmo status e passam pela validação:
 
-- dois `gerar-orcamento` reservam as peças duas vezes, se houver saldo;
-- dois `aprovar-orcamento` ou dois cancelamentos só são barrados pelo `WHERE` do estoque. Se outra OS tiver reserva da
+- dois envios do orçamento reservam as peças duas vezes, se houver saldo;
+- duas aprovações do orçamento ou dois cancelamentos só são barrados pelo `WHERE` do estoque. Se outra OS tiver reserva da
   mesma peça, a segunda requisição consome ou libera a reserva da outra OS.
 
 O caminho proposto é **`@Version` na `OrdemServicoEntity`**, com a `OptimisticLockException` traduzida para 409 no

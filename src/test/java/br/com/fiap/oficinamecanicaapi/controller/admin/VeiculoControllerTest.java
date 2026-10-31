@@ -29,6 +29,7 @@ import java.util.Set;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -74,6 +75,7 @@ class VeiculoControllerTest {
         mockMvc.perform(post("/veiculos").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(REQUEST_JSON))
                 .andExpect(status().isCreated())
+                .andExpect(header().string(HttpHeaders.LOCATION, "http://localhost/veiculos/" + ID))
                 .andExpect(jsonPath("$.id").value(ID))
                 .andExpect(jsonPath("$.placa").value(PLACA));
     }
@@ -122,9 +124,9 @@ class VeiculoControllerTest {
     @DisplayName("Deve listar veículos filtrando por cliente e repassando a paginação")
     void deveListarVeiculosDoCliente() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.listar(CLIENTE_ID, 0, 10)).thenReturn(new Pagina<>(List.of(RESPONSE), 0, 10, 1));
+        when(useCase.listar(CLIENTE_ID, null, 1, 10)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 10, 1));
 
-        mockMvc.perform(get("/veiculos").param("clienteId", "1").param("page", "0").param("size", "10")
+        mockMvc.perform(get("/veiculos").param("clienteId", "1").param("pagina", "1").param("tamanho", "10")
                         .header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.itens[0].clienteId").value(CLIENTE_ID))
@@ -143,14 +145,14 @@ class VeiculoControllerTest {
     }
 
     @Test
-    @DisplayName("Deve buscar veículo por placa")
-    void deveBuscarPorPlaca() throws Exception {
+    @DisplayName("Deve filtrar a listagem de veículos por placa")
+    void deveListarPorPlaca() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.buscarPorPlaca(PLACA)).thenReturn(RESPONSE);
+        when(useCase.listar(null, PLACA, null, null)).thenReturn(new Pagina<>(List.of(RESPONSE), 1, 20, 1));
 
-        mockMvc.perform(get("/veiculos/placa/{placa}", PLACA).header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(get("/veiculos").param("placa", PLACA).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.placa").value(PLACA));
+                .andExpect(jsonPath("$.itens[0].placa").value(PLACA));
     }
 
     @Test

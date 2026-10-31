@@ -55,7 +55,7 @@ class MinhasOrdensControllerTest {
     @DisplayName("Deve listar as OS do cliente do token")
     void deveListarOsDoCliente() throws Exception {
         autenticarComo(Perfil.CLIENTE, ID_CLIENTE);
-        when(useCase.listar(ID_CLIENTE)).thenReturn(List.of(RESPONSE));
+        when(useCase.listarDoCliente(ID_CLIENTE)).thenReturn(List.of(RESPONSE));
 
         mockMvc.perform(get("/minhas-ordens").header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())

@@ -8,9 +8,10 @@ public interface ClienteUseCasePortIn {
 
     ClienteResponse buscarPorId(Long id);
 
-    ClienteResponse buscarPorDocumento(String documento);
-
-    Pagina<ClienteResponse> listar(Integer pagina, Integer tamanho);
+    /**
+     * {@code documento} opcional (CPF ou CNPJ, com ou sem máscara): quando informado, a página traz no máximo esse cliente.
+     */
+    Pagina<ClienteResponse> listar(String documento, Integer pagina, Integer tamanho);
 
     ClienteResponse atualizar(Long id, ClienteRequest request);
 

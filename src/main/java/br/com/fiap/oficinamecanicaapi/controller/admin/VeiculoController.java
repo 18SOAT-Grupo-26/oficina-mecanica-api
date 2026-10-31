@@ -4,7 +4,6 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,22 +22,17 @@ public class VeiculoController implements VeiculoAPI {
 
     @Override
     public ResponseEntity<VeiculoResponse> criar(VeiculoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
+        return Criado.em(useCase.criar(request), VeiculoResponse::id);
     }
 
     @Override
-    public ResponseEntity<Pagina<VeiculoResponse>> listar(Long clienteId, Integer page, Integer size) {
-        return ResponseEntity.ok(useCase.listar(clienteId, page, size));
+    public ResponseEntity<Pagina<VeiculoResponse>> listar(Long clienteId, String placa, Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(clienteId, placa, pagina, tamanho));
     }
 
     @Override
     public ResponseEntity<VeiculoResponse> buscarPorId(Long id) {
         return ResponseEntity.ok(useCase.buscarPorId(id));
-    }
-
-    @Override
-    public ResponseEntity<VeiculoResponse> buscarPorPlaca(String placa) {
-        return ResponseEntity.ok(useCase.buscarPorPlaca(placa));
     }
 
     @Override

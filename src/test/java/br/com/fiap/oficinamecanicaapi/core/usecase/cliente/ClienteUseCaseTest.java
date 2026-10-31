@@ -150,24 +150,27 @@ class ClienteUseCaseTest {
     }
 
     @Test
-    @DisplayName("Deve buscar cliente por documento informado com máscara")
-    void deveBuscarPorDocumento() {
+    @DisplayName("Deve filtrar a listagem pelo documento informado com máscara")
+    void deveListarPorDocumento() {
         Documento documento = new Documento(CPF);
         when(clientePortOut.buscarAtivoPorDocumento(documento)).thenReturn(Optional.of(clienteSalvo(documento)));
 
-        ClienteResponse response = useCase.buscarPorDocumento(CPF_COM_MASCARA);
+        Pagina<ClienteResponse> pagina = useCase.listar(CPF_COM_MASCARA, null, null);
 
-        assertThat(response.documento()).isEqualTo(CPF);
+        assertThat(pagina.itens()).extracting(ClienteResponse::documento).containsExactly(CPF);
+        assertThat(pagina.total()).isEqualTo(1);
+        verify(clientePortOut, never()).listarAtivos(anyInt(), anyInt());
     }
 
     @Test
-    @DisplayName("Deve retornar 404 ao buscar cliente inexistente por documento")
-    void deveRetornarNaoEncontradoPorDocumento() {
+    @DisplayName("Deve devolver página vazia, e não 404, quando nenhum cliente tiver o documento")
+    void deveListarVazioPorDocumentoInexistente() {
         when(clientePortOut.buscarAtivoPorDocumento(new Documento(CPF))).thenReturn(Optional.empty());
 
-        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class,
-                () -> useCase.buscarPorDocumento(CPF));
+        Pagina<ClienteResponse> pagina = useCase.listar(CPF, null, null);
 
+        assertThat(pagina.itens()).isEmpty();
+        assertThat(pagina.total()).isZero();
     }
 
     @Test
@@ -176,7 +179,7 @@ class ClienteUseCaseTest {
         Cliente cliente = clienteSalvo(new Documento(CPF));
         when(clientePortOut.listarAtivos(2, 10)).thenReturn(new Pagina<>(List.of(cliente), 2, 10, 21));
 
-        Pagina<ClienteResponse> pagina = useCase.listar(2, 10);
+        Pagina<ClienteResponse> pagina = useCase.listar(null, 2, 10);
 
         assertThat(pagina.itens()).extracting(ClienteResponse::id).containsExactly(ID);
         assertThat(pagina.total()).isEqualTo(21);
@@ -188,17 +191,17 @@ class ClienteUseCaseTest {
         when(clientePortOut.listarAtivos(Pagina.PAGINA_PADRAO, Pagina.TAMANHO_PADRAO))
                 .thenReturn(new Pagina<>(List.of(), Pagina.PAGINA_PADRAO, Pagina.TAMANHO_PADRAO, 0));
 
-        assertThat(useCase.listar(null, null).itens()).isEmpty();
-        assertThat(useCase.listar(-1, 0).itens()).isEmpty();
+        assertThat(useCase.listar(null, null, null).itens()).isEmpty();
+        assertThat(useCase.listar(null, -1, 0).itens()).isEmpty();
     }
 
     @Test
     @DisplayName("Deve limitar o tamanho da página ao máximo permitido")
     void deveLimitarTamanhoMaximo() {
-        when(clientePortOut.listarAtivos(0, Pagina.TAMANHO_MAXIMO))
-                .thenReturn(new Pagina<>(List.of(), 0, Pagina.TAMANHO_MAXIMO, 0));
+        when(clientePortOut.listarAtivos(Pagina.PAGINA_PADRAO, Pagina.TAMANHO_MAXIMO))
+                .thenReturn(new Pagina<>(List.of(), Pagina.PAGINA_PADRAO, Pagina.TAMANHO_MAXIMO, 0));
 
-        Pagina<ClienteResponse> pagina = useCase.listar(0, 500);
+        Pagina<ClienteResponse> pagina = useCase.listar(null, 0, 500);
 
         assertThat(pagina.tamanho()).isEqualTo(Pagina.TAMANHO_MAXIMO);
     }

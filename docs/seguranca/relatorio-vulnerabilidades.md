@@ -53,7 +53,7 @@ e boas práticas).
 | ID  | OWASP | Severidade | Achado | Origem | Status |
 |-----|-------|------------|--------|--------|--------|
 | A1  | A02 / A05 | Alta | Chave JWT real (chave B) no `.env.example`. Quem copia o exemplo usa uma chave pública, e qualquer pessoa consegue forjar um token de ADMIN. | Gitleaks + manual | Corrigido no PR `fix/remove-chaves-jwt`, aguardando merge: `API_SECRET` vazio no exemplo (a API gera uma chave aleatória local) e recusa na subida das chaves publicadas |
-| A2  | A01 | Alta | `POST /auth/cadastro` público: qualquer pessoa criava um usuário, inclusive ADMIN. | Manual | Corrigido no #108: só ADMIN cadastra, e o admin inicial é criado na subida a partir do `.env` |
+| A2  | A01 | Alta | `POST /auth/cadastro` público: qualquer pessoa criava um usuário, inclusive ADMIN. | Manual | Corrigido no #108: só ADMIN cadastra, e o admin inicial é criado na subida a partir do `.env`. Hoje a rota é `POST /usuarios` |
 | A3  | A01 | Alta | Rotas públicas com curinga (`/auth/**`) e token aceito como parâmetro de query/body. | Manual | Corrigido no #98 e no #99: lista explícita em `RotasPublicas` e `RotasProtegidasTest`, que exige 401 em toda rota não pública |
 | A4  | A07 | Alta | Enumeração de usuários no login: usuário inexistente e senha errada respondiam de forma diferente. | Manual | Corrigido no #103: 401 igual e o mesmo custo de bcrypt (60 ms × 61 ms medidos) |
 | A5  | A07 | Alta | Login de usuário inexistente com senha acima de 72 bytes respondia **500**, enquanto o usuário existente respondia 401. Isso reabria a enumeração do A4. | **ZAP** (Buffer Overflow / Format String no `/auth/login`) | Corrigido no #116: comparação com um hash fictício gerado em tempo de execução |

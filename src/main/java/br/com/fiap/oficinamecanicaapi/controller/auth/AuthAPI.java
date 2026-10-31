@@ -1,7 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.controller.auth;
 
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthToken;
-import br.com.fiap.oficinamecanicaapi.core.port.in.auth.CadastroRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.SigninRequest;
 import br.com.fiap.oficinamecanicaapi.shared.exception.model.ErrorTemplate;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,13 +16,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 public interface AuthAPI {
 
-    @Operation(summary = "Cadastrar usuário (somente ADMIN)", tags = "Autenticação")
-    @ApiResponse(responseCode = "201", description = "Usuário cadastrado", content = @Content)
-    @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @ApiResponse(responseCode = "409", description = "E-mail ou documento já cadastrado", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
-    @PostMapping("/cadastro")
-    ResponseEntity<Void> cadastrarUsuario(@RequestBody @Valid CadastroRequest request);
-
     @Operation(summary = "Gerar token", tags = "Autenticação")
     @ApiResponse(responseCode = "200", description = "Token gerado", content = @Content)
     @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content(schema = @Schema(implementation = ErrorTemplate.class)))
@@ -32,7 +24,7 @@ public interface AuthAPI {
 
     @Operation(summary = "Validar token", tags = "Autenticação")
     @ApiResponse(responseCode = "200", description = "Token válido", content = @Content)
-    @GetMapping("/validate")
+    @GetMapping("/validacao")
     ResponseEntity<Boolean> validarToken(@RequestHeader(value = "Authorization") String token);
 
 }

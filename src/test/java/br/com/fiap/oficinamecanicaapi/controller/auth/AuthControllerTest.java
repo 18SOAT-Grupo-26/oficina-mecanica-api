@@ -1,5 +1,6 @@
 package br.com.fiap.oficinamecanicaapi.controller.auth;
 
+import br.com.fiap.oficinamecanicaapi.controller.admin.UsuarioController;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.DetalhesUsuario;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Perfil;
 import br.com.fiap.oficinamecanicaapi.core.domain.usuario.model.Usuario;
@@ -35,8 +36,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** Cadastro de usuários: só ADMINISTRATOR logado; login e validação do token continuam públicos. */
-@WebMvcTest(AuthController.class)
+/** Cadastro de usuários (/usuarios): só ADMINISTRATOR logado; login e validação do token continuam públicos. */
+@WebMvcTest({AuthController.class, UsuarioController.class})
 @Import(SecurityConfig.class)
 class AuthControllerTest {
 
@@ -71,7 +72,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve responder 401 ao cadastrar usuário sem token")
     void deveExigirTokenNoCadastro() throws Exception {
-        mockMvc.perform(post("/auth/cadastro").contentType(MediaType.APPLICATION_JSON).content(CADASTRO_JSON))
+        mockMvc.perform(post("/usuarios").contentType(MediaType.APPLICATION_JSON).content(CADASTRO_JSON))
                 .andExpect(status().isUnauthorized());
 
         verifyNoInteractions(authService);
@@ -82,7 +83,7 @@ class AuthControllerTest {
     void deveRecusarCadastroDeQuemNaoEhAdministrador() throws Exception {
         autenticarComo(Perfil.FUNCIONARIO);
 
-        mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, BEARER)
+        mockMvc.perform(post("/usuarios").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(CADASTRO_JSON))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("Acesso negado"));
@@ -95,7 +96,7 @@ class AuthControllerTest {
     void deveCadastrarComoAdministrador() throws Exception {
         autenticarComo(Perfil.ADMIN);
 
-        mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, BEARER)
+        mockMvc.perform(post("/usuarios").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(CADASTRO_JSON))
                 .andExpect(status().isCreated());
 
@@ -107,7 +108,7 @@ class AuthControllerTest {
     void deveRejeitarCadastroIncompleto() throws Exception {
         autenticarComo(Perfil.ADMIN);
 
-        mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, BEARER)
+        mockMvc.perform(post("/usuarios").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content("""
                             {"nome":"","email":"bruno@oficina.com.br","nomeUsuario":"bruno","senha":"Senha@Forte123",
                              "trocaSenhaObrigatoria":false}
@@ -125,7 +126,7 @@ class AuthControllerTest {
         doThrow(new ConflitoException("Já existe um usuário cadastrado com este e-mail"))
                 .when(authService).cadastrarUsuario(CADASTRO);
 
-        mockMvc.perform(post("/auth/cadastro").header(HttpHeaders.AUTHORIZATION, BEARER)
+        mockMvc.perform(post("/usuarios").header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(CADASTRO_JSON))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value(409));
@@ -170,7 +171,7 @@ class AuthControllerTest {
     void deveValidarToken() throws Exception {
         when(authService.validarToken("Bearer jwt")).thenReturn(true);
 
-        mockMvc.perform(get("/auth/validate").header(HttpHeaders.AUTHORIZATION, "Bearer jwt"))
+        mockMvc.perform(get("/auth/validacao").header(HttpHeaders.AUTHORIZATION, "Bearer jwt"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(true));
     }
@@ -178,7 +179,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("Deve responder 400 quando o header Authorization não vier no validate")
     void deveExigirHeaderNoValidate() throws Exception {
-        mockMvc.perform(get("/auth/validate"))
+        mockMvc.perform(get("/auth/validacao"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Header obrigatório ausente: Authorization"));
 

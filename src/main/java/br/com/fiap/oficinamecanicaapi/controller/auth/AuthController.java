@@ -2,11 +2,8 @@ package br.com.fiap.oficinamecanicaapi.controller.auth;
 
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthToken;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.AuthenticationUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.port.in.auth.CadastroRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.auth.SigninRequest;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,13 +15,6 @@ public class AuthController implements AuthAPI {
 
     public AuthController(AuthenticationUseCasePortIn authService) {
         this.authService = authService;
-    }
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> cadastrarUsuario(CadastroRequest request) {
-        authService.cadastrarUsuario(request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override

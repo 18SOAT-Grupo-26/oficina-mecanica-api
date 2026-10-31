@@ -6,6 +6,7 @@ import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.service.Calculado
 import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
 import br.com.fiap.oficinamecanicaapi.core.domain.servico.model.Servico;
 import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Documento;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.domain.veiculo.model.Veiculo;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.ordemservico.OrdemServicoResponse;
@@ -114,8 +115,15 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
 
     @Override
     @Transactional(readOnly = true)
-    public List<OrdemServicoResponse> listar(Long idCliente) {
-        return mapper.toResponseList(listarOrdens(idCliente));
+    public Pagina<OrdemServicoResponse> listar(Long idCliente, StatusOrdemServico status, Integer pagina, Integer tamanho) {
+        return ordemServicoPortOut.listar(idCliente, status, Pagina.paginaValida(pagina), Pagina.tamanhoValido(tamanho))
+                .map(mapper::toResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrdemServicoResponse> listarDoCliente(Long idCliente) {
+        return mapper.toResponseList(ordemServicoPortOut.listarDoCliente(idCliente));
     }
 
     @Override
@@ -126,10 +134,6 @@ public class OrdemServicoUseCase implements OrdemServicoUseCasePortIn {
             throw new RecursoNaoEncontradoException("Ordem de serviço não encontrada");
         }
         return mapper.toResponse(os);
-    }
-
-    private List<OrdemServico> listarOrdens(Long idCliente) {
-        return ordemServicoPortOut.listarOrdens(idCliente);
     }
 
     @Override

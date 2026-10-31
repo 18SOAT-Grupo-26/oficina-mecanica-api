@@ -112,7 +112,7 @@ class RotasProtegidasTest {
     @Test
     @DisplayName("Validação de token sem header Authorization deve responder 400, e não 500")
     void validacaoDeTokenSemHeaderDeveResponder400() throws Exception {
-        mockMvc.perform(get("/auth/validate"))
+        mockMvc.perform(get("/auth/validacao"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Header obrigatório ausente: Authorization"));
     }
@@ -120,7 +120,7 @@ class RotasProtegidasTest {
     @Test
     @DisplayName("Toda resposta deve enviar Cross-Origin-Resource-Policy same-origin (isolamento contra Spectre)")
     void deveEnviarCrossOriginResourcePolicy() throws Exception {
-        mockMvc.perform(get("/auth/validate"))
+        mockMvc.perform(get("/auth/validacao"))
                 .andExpect(header().string("Cross-Origin-Resource-Policy", "same-origin"));
     }
 

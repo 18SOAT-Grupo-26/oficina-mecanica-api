@@ -29,6 +29,7 @@ import java.util.Set;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,7 +41,7 @@ class ServicoControllerTest {
     private static final String BEARER = "Bearer " + TOKEN;
     private static final String USERNAME = "usuario";
     private static final Long ID = 1L;
-    private static final String ROTA = "/servico";
+    private static final String ROTA = "/servicos";
     private static final ServicoRequest REQUEST = new ServicoRequest("Troca de óleo", "Óleo sintético", new BigDecimal("80.00"));
     private static final ServicoResponse RESPONSE = new ServicoResponse(ID, "Troca de óleo", "Óleo sintético", new BigDecimal("80.00"), null, null);
     private static final String REQUEST_JSON = """
@@ -68,6 +69,7 @@ class ServicoControllerTest {
         mockMvc.perform(post(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER)
                         .contentType(MediaType.APPLICATION_JSON).content(REQUEST_JSON))
                 .andExpect(status().isCreated())
+                .andExpect(header().string(HttpHeaders.LOCATION, "http://localhost/servicos/" + ID))
                 .andExpect(jsonPath("$.id").value(ID))
                 .andExpect(jsonPath("$.nome").value("Troca de óleo"));
     }
@@ -91,7 +93,7 @@ class ServicoControllerTest {
         autenticarComo(Perfil.ADMIN);
         when(useCase.listar(2, 5)).thenReturn(new Pagina<>(List.of(RESPONSE), 2, 5, 11));
 
-        mockMvc.perform(get(ROTA).param("page", "2").param("size", "5").header(HttpHeaders.AUTHORIZATION, BEARER))
+        mockMvc.perform(get(ROTA).param("pagina", "2").param("tamanho", "5").header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.itens[0].id").value(ID))
                 .andExpect(jsonPath("$.pagina").value(2))
@@ -102,7 +104,7 @@ class ServicoControllerTest {
     @DisplayName("Deve listar sem paginação informada, repassando nulos ao caso de uso")
     void deveListarSemPaginacao() throws Exception {
         autenticarComo(Perfil.ADMIN);
-        when(useCase.listar(null, null)).thenReturn(new Pagina<>(List.of(), 0, 20, 0));
+        when(useCase.listar(null, null)).thenReturn(new Pagina<>(List.of(), 1, 20, 0));
 
         mockMvc.perform(get(ROTA).header(HttpHeaders.AUTHORIZATION, BEARER))
                 .andExpect(status().isOk())

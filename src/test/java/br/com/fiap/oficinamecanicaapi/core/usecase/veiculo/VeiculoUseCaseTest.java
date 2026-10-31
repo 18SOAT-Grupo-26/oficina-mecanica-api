@@ -140,22 +140,32 @@ class VeiculoUseCaseTest {
     }
 
     @Test
-    @DisplayName("Deve buscar veículo por placa informada com hífen e minúsculas")
-    void deveBuscarPorPlaca() {
+    @DisplayName("Deve filtrar a listagem pela placa informada com hífen e minúsculas")
+    void deveListarPorPlaca() {
         Placa placa = new Placa(PLACA);
         when(veiculoPortOut.buscarAtivoPorPlaca(placa)).thenReturn(Optional.of(veiculoSalvo(placa, CLIENTE_ID)));
 
-        assertThat(useCase.buscarPorPlaca(PLACA_COM_HIFEN).placa()).isEqualTo(PLACA);
+        Pagina<VeiculoResponse> pagina = useCase.listar(null, PLACA_COM_HIFEN, null, null);
+
+        assertThat(pagina.itens()).extracting(VeiculoResponse::placa).containsExactly(PLACA);
+        verify(veiculoPortOut, never()).listarAtivos(any(), anyInt(), anyInt());
     }
 
     @Test
-    @DisplayName("Deve responder 404 ao buscar veículo inexistente por placa")
-    void deveRetornarNaoEncontradoPorPlaca() {
+    @DisplayName("Deve devolver página vazia, e não 404, quando nenhum veículo tiver a placa")
+    void deveListarVazioPorPlacaInexistente() {
         when(veiculoPortOut.buscarAtivoPorPlaca(new Placa(PLACA))).thenReturn(Optional.empty());
 
-        RecursoNaoEncontradoException exception = assertThrows(RecursoNaoEncontradoException.class,
-                () -> useCase.buscarPorPlaca(PLACA));
+        assertThat(useCase.listar(null, PLACA, null, null).total()).isZero();
+    }
 
+    @Test
+    @DisplayName("Deve devolver página vazia quando a placa for de outro cliente")
+    void deveListarVazioPorPlacaDeOutroCliente() {
+        Placa placa = new Placa(PLACA);
+        when(veiculoPortOut.buscarAtivoPorPlaca(placa)).thenReturn(Optional.of(veiculoSalvo(placa, CLIENTE_ID)));
+
+        assertThat(useCase.listar(CLIENTE_ID + 1, PLACA, null, null).itens()).isEmpty();
     }
 
     @Test
@@ -164,7 +174,7 @@ class VeiculoUseCaseTest {
         Veiculo veiculo = veiculoSalvo(new Placa(PLACA), CLIENTE_ID);
         when(veiculoPortOut.listarAtivos(CLIENTE_ID, 1, 5)).thenReturn(new Pagina<>(List.of(veiculo), 1, 5, 6));
 
-        Pagina<VeiculoResponse> pagina = useCase.listar(CLIENTE_ID, 1, 5);
+        Pagina<VeiculoResponse> pagina = useCase.listar(CLIENTE_ID, null, 1, 5);
 
         assertThat(pagina.itens()).extracting(VeiculoResponse::id).containsExactly(ID);
         assertThat(pagina.total()).isEqualTo(6);
@@ -176,7 +186,7 @@ class VeiculoUseCaseTest {
         when(veiculoPortOut.listarAtivos(null, Pagina.PAGINA_PADRAO, Pagina.TAMANHO_PADRAO))
                 .thenReturn(new Pagina<>(List.of(), Pagina.PAGINA_PADRAO, Pagina.TAMANHO_PADRAO, 0));
 
-        assertThat(useCase.listar(null, null, null).itens()).isEmpty();
+        assertThat(useCase.listar(null, null, null, null).itens()).isEmpty();
     }
 
     @Test

@@ -4,14 +4,13 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/servico")
+@RequestMapping("/servicos")
 @PreAuthorize("hasAnyRole('ADMIN', 'FUNCIONARIO')")
 public class ServicoController implements ServicoAPI {
 
@@ -23,12 +22,12 @@ public class ServicoController implements ServicoAPI {
 
     @Override
     public ResponseEntity<ServicoResponse> criar(ServicoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
+        return Criado.em(useCase.criar(request), ServicoResponse::id);
     }
 
     @Override
-    public ResponseEntity<Pagina<ServicoResponse>> listar(Integer page, Integer size) {
-        return ResponseEntity.ok(useCase.listar(page, size));
+    public ResponseEntity<Pagina<ServicoResponse>> listar(Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(pagina, tamanho));
     }
 
     @Override

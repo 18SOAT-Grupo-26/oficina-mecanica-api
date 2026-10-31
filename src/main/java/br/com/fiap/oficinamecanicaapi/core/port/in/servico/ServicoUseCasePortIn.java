@@ -6,7 +6,7 @@ public interface ServicoUseCasePortIn {
 
     ServicoResponse criar(ServicoRequest request);
 
-    Pagina<ServicoResponse> listar(Integer page, Integer size);
+    Pagina<ServicoResponse> listar(Integer pagina, Integer tamanho);
 
     ServicoResponse buscarPorId(Long id);
 

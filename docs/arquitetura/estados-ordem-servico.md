@@ -10,9 +10,9 @@ stateDiagram-v2
     direction LR
     [*] --> RECEBIDA: POST /ordens-servico
     RECEBIDA --> EM_DIAGNOSTICO: automático, na abertura
-    EM_DIAGNOSTICO --> AGUARDANDO_APROVACAO: PATCH /{id}/gerar-orcamento<br/>reserva as peças
-    AGUARDANDO_APROVACAO --> EM_EXECUCAO: PATCH /{id}/aprovar-orcamento<br/>baixa as peças
-    AGUARDANDO_APROVACAO --> CANCELADA: PATCH /{id}/rejeitar-orcamento<br/>libera as peças
+    EM_DIAGNOSTICO --> AGUARDANDO_APROVACAO: POST /{id}/orcamento/envio<br/>reserva as peças
+    AGUARDANDO_APROVACAO --> EM_EXECUCAO: POST /{id}/orcamento/aprovacao<br/>baixa as peças
+    AGUARDANDO_APROVACAO --> CANCELADA: POST /{id}/orcamento/rejeicao<br/>libera as peças
     EM_EXECUCAO --> FINALIZADA: PATCH /{id}/status
     FINALIZADA --> ENTREGUE: PATCH /{id}/status
     RECEBIDA --> CANCELADA: PATCH /{id}/status ou DELETE /{id}

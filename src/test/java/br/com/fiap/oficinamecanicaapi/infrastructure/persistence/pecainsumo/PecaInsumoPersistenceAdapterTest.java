@@ -90,7 +90,7 @@ class PecaInsumoPersistenceAdapterTest {
         when(repository.findAll(pageable)).thenReturn(new PageImpl<>(List.of(entidade()), pageable, 1));
 
         assertThat(adapter.existePorNomeNormalizado("filtro de oleo")).isFalse();
-        assertThat(adapter.listar(0, 20).itens()).extracting(PecaInsumo::getId).containsExactly(1L);
+        assertThat(adapter.listar(1, 20).itens()).extracting(PecaInsumo::getId).containsExactly(1L);
     }
 
     private static PecaInsumoEntity entidade() {

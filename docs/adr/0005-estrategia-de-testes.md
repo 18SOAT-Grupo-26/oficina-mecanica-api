@@ -97,8 +97,8 @@ Esses testes ficam no topo da pirâmide e são poucos. Eles cobrem o que só o b
 
 - todas as migrations aplicam do zero, e o Hibernate valida as entidades (`MigracoesIT`);
 - `reservar`, `liberar` e `baixar` recusam movimento sem saldo ou sem reserva (`PecaInsumoRepositoryIT`);
-- as consultas da OS (OS por cliente, contagem por status e períodos de execução para o tempo médio) rodam no
-  PostgreSQL (`OrdemServicoJpaRepositoryIT`);
+- as consultas da OS (OS por cliente, listagem paginada com filtro por cliente e status, contagem por status e
+  períodos de execução para o tempo médio) rodam no PostgreSQL (`OrdemServicoJpaRepositoryIT`);
 - o ciclo da OS até `ENTREGUE` movimenta o estoque, e uma OS com mais peças que o saldo responde 409 sem gravar nada
   (`FluxoOrdemServicoIT`);
 - login, token adulterado, 401 e 403 com a cadeia de segurança completa (`SegurancaIT`).

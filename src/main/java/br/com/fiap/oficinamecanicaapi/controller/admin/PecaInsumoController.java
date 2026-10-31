@@ -4,14 +4,13 @@ import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoRequest;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoResponse;
 import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoUseCasePortIn;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/insumos")
+@RequestMapping("/pecas-insumos")
 @PreAuthorize("hasRole('FUNCIONARIO') or hasRole('ADMIN')")
 public class PecaInsumoController implements PecaInsumoAPI {
     private final PecaInsumoUseCasePortIn useCase;
@@ -22,12 +21,12 @@ public class PecaInsumoController implements PecaInsumoAPI {
 
     @Override
     public ResponseEntity<PecaInsumoResponse> criar(PecaInsumoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(useCase.criar(request));
+        return Criado.em(useCase.criar(request), PecaInsumoResponse::id);
     }
 
     @Override
-    public ResponseEntity<Pagina<PecaInsumoResponse>> listar(Integer page, Integer size) {
-        return ResponseEntity.ok(useCase.listar(page, size));
+    public ResponseEntity<Pagina<PecaInsumoResponse>> listar(Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(pagina, tamanho));
     }
 
     @Override

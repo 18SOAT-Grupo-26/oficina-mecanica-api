@@ -45,10 +45,10 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
         veiculoId = id(criar("/veiculos", """
                 {"placa":"BRA2E19","marca":"Fiat","modelo":"Argo","ano":2022,"clienteId":%d}
                 """.formatted(clienteId)));
-        servicoId = id(criar("/servico", """
+        servicoId = id(criar("/servicos", """
                 {"nome":"Troca de óleo","descricao":"Troca de óleo do motor","preco":100.00}
                 """));
-        pecaId = id(criar("/insumos", """
+        pecaId = id(criar("/pecas-insumos", """
                 {"nome":"Filtro de óleo","descricao":"Filtro","quantidade":10,"reservado":0,"preco":25.00}
                 """));
     }
@@ -66,12 +66,12 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("EM_DIAGNOSTICO")));
 
-        executar(patch("/ordens-servico/" + osId + "/gerar-orcamento"))
+        executar(post("/ordens-servico/" + osId + "/orcamento/envio"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("AGUARDANDO_APROVACAO")));
         assertThat(estoque()).containsExactly(10, 2);
 
-        executar(patch("/ordens-servico/" + osId + "/aprovar-orcamento"))
+        executar(post("/ordens-servico/" + osId + "/orcamento/aprovacao"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("EM_EXECUCAO")));
 
@@ -82,9 +82,10 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("ENTREGUE")));
 
-        executar(get("/ordens-servico/listar/" + clienteId))
+        executar(get("/ordens-servico").param("clienteId", String.valueOf(clienteId)).param("status", "ENTREGUE"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$.itens", hasSize(1)))
+                .andExpect(jsonPath("$.itens[0].id", is((int) osId)));
         executar(get("/ordens-servico/tempo-medio-execucao"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.quantidadeOrdens", is(1)));
@@ -102,10 +103,10 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
                  "pecas":[{"idPeca":%d,"quantidade":3}]}
                 """.formatted(CPF, veiculoId, pecaId)));
 
-        executar(patch("/ordens-servico/" + osId + "/gerar-orcamento")).andExpect(status().isOk());
+        executar(post("/ordens-servico/" + osId + "/orcamento/envio")).andExpect(status().isOk());
         assertThat(estoque()).containsExactly(10, 3);
 
-        executar(patch("/ordens-servico/" + osId + "/rejeitar-orcamento"))
+        executar(post("/ordens-servico/" + osId + "/orcamento/rejeicao"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("CANCELADA")));
         assertThat(estoque()).containsExactly(10, 0);
@@ -133,10 +134,10 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
                  "pecas":[{"idPeca":%d,"quantidade":1}]}
                 """.formatted(CPF, veiculoId, servicoId, pecaId));
 
-        executar(delete("/servico/" + servicoId))
+        executar(delete("/servicos/" + servicoId))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message", is("O serviço está em uma ordem de serviço e não pode ser excluído")));
-        executar(delete("/insumos/" + pecaId))
+        executar(delete("/pecas-insumos/" + pecaId))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message", is("O insumo está em uma ordem de serviço e não pode ser excluído")));
 
@@ -147,8 +148,8 @@ class FluxoOrdemServicoIT extends IntegracaoBase {
     @Test
     @DisplayName("Serviço e peça que não estão em nenhuma OS continuam podendo ser excluídos")
     void excluirItemSemUso() throws Exception {
-        executar(delete("/servico/" + servicoId)).andExpect(status().isNoContent());
-        executar(delete("/insumos/" + pecaId)).andExpect(status().isNoContent());
+        executar(delete("/servicos/" + servicoId)).andExpect(status().isNoContent());
+        executar(delete("/pecas-insumos/" + pecaId)).andExpect(status().isNoContent());
     }
 
     @Test

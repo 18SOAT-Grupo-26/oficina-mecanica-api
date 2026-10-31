@@ -1,6 +1,8 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.persistence.ordemservico;
 
 import br.com.fiap.oficinamecanicaapi.core.domain.ordemservico.model.StatusOrdemServico;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,6 +32,18 @@ public interface OrdemServicoJpaRepository extends JpaRepository<OrdemServicoEnt
             order by os.createdAt desc
             """)
     List<OrdemServicoEntity> listarOrdensByClientId(@Param("idCliente") Long idCliente);
+
+    /**
+     * Filtros nulos não restringem; a ordenação vem no {@code pageable}.
+     */
+    @Query("""
+            select os
+            from OrdemServicoEntity os
+            where (:idCliente is null or os.clienteId = :idCliente)
+              and (:status is null or os.status = :status)
+            """)
+    Page<OrdemServicoEntity> listar(@Param("idCliente") Long idCliente, @Param("status") StatusOrdemServico status,
+                                    Pageable pageable);
 
     long countByStatus(StatusOrdemServico status);
 
