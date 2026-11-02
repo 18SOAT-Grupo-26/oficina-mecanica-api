@@ -451,7 +451,7 @@ prometheus, grafana               # configuração da observabilidade
 
 ## Vídeo da entrega
 
-_A definir._
+[Apresentação](https://youtu.be/n91Ov7mz4ew)
 
 ## Licença
 
