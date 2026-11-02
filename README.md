@@ -29,7 +29,7 @@ Funcionalidades disponíveis até o momento:
 - CRUD de clientes, com validação de CPF/CNPJ e busca por documento (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
 - CRUD de veículos, com validação de placa e busca por placa (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
 - CRUD de peças e insumos, com saldo em estoque e quantidade reservada (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
-- CRUD de serviços (somente `ADMIN`)
+- CRUD de serviços (`ADMIN` e `FUNCIONARIO`; exclusão só `ADMIN`)
 - Ordem de serviço (`ADMIN` e `FUNCIONARIO`; cancelamento só `ADMIN`): abertura com serviços e peças, envio,
   aprovação e rejeição do orçamento (com reserva, baixa e devolução do estoque), mudança de status com histórico,
   listagem paginada com filtro por cliente e status e tempo médio de execução
@@ -157,7 +157,8 @@ Possíveis problemas:
 - **SonarQube reinicia ou não abre**: falta memória para o Docker; veja os pré-requisitos.
 - **A API não sobe com erro de senha do administrador**: `ADMIN_SENHA` está fora da política de senha (veja
   [Usuários](#usuários-credenciais-de-demonstração-e-autenticação)).
-  ```
+
+## Variáveis de ambiente
 
 Todas ficam no `.env` (copiado do [`.env.example`](.env.example)). O Compose repassa à API as que estão no
 `environment` do serviço `api`; fora do Docker, a API lê o `.env` direto.
@@ -192,8 +193,8 @@ Todas ficam no `.env` (copiado do [`.env.example`](.env.example)). O Compose rep
 
 | Comando      | O que roda | Precisa de |
 |--------------|------------|------------|
-| `mvn test`   | testes unitários (`*Test`): domínio, casos de uso, controllers, segurança e arquitetura | só Java e Maven |
-| `mvn verify` | unitários + testes de integração (`*IT`), cobertura JaCoCo e a meta de 80% | Docker aberto (Testcontainers sobe um PostgreSQL 18 só para o teste) |
+| `mvn test`   | testes unitários (`*Test`): domínio, casos de uso, controllers, segurança e arquitetura | Java e Maven, ou Docker (comando abaixo) |
+| `mvn verify` | unitários + testes de integração (`*IT`), cobertura JaCoCo e a meta de 80% | Docker aberto (Testcontainers sobe um PostgreSQL 18 só para o teste) e Java e Maven, ou só Docker (comando abaixo) |
 
 Os testes de integração ficam no pacote da classe que exercitam (ex.: `SegurancaIT`, `FluxoOrdemServicoIT`,
 `MigracoesIT`) e usam a base `src/test/java/.../integracao/IntegracaoBase.java`. Sem Docker, eles são pulados.
@@ -215,6 +216,22 @@ docker run --rm -v "${PWD}:/app" -v "$env:USERPROFILE\.m2:/root/.m2" -w /app mav
 ```
 
 O volume `.m2` guarda as dependências entre execuções.
+
+O `mvn verify` também roda num container. Ele precisa do socket do Docker para o Testcontainers subir o PostgreSQL:
+
+```bash
+# bash / Git Bash
+docker run --rm -v "$PWD":/app -v "$HOME/.m2":/root/.m2 -v /var/run/docker.sock:/var/run/docker.sock \
+  -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal --add-host=host.docker.internal:host-gateway \
+  -w /app maven:3-amazoncorretto-25-alpine mvn verify
+```
+
+```powershell
+# PowerShell
+docker run --rm -v "${PWD}:/app" -v "$env:USERPROFILE\.m2:/root/.m2" -v /var/run/docker.sock:/var/run/docker.sock `
+  -e TESTCONTAINERS_HOST_OVERRIDE=host.docker.internal --add-host=host.docker.internal:host-gateway `
+  -w /app maven:3-amazoncorretto-25-alpine mvn verify
+```
 
 ## Qualidade de código e cobertura (Sonar + JaCoCo)
 
@@ -286,7 +303,8 @@ Para ver os problemas do Sonar enquanto programa, instale a extensão **SonarQub
 - Swagger UI: http://localhost:8081/api/v1/documentation
 - OpenAPI (JSON): http://localhost:8081/api/v1/api-docs-personalized
 
-Para chamar endpoints protegidos pelo Swagger, faça login em `POST /auth/login`, clique em **Authorize** e cole o token.
+Para chamar endpoints protegidos pelo Swagger, faça login em `POST /auth/login`, clique em **Authorize** e cole o token
+**sem o prefixo `Bearer `**: o Swagger já o acrescenta e, com o prefixo duplicado, a API responde 401.
 
 ### Respostas de erro
 
@@ -409,8 +427,8 @@ curl -X POST http://localhost:8081/api/v1/usuarios -H "Content-Type: application
 O token vale `JWT_EXPIRATION_MINUTES` (padrão 60 min). Após `LOGIN_MAX_TENTATIVAS` (padrão 5) falhas de login de uma
 mesma conta em `LOGIN_JANELA_MINUTOS` (padrão 15), o login dela responde **429** até a janela expirar.
 
-Perfis existentes (migration `V10__perfis_fase_1.sql`): `ADMIN` (tudo, inclusive exclusões, serviços e cadastro de
-usuários), `FUNCIONARIO` (cadastros sem exclusão e ordens de serviço) e `CLIENTE` (consulta das próprias OS).
+Perfis existentes (migration `V10__perfis_fase_1.sql`): `ADMIN` (tudo, inclusive exclusões e cadastro de
+usuários), `FUNCIONARIO` (cadastros sem exclusão, inclusive serviços, e ordens de serviço) e `CLIENTE` (consulta das próprias OS).
 Credenciais de demonstração: as do administrador inicial definidas no seu `.env` (`ADMIN_USUARIO` / `ADMIN_SENHA`).
 
 ## Análise de vulnerabilidades
