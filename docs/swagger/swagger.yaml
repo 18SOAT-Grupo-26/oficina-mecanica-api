@@ -1,0 +1,2294 @@
+---
+openapi: 3.1.0
+info:
+  title: Oficina Mecânica v1
+  description: Documentação da API da Oficina Mecânica
+  version: '1.0'
+servers:
+- url: http://localhost:8081/api/v1
+  description: Generated server url
+paths:
+  "/veiculos/{id}":
+    get:
+      tags:
+      - Veículo
+      summary: Buscar veículo por id
+      operationId: buscarPorId
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Veículo encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/VeiculoResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Veículo não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Veículo
+      summary: Atualizar veículo
+      operationId: atualizar
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/VeiculoRequest"
+        required: true
+      responses:
+        '200':
+          description: Veículo atualizado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/VeiculoResponse"
+        '400':
+          description: Dados inválidos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Veículo ou cliente não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: Placa já cadastrada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Veículo
+      summary: Remover veículo (soft delete)
+      operationId: desativar
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Veículo desativado
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Veículo não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/servicos/{id}":
+    get:
+      tags:
+      - Serviço
+      summary: Buscar serviço por id
+      operationId: buscarPorId_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Serviço encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ServicoResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Serviço não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Serviço
+      summary: Atualizar serviço
+      operationId: atualizar_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ServicoRequest"
+        required: true
+      responses:
+        '200':
+          description: Serviço atualizado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ServicoResponse"
+        '400':
+          description: Dados inválidos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Serviço não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: Já existe um serviço ativo com o mesmo nome
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Serviço
+      summary: Remover serviço (soft delete)
+      operationId: desativar_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Serviço desativado; as OS que já o usam não mudam
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Serviço não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/pecas-insumos/{id}":
+    get:
+      tags:
+      - Insumo
+      summary: Buscar insumo por id
+      operationId: buscarPorId_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Insumo encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/PecaInsumoResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Insumo não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Insumo
+      summary: Atualizar insumo
+      operationId: atualizar_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PecaInsumoRequest"
+        required: true
+      responses:
+        '200':
+          description: Insumo atualizado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/PecaInsumoResponse"
+        '400':
+          description: Dados inválidos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Insumo não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: Já existe um insumo ativo com o mesmo nome
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Insumo
+      summary: Remover insumo (soft delete)
+      operationId: desativar_2
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Insumo desativado; as OS que já o usam não mudam
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Insumo não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: O insumo tem unidades reservadas para orçamentos enviados e
+            não pode ser desativado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/ordens-servico/{id}":
+    get:
+      tags:
+      - Ordem de Serviço
+      summary: Consultar OS
+      description: Status, itens e histórico.
+      operationId: consultar
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: OS encontrada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/OrdemServicoResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: OS não encontrada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Ordem de Serviço
+      summary: Atualizar dados da OS
+      description: |-
+        Atualização completa, com o mesmo body da criação: cliente, veículo, serviços e peças são obrigatórios.
+        Lista vazia remove os itens daquele tipo; dado igual ao atual não conta como alteração.
+        A partir de EM_EXECUCAO (e com a OS cancelada) nada pode ser editado.
+        Cliente e veículo precisam ser os da abertura (outro responde 409: cancele a OS e abra outra).
+        Itens só mudam em EM_DIAGNOSTICO. O status não muda por aqui.
+      operationId: atualizar_3
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/OrdemServicoRequest"
+        required: true
+      responses:
+        '200':
+          description: OS atualizada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/OrdemServicoResponse"
+        '400':
+          description: Cliente, veículo, serviços ou peças ausentes, ou campos inválidos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: OS ou cadastro não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: OS em EM_EXECUCAO ou depois, cliente ou veículo diferente,
+            itens fora de EM_DIAGNOSTICO, item repetido ou saldo insuficiente
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Ordem de Serviço
+      summary: Remover OS (soft delete)
+      description: 'Cancela a OS sem removê-la: ela vai para CANCELADA e fica no histórico.
+        Com o orçamento pendente (AGUARDANDO_APROVACAO), a reserva de estoque das
+        peças é liberada. Só vale até AGUARDANDO_APROVACAO.'
+      operationId: cancelar
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: OS cancelada
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: OS não encontrada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: OS a partir de EM_EXECUCAO ou já cancelada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/clientes/{id}":
+    get:
+      tags:
+      - Cliente
+      summary: Buscar cliente por id
+      operationId: buscarPorId_3
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ClienteResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Cliente não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Cliente
+      summary: Atualizar cliente
+      operationId: atualizar_4
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ClienteRequest"
+        required: true
+      responses:
+        '200':
+          description: Cliente atualizado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ClienteResponse"
+        '400':
+          description: Dados inválidos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Cliente não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: Documento já cadastrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Cliente
+      summary: Remover cliente (soft delete)
+      operationId: desativar_3
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '204':
+          description: Cliente desativado
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Cliente não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/veiculos":
+    get:
+      tags:
+      - Veículo
+      summary: Listar veículos ativos, opcionalmente por cliente ou placa
+      operationId: listar
+      parameters:
+      - name: clienteId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: placa
+        in: query
+        description: Placa antiga ou Mercosul, com ou sem hífen
+        required: false
+        schema:
+          type: string
+      - name: pagina
+        in: query
+        description: 'Página, a partir de 1 (padrão: 1)'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: tamanho
+        in: query
+        description: 'Itens por página (padrão: 20, máximo: 100)'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Página de veículos ativos (com placa, no máximo um; vazia se
+            não houver)
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/PaginaVeiculoResponse"
+        '400':
+          description: Placa inválida
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Veículo
+      summary: Cadastrar veículo
+      operationId: criar
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/VeiculoRequest"
+        required: true
+      responses:
+        '201':
+          description: Veículo cadastrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/VeiculoResponse"
+        '400':
+          description: Dados inválidos (inclui placa ou ano inválido)
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Cliente não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: Placa já cadastrada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/usuarios":
+    post:
+      tags:
+      - Usuário
+      summary: Cadastrar usuário (somente ADMIN)
+      operationId: cadastrar
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CadastroRequest"
+        required: true
+      responses:
+        '201':
+          description: Usuário cadastrado
+        '400':
+          description: Dados inválidos (inclui senha fora da política e clienteId
+            ausente ou indevido para o perfil)
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Cliente do perfil CLIENTE não encontrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: E-mail ou nome de usuário já cadastrado, ou cliente que já
+            tem usuário
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/servicos":
+    get:
+      tags:
+      - Serviço
+      summary: Listar serviços ativos
+      operationId: listar_1
+      parameters:
+      - name: pagina
+        in: query
+        description: 'Página, a partir de 1 (padrão: 1)'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: tamanho
+        in: query
+        description: 'Itens por página (padrão: 20, máximo: 100)'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Página de serviços ativos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/PaginaServicoResponse"
+        '400':
+          description: Parâmetro de paginação inválido
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Serviço
+      summary: Cadastrar serviço
+      operationId: criar_1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ServicoRequest"
+        required: true
+      responses:
+        '201':
+          description: Serviço cadastrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ServicoResponse"
+        '400':
+          description: Dados da requisição inválidos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: Já existe um serviço ativo com o mesmo nome
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/pecas-insumos":
+    get:
+      tags:
+      - Insumo
+      summary: Listar insumos ativos
+      operationId: listar_2
+      parameters:
+      - name: pagina
+        in: query
+        description: 'Página, a partir de 1 (padrão: 1)'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: tamanho
+        in: query
+        description: 'Itens por página (padrão: 20, máximo: 100)'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Página de insumos ativos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/PaginaPecaInsumoResponse"
+        '400':
+          description: Parâmetro de paginação inválido
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Insumo
+      summary: Cadastrar insumo
+      operationId: criar_2
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PecaInsumoRequest"
+        required: true
+      responses:
+        '201':
+          description: Insumo cadastrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/PecaInsumoResponse"
+        '400':
+          description: Dados da requisição inválidos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: Já existe um insumo ativo com o mesmo nome
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/ordens-servico":
+    get:
+      tags:
+      - Ordem de Serviço
+      summary: Listar OS
+      description: Da mais nova para a mais antiga, com status, itens e histórico.
+        Cliente e status são filtros opcionais; sem filtro, vêm todas, inclusive as
+        canceladas.
+      operationId: listar_3
+      parameters:
+      - name: clienteId
+        in: query
+        required: false
+        schema:
+          type: integer
+          format: int64
+      - name: status
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - RECEBIDA
+          - EM_DIAGNOSTICO
+          - AGUARDANDO_APROVACAO
+          - EM_EXECUCAO
+          - FINALIZADA
+          - ENTREGUE
+          - CANCELADA
+      - name: pagina
+        in: query
+        description: 'Página, a partir de 1 (padrão: 1)'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: tamanho
+        in: query
+        description: 'Itens por página (padrão: 20, máximo: 100)'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Página de OS (vazia quando nenhuma atende aos filtros)
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/PaginaOrdemServicoResponse"
+        '400':
+          description: Status desconhecido ou parâmetro inválido
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Ordem de Serviço
+      summary: Criar OS
+      description: Toda OS nasce RECEBIDA e vai sozinha para EM_DIAGNOSTICO (os dois
+        ficam no histórico). Cliente (CPF/CNPJ), veículo, serviços e peças são obrigatórios;
+        as listas de itens podem vir vazias. Todos devem estar cadastrados, e o preço
+        do item fica congelado. Cliente e veículo não mudam depois.
+      operationId: criar_3
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/OrdemServicoRequest"
+        required: true
+      responses:
+        '201':
+          description: OS criada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/OrdemServicoResponse"
+        '400':
+          description: Cliente, veículo, serviços ou peças ausentes, ou campos inválidos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: Cliente, veículo, serviço ou peça não cadastrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: Veículo de outro cliente, item repetido ou saldo insuficiente
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/ordens-servico/{id}/orcamento/rejeicao":
+    post:
+      tags:
+      - Ordem de Serviço
+      summary: Rejeitar orçamento
+      description: 'Rejeita o orçamento enviado: a OS é cancelada e a reserva de estoque
+        das peças é liberada, sem consumo. Só vale para OS em AGUARDANDO_APROVACAO.'
+      operationId: rejeitarOrcamento
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Orçamento rejeitado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/OrdemServicoResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: OS não encontrada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: OS fora de AGUARDANDO_APROVACAO ou reserva inconsistente
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/ordens-servico/{id}/orcamento/envio":
+    post:
+      tags:
+      - Ordem de Serviço
+      summary: Enviar orçamento
+      description: 'Envia o orçamento ao cliente: a OS vai de EM_DIAGNOSTICO para
+        AGUARDANDO_APROVACAO e o estoque das peças fica reservado. A OS precisa de
+        ao menos um item.'
+      operationId: enviarOrcamento
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Orçamento enviado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/OrdemServicoResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: OS não encontrada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: OS fora de EM_DIAGNOSTICO, sem itens ou com saldo insuficiente
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/ordens-servico/{id}/orcamento/aprovacao":
+    post:
+      tags:
+      - Ordem de Serviço
+      summary: Aprovar orçamento
+      description: 'Aprova o orçamento enviado: a OS vai para EM_EXECUCAO e o estoque
+        reservado das peças é baixado. Só vale para OS em AGUARDANDO_APROVACAO.'
+      operationId: aprovarOrcamento
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Orçamento aprovado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/OrdemServicoResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: OS não encontrada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: OS fora de AGUARDANDO_APROVACAO ou saldo reservado insuficiente
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/clientes":
+    get:
+      tags:
+      - Cliente
+      summary: Listar clientes ativos, opcionalmente por CPF ou CNPJ
+      operationId: listar_4
+      parameters:
+      - name: documento
+        in: query
+        description: CPF ou CNPJ, com ou sem máscara
+        required: false
+        schema:
+          type: string
+      - name: pagina
+        in: query
+        description: 'Página, a partir de 1 (padrão: 1)'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      - name: tamanho
+        in: query
+        description: 'Itens por página (padrão: 20, máximo: 100)'
+        required: false
+        schema:
+          type: integer
+          format: int32
+      responses:
+        '200':
+          description: Página de clientes ativos (com documento, no máximo um; vazia
+            se não houver)
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/PaginaClienteResponse"
+        '400':
+          description: Documento inválido
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Cliente
+      summary: Cadastrar cliente
+      operationId: criar_4
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ClienteRequest"
+        required: true
+      responses:
+        '201':
+          description: Cliente cadastrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ClienteResponse"
+        '400':
+          description: Dados inválidos (inclui CPF/CNPJ inválido)
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: Documento já cadastrado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/auth/login":
+    post:
+      tags:
+      - Autenticação
+      summary: Gerar token
+      operationId: gerarToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SigninRequest"
+        required: true
+      responses:
+        '200':
+          description: Token gerado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/AuthToken"
+        '400':
+          description: Dados inválidos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Credenciais inválidas
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Body ausente ou ilegível
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '429':
+          description: Muitas tentativas de login; tente de novo em alguns minutos
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+  "/ordens-servico/{id}/status":
+    patch:
+      tags:
+      - Ordem de Serviço
+      summary: Mudar status da OS
+      description: |-
+        Só avança para o próximo status: não volta, não pula e não repete o atual.
+        Manuais: FINALIZADA e ENTREGUE.
+        CANCELADA cancela a OS sem removê-la: só até AGUARDANDO_APROVACAO.
+        EM_DIAGNOSTICO vem da abertura da OS; AGUARDANDO_APROVACAO e EM_EXECUCAO, do envio e da aprovação do orçamento.
+      operationId: alterarStatus
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Status"
+        required: true
+      responses:
+        '200':
+          description: Status alterado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/OrdemServicoResponse"
+        '400':
+          description: Status de destino ausente
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: OS não encontrada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '409':
+          description: Transição inválida ou status automático
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '422':
+          description: Status desconhecido ou body ilegível
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/ordens-servico/tempo-medio-execucao":
+    get:
+      tags:
+      - Ordem de Serviço
+      summary: Consultar tempo médio de execução
+      description: Média de EM_EXECUCAO a FINALIZADA das OS que passaram por FINALIZADA
+        (inclusive as entregues), em minutos truncados. Sem OS finalizada, a média
+        vem nula.
+      operationId: consultarTempoMedioExecucao
+      responses:
+        '200':
+          description: Tempo médio calculado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/TempoMedioExecucaoResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Usuário sem perfil autorizado para esta operação
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/minhas-ordens":
+    get:
+      tags:
+      - Acompanhamento da OS
+      summary: Listar minhas OS
+      description: OS do cliente logado, com status, itens e histórico.
+      operationId: listar_5
+      responses:
+        '200':
+          description: OS do cliente
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/OrdemServicoResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Perfil diferente de CLIENTE
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/minhas-ordens/{id}":
+    get:
+      tags:
+      - Acompanhamento da OS
+      summary: Consultar minha OS
+      description: Status, itens e histórico. A OS de outro cliente responde 404.
+      operationId: consultar_1
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: OS encontrada
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/OrdemServicoResponse"
+        '401':
+          description: Token ausente ou inválido
+        '403':
+          description: Perfil diferente de CLIENTE
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '404':
+          description: OS não encontrada ou de outro cliente
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+      security:
+      - bearerAuth: []
+  "/auth/validacao":
+    get:
+      tags:
+      - Autenticação
+      summary: Validar token
+      operationId: validarToken
+      parameters:
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Token válido (sempre true; token inválido responde 401)
+          content:
+            "*/*":
+              schema:
+                type: boolean
+        '400':
+          description: Header Authorization ausente
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '401':
+          description: Token inválido ou expirado
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+        '500':
+          description: Erro interno inesperado
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorTemplate"
+components:
+  schemas:
+    VeiculoRequest:
+      type: object
+      properties:
+        placa:
+          type: string
+          minLength: 1
+        marca:
+          type: string
+          minLength: 1
+        modelo:
+          type: string
+          minLength: 1
+        ano:
+          type: integer
+          format: int32
+        clienteId:
+          type: integer
+          format: int64
+      required:
+      - ano
+      - clienteId
+      - marca
+      - modelo
+      - placa
+    VeiculoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        placa:
+          type: string
+        marca:
+          type: string
+        modelo:
+          type: string
+        ano:
+          type: integer
+          format: int32
+        clienteId:
+          type: integer
+          format: int64
+        criadoEm:
+          type: string
+          format: date-time
+        atualizadoEm:
+          type: string
+          format: date-time
+    ErrorTemplate:
+      type: object
+      properties:
+        errorCode:
+          type: integer
+          format: int32
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+    ServicoRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+        descricao:
+          type: string
+        preco:
+          type: number
+    ServicoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        descricao:
+          type: string
+        preco:
+          type: number
+        criadoEm:
+          type: string
+          format: date-time
+        atualizadoEm:
+          type: string
+          format: date-time
+    PecaInsumoRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+        descricao:
+          type: string
+        quantidade:
+          type: integer
+          format: int32
+        reservado:
+          type: integer
+          format: int32
+        preco:
+          type: number
+    PecaInsumoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        descricao:
+          type: string
+        quantidade:
+          type: integer
+          format: int32
+        reservado:
+          type: integer
+          format: int32
+        preco:
+          type: number
+        criadoEm:
+          type: string
+          format: date-time
+        atualizadoEm:
+          type: string
+          format: date-time
+    OrdemServicoRequest:
+      type: object
+      properties:
+        documentoCliente:
+          type: string
+          minLength: 1
+        idVeiculo:
+          type: integer
+          format: int64
+        servicos:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Servico"
+        pecas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Peca"
+      required:
+      - documentoCliente
+      - idVeiculo
+      - pecas
+      - servicos
+    Peca:
+      type: object
+      properties:
+        idPeca:
+          type: integer
+          format: int64
+        quantidade:
+          type: integer
+          format: int32
+      required:
+      - idPeca
+      - quantidade
+    Servico:
+      type: object
+      properties:
+        idServico:
+          type: integer
+          format: int64
+        quantidade:
+          type: integer
+          format: int32
+      required:
+      - idServico
+      - quantidade
+    ItemPeca:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        idPeca:
+          type: integer
+          format: int64
+        descricao:
+          type: string
+        precoUnitario:
+          type: number
+        quantidade:
+          type: integer
+          format: int32
+        subtotal:
+          type: number
+    ItemServico:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        idServico:
+          type: integer
+          format: int64
+        descricao:
+          type: string
+        precoUnitario:
+          type: number
+        quantidade:
+          type: integer
+          format: int32
+        subtotal:
+          type: number
+    OrdemServicoResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        idCliente:
+          type: integer
+          format: int64
+        idVeiculo:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+          - RECEBIDA
+          - EM_DIAGNOSTICO
+          - AGUARDANDO_APROVACAO
+          - EM_EXECUCAO
+          - FINALIZADA
+          - ENTREGUE
+          - CANCELADA
+        itensServico:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ItemServico"
+        itensPeca:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ItemPeca"
+        historico:
+          type: array
+          items:
+            "$ref": "#/components/schemas/RegistroHistorico"
+    RegistroHistorico:
+      type: object
+      properties:
+        statusAntigo:
+          type: string
+          enum:
+          - RECEBIDA
+          - EM_DIAGNOSTICO
+          - AGUARDANDO_APROVACAO
+          - EM_EXECUCAO
+          - FINALIZADA
+          - ENTREGUE
+          - CANCELADA
+        statusAtualizado:
+          type: string
+          enum:
+          - RECEBIDA
+          - EM_DIAGNOSTICO
+          - AGUARDANDO_APROVACAO
+          - EM_EXECUCAO
+          - FINALIZADA
+          - ENTREGUE
+          - CANCELADA
+        dataHora:
+          type: string
+          format: date-time
+    ClienteRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+          minLength: 1
+        documento:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+          minLength: 1
+        telefone:
+          type: string
+          minLength: 1
+        endereco:
+          "$ref": "#/components/schemas/Endereco"
+      required:
+      - documento
+      - email
+      - nome
+      - telefone
+    Endereco:
+      type: object
+      properties:
+        logradouro:
+          type: string
+        numero:
+          type: string
+        bairro:
+          type: string
+        cidade:
+          type: string
+        estado:
+          type: string
+        cep:
+          type: string
+        complemento:
+          type: string
+    ClienteResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: string
+        documento:
+          type: string
+        tipoDocumento:
+          type: string
+          enum:
+          - CPF
+          - CNPJ
+        email:
+          type: string
+        telefone:
+          type: string
+        endereco:
+          "$ref": "#/components/schemas/Endereco"
+        criadoEm:
+          type: string
+          format: date-time
+        atualizadoEm:
+          type: string
+          format: date-time
+    CadastroRequest:
+      type: object
+      properties:
+        nome:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          minLength: 1
+        nomeUsuario:
+          type: string
+          minLength: 1
+        senha:
+          type: string
+          minLength: 1
+        trocaSenhaObrigatoria:
+          type: boolean
+        perfil:
+          type: string
+          enum:
+          - ADMIN
+          - FUNCIONARIO
+          - CLIENTE
+        clienteId:
+          type: integer
+          format: int64
+      required:
+      - email
+      - nome
+      - nomeUsuario
+      - perfil
+      - senha
+    SigninRequest:
+      type: object
+      properties:
+        identificador:
+          type: string
+          minLength: 1
+        senha:
+          type: string
+          minLength: 1
+      required:
+      - identificador
+      - senha
+    AuthToken:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        trocaSenhaObrigatoria:
+          type: boolean
+      required:
+      - token
+    Status:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - RECEBIDA
+          - EM_DIAGNOSTICO
+          - AGUARDANDO_APROVACAO
+          - EM_EXECUCAO
+          - FINALIZADA
+          - ENTREGUE
+          - CANCELADA
+      required:
+      - status
+    PaginaVeiculoResponse:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            "$ref": "#/components/schemas/VeiculoResponse"
+        pagina:
+          type: integer
+          format: int32
+        tamanho:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
+    PaginaServicoResponse:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ServicoResponse"
+        pagina:
+          type: integer
+          format: int32
+        tamanho:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
+    PaginaPecaInsumoResponse:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            "$ref": "#/components/schemas/PecaInsumoResponse"
+        pagina:
+          type: integer
+          format: int32
+        tamanho:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
+    PaginaOrdemServicoResponse:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            "$ref": "#/components/schemas/OrdemServicoResponse"
+        pagina:
+          type: integer
+          format: int32
+        tamanho:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
+    TempoMedioExecucaoResponse:
+      type: object
+      properties:
+        mediaMinutos:
+          type: integer
+          format: int64
+        quantidadeOrdens:
+          type: integer
+          format: int32
+    PaginaClienteResponse:
+      type: object
+      properties:
+        itens:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ClienteResponse"
+        pagina:
+          type: integer
+          format: int32
+        tamanho:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: Token obtido em POST /auth/login
+      scheme: bearer
+      bearerFormat: JWT

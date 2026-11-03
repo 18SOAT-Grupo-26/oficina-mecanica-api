@@ -1,13 +1,13 @@
 package br.com.fiap.oficinamecanicaapi.infrastructure.config.security;
 
-import br.com.fiap.oficinamecanicaapi.core.domain.auth.model.SigninRequest;
-import br.com.fiap.oficinamecanicaapi.core.port.in.user.UserUseCasePortIn;
-import br.com.fiap.oficinamecanicaapi.core.usecase.auth.JwtTokenProviderUseCase;
+import br.com.fiap.oficinamecanicaapi.core.port.in.auth.JwtTokenUseCasePortIn;
+import br.com.fiap.oficinamecanicaapi.core.port.in.usuario.UsuarioUseCasePortIn;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -20,19 +20,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     private static final String BEARER_PREFIX = "Bearer ";
 
-    private final JwtTokenProviderUseCase jwtTokenProvider;
-    private final UserUseCasePortIn userPortOut;
+    private final JwtTokenUseCasePortIn jwtTokenProvider;
+    private final UsuarioUseCasePortIn usuarioUseCase;
 
-    public JwtAuthenticationFilter(JwtTokenProviderUseCase jwtTokenProvider,
-                                   UserUseCasePortIn userPortOut) {
+    public JwtAuthenticationFilter(JwtTokenUseCasePortIn jwtTokenProvider,
+                                   UsuarioUseCasePortIn usuarioUseCase) {
         this.jwtTokenProvider = jwtTokenProvider;
-        this.userPortOut = userPortOut;
+        this.usuarioUseCase = usuarioUseCase;
     }
 
     @Override
@@ -47,29 +48,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = header.substring(BEARER_PREFIX.length());
         try {
-            if (Boolean.TRUE.equals(jwtTokenProvider.validateToken(token))) {
-                String username = jwtTokenProvider.extractUsername(token);
-                var userDetails = userPortOut.retrieveUser(
-                        SigninRequest.builder().identifier(username).build());
+            if (Boolean.TRUE.equals(jwtTokenProvider.validarToken(token))) {
+                String nomeUsuario = jwtTokenProvider.extrairNomeUsuario(token);
+                var detalhesUsuario = usuarioUseCase.buscarPorIdentificador(nomeUsuario);
 
                 List<GrantedAuthority> authorities = new ArrayList<>();
 
-                // Role como authority (ex: ROLE_ADMINISTRATOR)
-                authorities.add(userDetails.user().role());
+                // Perfil como authority (ex: ROLE_ADMIN)
+                authorities.add(detalhesUsuario.usuario().perfil());
 
-                // Permissions como authorities individuais (ex: TUTOR_CREATE)
-                if (userDetails.permissions() != null) {
-                    userDetails.permissions().forEach(p ->
+                // Permissões como authorities individuais (ex: TUTOR_CREATE)
+                if (detalhesUsuario.permissoes() != null) {
+                    detalhesUsuario.permissoes().forEach(p ->
                             authorities.add(new SimpleGrantedAuthority(p)));
                 }
 
                 var auth = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, authorities);
+                        detalhesUsuario, null, authorities);
                 auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
-        } catch (Throwable ex) {
-            log.debug("JWT authentication skipped: {}", ex.getMessage());
+        } catch (Exception ex) {
+            log.warn("action=jwt_recusado method={} uri={} motivo={}",
+                    request.getMethod(), request.getRequestURI(), ex.getMessage());
             SecurityContextHolder.clearContext();
         }
 

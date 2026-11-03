@@ -1,0 +1,8 @@
+# Chaves JWT que ficaram no histórico (A, B e C no relatório de vulnerabilidades). Não dá para tirá-las do histórico
+# sem reescrevê-lo; por isso são tratadas como comprometidas e a API se recusa a subir com elas (SegredoJwtConfig).
+# Nunca reutilize esses valores. Um segredo novo, em qualquer outro commit, faz o CI falhar.
+26fe9db04387fdddbab6d8edef049acf1ca747a6:src/main/resources/application.yaml:oficina-jwt-secret:38
+2aeb1990c44dfd1e4b7e1cadbabc465b409a0b33:docker-compose.yml:oficina-jwt-secret:31
+d4f2d601fe468ca153c5650525afe987c1e0536c:.env.example:oficina-jwt-secret:3
+39cff49afe0f9e893ddd313900e1630048fb2382:.env.example2:oficina-jwt-secret:23
+c716b4cf2e3405f9de09035101f651c8dae7d762:src/test/java/br/com/fiap/oficinamecanicaapi/integracao/IntegracaoBase.java:oficina-jwt-secret:34

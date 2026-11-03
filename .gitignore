@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### macOS ###
+.DS_Store
+
+### Secrets ###
+.env
+
+### Local notes ###
+temp/

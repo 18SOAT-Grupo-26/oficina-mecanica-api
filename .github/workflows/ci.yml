@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build, testes e SonarCloud
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # o Sonar usa o histórico para blame e código novo
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build, testes e cobertura (JaCoCo)
+        run: mvn -B verify
+
+      # Evidência de cobertura: o relatório HTML fica para download na página da execução, mesmo se o build falhar
+      - name: Relatório de cobertura (JaCoCo)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-cobertura-jacoco
+          path: target/site/jacoco/
+          if-no-files-found: ignore
+
+      # PRs de fork e repositórios sem o secret pulam a análise, mas mantêm build e testes
+      - name: Análise SonarCloud
+        if: env.SONAR_TOKEN != ''
+        run: >
+          mvn -B sonar:sonar
+          -Dsonar.host.url=https://sonarcloud.io
+          -Dsonar.organization=18soat-grupo-26
+
+  segredos:
+    name: Segredos no histórico (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # varre todo o histórico, não só o último commit
+
+      # Imagem oficial em versão fixa (a gitleaks-action exige licença em repositório de organização).
+      # Regras em .gitleaks.toml; as chaves antigas, já recusadas pela API, ficam em .gitleaksignore.
+      - name: Gitleaks
+        run: >
+          docker run --rm -v "$PWD":/repo zricethezav/gitleaks:v8.21.2
+          detect --source /repo --config /repo/.gitleaks.toml --redact --verbose

@@ -1,4 +1,49 @@
 package br.com.fiap.oficinamecanicaapi.controller.admin;
 
-public class VeiculoController {
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
+import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoResponse;
+import br.com.fiap.oficinamecanicaapi.core.port.in.veiculo.VeiculoUseCasePortIn;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/veiculos")
+@PreAuthorize("hasAnyRole('ADMIN', 'FUNCIONARIO')")
+public class VeiculoController implements VeiculoAPI {
+
+    private final VeiculoUseCasePortIn useCase;
+
+    public VeiculoController(VeiculoUseCasePortIn useCase) {
+        this.useCase = useCase;
+    }
+
+    @Override
+    public ResponseEntity<VeiculoResponse> criar(VeiculoRequest request) {
+        return Criado.em(useCase.criar(request), VeiculoResponse::id);
+    }
+
+    @Override
+    public ResponseEntity<Pagina<VeiculoResponse>> listar(Long clienteId, String placa, Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(clienteId, placa, pagina, tamanho));
+    }
+
+    @Override
+    public ResponseEntity<VeiculoResponse> buscarPorId(Long id) {
+        return ResponseEntity.ok(useCase.buscarPorId(id));
+    }
+
+    @Override
+    public ResponseEntity<VeiculoResponse> atualizar(Long id, VeiculoRequest request) {
+        return ResponseEntity.ok(useCase.atualizar(id, request));
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')") // funcionário não exclui cadastros
+    public ResponseEntity<Void> desativar(Long id) {
+        useCase.desativar(id);
+        return ResponseEntity.noContent().build();
+    }
 }

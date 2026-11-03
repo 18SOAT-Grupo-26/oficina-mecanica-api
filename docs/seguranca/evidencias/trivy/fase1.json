@@ -1,0 +1,132 @@
+{
+  "SchemaVersion": 2,
+  "CreatedAt": "2026-10-31T21:48:48.207040281Z",
+  "ArtifactName": "oficina-mecanica-api:scan",
+  "ArtifactType": "container_image",
+  "Metadata": {
+    "OS": {
+      "Family": "alpine",
+      "Name": "3.24.3"
+    },
+    "ImageID": "sha256:06922f7f854cf63f8ab1b31a229ebdb0eabb220ae17b08c5ecfd2bd779679ed3",
+    "DiffIDs": [
+      "sha256:75c137aedfb2760f88629236cb7b797630aed0c3d91d626d1d1bb694878fc2ba",
+      "sha256:6f4a81ed97354bf33b6a6a174d652f062aa2cb8ae777652295c45779f68531c6",
+      "sha256:3af4613ca8d5579397dd9cdee63a402d47cb676db2a725cbcc4536f1a208cc59",
+      "sha256:aefb15fbf351f036cb15f0f1ee672851ad1e92cca03bd6a3560838a93926addf"
+    ],
+    "RepoTags": [
+      "oficina-mecanica-api:scan"
+    ],
+    "ImageConfig": {
+      "architecture": "amd64",
+      "created": "2026-10-31T21:46:06.574005492Z",
+      "history": [
+        {
+          "created": "2026-10-21T22:37:22Z",
+          "created_by": "ADD alpine-minirootfs-3.24.3-x86_64.tar.gz / # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-10-21T22:37:22Z",
+          "created_by": "CMD [\"/bin/sh\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-10-27T16:40:40Z",
+          "created_by": "ARG version=25.0.5.0.10",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-10-27T16:40:40Z",
+          "created_by": "RUN |1 version=25.0.5.0.10 /bin/sh -c wget -O /THIRD-PARTY-LICENSES-20200824.tar.gz https://corretto.aws/downloads/resources/licenses/alpine/THIRD-PARTY-LICENSES-20200824.tar.gz \u0026\u0026     echo \"82f3e50e71b2aee21321b2b33de372feed5befad6ef2196ddec92311bc09becb  /THIRD-PARTY-LICENSES-20200824.tar.gz\" | sha256sum -c - \u0026\u0026     tar x -ovzf THIRD-PARTY-LICENSES-20200824.tar.gz \u0026\u0026     rm -rf THIRD-PARTY-LICENSES-20200824.tar.gz \u0026\u0026     wget -O /etc/apk/keys/amazoncorretto.rsa.pub https://apk.corretto.aws/amazoncorretto.rsa.pub \u0026\u0026     SHA_SUM=\"6cfdf08be09f32ca298e2d5bd4a359ee2b275765c09b56d514624bf831eafb91\" \u0026\u0026     echo \"${SHA_SUM}  /etc/apk/keys/amazoncorretto.rsa.pub\" | sha256sum -c - \u0026\u0026     echo \"https://apk.corretto.aws\" \u003e\u003e /etc/apk/repositories \u0026\u0026     apk add --no-cache amazon-corretto-25=$version-r0 \u0026\u0026     rm -rf /usr/lib/jvm/java-25-amazon-corretto/lib/src.zip # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-10-27T16:40:40Z",
+          "created_by": "ENV LANG=C.UTF-8",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-10-27T16:40:40Z",
+          "created_by": "ENV JAVA_HOME=/usr/lib/jvm/default-jvm",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-10-27T16:40:40Z",
+          "created_by": "ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/jvm/default-jvm/bin",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-10-27T22:42:37Z",
+          "created_by": "WORKDIR /app",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-10-31T21:46:06Z",
+          "created_by": "COPY /app/target/oficinamecanicaapi-*.jar app.jar # buildkit",
+          "comment": "buildkit.dockerfile.v0"
+        },
+        {
+          "created": "2026-10-31T21:46:06Z",
+          "created_by": "USER nobody",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-10-31T21:46:06Z",
+          "created_by": "EXPOSE [8081/tcp]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        },
+        {
+          "created": "2026-10-31T21:46:06Z",
+          "created_by": "ENTRYPOINT [\"java\" \"-jar\" \"app.jar\"]",
+          "comment": "buildkit.dockerfile.v0",
+          "empty_layer": true
+        }
+      ],
+      "os": "linux",
+      "rootfs": {
+        "type": "layers",
+        "diff_ids": [
+          "sha256:75c137aedfb2760f88629236cb7b797630aed0c3d91d626d1d1bb694878fc2ba",
+          "sha256:6f4a81ed97354bf33b6a6a174d652f062aa2cb8ae777652295c45779f68531c6",
+          "sha256:3af4613ca8d5579397dd9cdee63a402d47cb676db2a725cbcc4536f1a208cc59",
+          "sha256:aefb15fbf351f036cb15f0f1ee672851ad1e92cca03bd6a3560838a93926addf"
+        ]
+      },
+      "config": {
+        "Entrypoint": [
+          "java",
+          "-jar",
+          "app.jar"
+        ],
+        "Env": [
+          "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/lib/jvm/default-jvm/bin",
+          "LANG=C.UTF-8",
+          "JAVA_HOME=/usr/lib/jvm/default-jvm"
+        ],
+        "User": "nobody",
+        "WorkingDir": "/app"
+      }
+    }
+  },
+  "Results": [
+    {
+      "Target": "oficina-mecanica-api:scan (alpine 3.24.3)",
+      "Class": "os-pkgs",
+      "Type": "alpine"
+    },
+    {
+      "Target": "Java",
+      "Class": "lang-pkgs",
+      "Type": "jar"
+    }
+  ]
+}

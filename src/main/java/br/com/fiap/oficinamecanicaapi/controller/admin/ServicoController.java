@@ -1,4 +1,49 @@
 package br.com.fiap.oficinamecanicaapi.controller.admin;
 
-public class ServicoController {
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
+import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoResponse;
+import br.com.fiap.oficinamecanicaapi.core.port.in.servico.ServicoUseCasePortIn;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/servicos")
+@PreAuthorize("hasAnyRole('ADMIN', 'FUNCIONARIO')")
+public class ServicoController implements ServicoAPI {
+
+    private final ServicoUseCasePortIn useCase;
+
+    public ServicoController(ServicoUseCasePortIn useCase) {
+        this.useCase = useCase;
+    }
+
+    @Override
+    public ResponseEntity<ServicoResponse> criar(ServicoRequest request) {
+        return Criado.em(useCase.criar(request), ServicoResponse::id);
+    }
+
+    @Override
+    public ResponseEntity<Pagina<ServicoResponse>> listar(Integer pagina, Integer tamanho) {
+        return ResponseEntity.ok(useCase.listar(pagina, tamanho));
+    }
+
+    @Override
+    public ResponseEntity<ServicoResponse> buscarPorId(Long id) {
+        return ResponseEntity.ok(useCase.buscarPorId(id));
+    }
+
+    @Override
+    public ResponseEntity<ServicoResponse> atualizar(Long id, ServicoRequest request) {
+        return ResponseEntity.ok(useCase.atualizar(id, request));
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> desativar(Long id) {
+        useCase.desativar(id);
+        return ResponseEntity.noContent().build();
+    }
 }

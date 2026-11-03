@@ -1,0 +1,8 @@
+[extend]
+useDefault = true
+
+[[rules]]
+id = "oficina-jwt-secret"
+description = "Segredo JWT (API_SECRET / api.secret) em Base64 versionado"
+regex = '''(?i)(?:API_SECRET|api[._-]?secret|secret)["']?\s*[:=]\s*["']?([A-Za-z0-9+/]{40,}={0,2})'''
+secretGroup = 1

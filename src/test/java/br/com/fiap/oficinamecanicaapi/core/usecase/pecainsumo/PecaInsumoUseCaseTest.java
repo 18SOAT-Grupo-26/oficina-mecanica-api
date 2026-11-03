@@ -1,0 +1,315 @@
+package br.com.fiap.oficinamecanicaapi.core.usecase.pecainsumo;
+
+import br.com.fiap.oficinamecanicaapi.core.domain.pecainsumo.model.PecaInsumo;
+import br.com.fiap.oficinamecanicaapi.core.domain.shared.model.Pagina;
+import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoRequest;
+import br.com.fiap.oficinamecanicaapi.core.port.in.pecainsumo.PecaInsumoResponse;
+import br.com.fiap.oficinamecanicaapi.core.port.out.pecainsumo.PecaInsumoPortOut;
+import br.com.fiap.oficinamecanicaapi.core.usecase.pecainsumo.mapper.PecaInsumoMapper;
+import br.com.fiap.oficinamecanicaapi.shared.exception.ConflitoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.DadoInvalidoException;
+import br.com.fiap.oficinamecanicaapi.shared.exception.RecursoNaoEncontradoException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mapstruct.factory.Mappers;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class PecaInsumoUseCaseTest {
+
+    private static final Long ID = 1L;
+    private static final PecaInsumoRequest REQUEST = new PecaInsumoRequest(
+            "  Óleo do Motor  ", "Sintético 5W30", 10, 2, new BigDecimal("59.9"));
+
+    @Mock
+    private PecaInsumoPortOut pecaInsumoPortOut;
+
+    private PecaInsumoUseCase useCase;
+
+    @Spy
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
+
+    @BeforeEach
+    void setUp() {
+        useCase = new PecaInsumoUseCase(pecaInsumoPortOut, Mappers.getMapper(PecaInsumoMapper.class), meterRegistry);
+    }
+
+    @Test
+    @DisplayName("criar persiste insumo com nome normalizado e preço com 2 casas")
+    void criarPersisteInsumo() {
+        when(pecaInsumoPortOut.existeAtivoPorNomeNormalizado("oleo do motor")).thenReturn(false);
+        when(pecaInsumoPortOut.salvar(any())).thenAnswer(inv -> {
+            PecaInsumo e = inv.getArgument(0);
+            // como o banco: devolve a peça gravada, agora com id
+            return PecaInsumo.reconstituir(ID, e.getNome(), e.getNomeNormalizado(), e.getDescricao(),
+                    e.getQuantidade(), e.getReservado(), e.getPreco(), e.isAtivo(), e.getCriadoEm(),
+                    e.getAtualizadoEm());
+        });
+
+        PecaInsumoResponse response = useCase.criar(REQUEST);
+
+        assertThat(response.id()).isEqualTo(ID);
+        assertThat(response.nome()).isEqualTo("Óleo do Motor");
+        assertThat(response.preco()).isEqualByComparingTo("59.90");
+        assertThat(response.preco().scale()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("criar rejeita nome já cadastrado (409)")
+    void criarRejeitaNomeDuplicado() {
+        when(pecaInsumoPortOut.existeAtivoPorNomeNormalizado("oleo do motor")).thenReturn(true);
+
+        ConflitoException ex = assertThrows(ConflitoException.class, () -> useCase.criar(REQUEST));
+
+        verify(pecaInsumoPortOut, never()).salvar(any());
+    }
+
+    @Test
+    @DisplayName("criar rejeita reservado maior que quantidade (422)")
+    void criarRejeitaReservadoMaiorQueQuantidade() {
+        PecaInsumoRequest invalido = new PecaInsumoRequest("Filtro", null, 2, 5, BigDecimal.TEN);
+
+        DadoInvalidoException ex = assertThrows(DadoInvalidoException.class, () -> useCase.criar(invalido));
+
+    }
+
+    @Test
+    @DisplayName("listar aplica paginação padrão e limita o tamanho máximo")
+    void listarAplicaLimites() {
+        PecaInsumo entity = entidade(ID, "Filtro");
+        when(pecaInsumoPortOut.listarAtivos(1, 20)).thenReturn(new Pagina<>(List.of(entity), 1, 20, 1));
+        when(pecaInsumoPortOut.listarAtivos(1, 100)).thenReturn(new Pagina<>(List.of(), 1, 100, 0));
+
+        Pagina<PecaInsumoResponse> padrao = useCase.listar(null, null);
+        useCase.listar(-1, 500);
+
+        assertThat(padrao.itens()).hasSize(1);
+        assertThat(padrao.itens().get(0).nome()).isEqualTo("Filtro");
+        verify(pecaInsumoPortOut).listarAtivos(1, 100);
+    }
+
+    @Test
+    @DisplayName("buscarPorId retorna insumo")
+    void buscarPorIdRetornaInsumo() {
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(entidade(ID, "Filtro")));
+
+        assertThat(useCase.buscarPorId(ID).nome()).isEqualTo("Filtro");
+    }
+
+    @Test
+    @DisplayName("buscarPorId lança 404 quando não existe")
+    void buscarPorIdNaoEncontrado() {
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
+
+        RecursoNaoEncontradoException ex = assertThrows(RecursoNaoEncontradoException.class, () -> useCase.buscarPorId(ID));
+
+    }
+
+    @Test
+    @DisplayName("atualizar mantém o próprio nome sem checar duplicidade")
+    void atualizarMesmoNome() {
+        PecaInsumo entity = entidade(ID, "Filtro de Ar");
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(entity));
+        when(pecaInsumoPortOut.salvar(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        PecaInsumoResponse response = useCase.atualizar(ID,
+                new PecaInsumoRequest("filtro de ar", "novo", 7, 0, new BigDecimal("30.00")));
+
+        assertThat(response.quantidade()).isEqualTo(7);
+        assertThat(response.descricao()).isEqualTo("novo");
+        verify(pecaInsumoPortOut, never()).existeAtivoPorNomeNormalizado(any());
+    }
+
+    @Test
+    @DisplayName("atualizar com nome de outro insumo lança 409")
+    void atualizarNomeDuplicado() {
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(entidade(ID, "Filtro")));
+        when(pecaInsumoPortOut.existeAtivoPorNomeNormalizado("correia")).thenReturn(true);
+
+        ConflitoException ex = assertThrows(ConflitoException.class, () ->
+                useCase.atualizar(ID, new PecaInsumoRequest("Correia", null, 1, 0, BigDecimal.ONE)));
+
+    }
+
+    @Test
+    @DisplayName("desativar grava o insumo inativo, sem apagar")
+    void desativarGravaInsumoInativo() {
+        PecaInsumo entity = entidade(ID, "Filtro");
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(entity));
+
+        useCase.desativar(ID);
+
+        verify(pecaInsumoPortOut).salvar(entity);
+        assertThat(entity.isAtivo()).isFalse();
+    }
+
+    @Test
+    @DisplayName("desativar recusa com 409 o insumo com unidades reservadas, sem gravar")
+    void desativarRecusaInsumoReservado() {
+        PecaInsumo reservado = peca("Filtro de óleo", "filtro de oleo", 10, 3, "30.00");
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(reservado));
+
+        assertThrows(ConflitoException.class, () -> useCase.desativar(ID));
+        verify(pecaInsumoPortOut, never()).salvar(any());
+        assertThat(operacoes("desativado")).isZero();
+    }
+
+    @Test
+    @DisplayName("desativar lança 404 para insumo inexistente ou já desativado")
+    void desativarNaoEncontrado() {
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNaoEncontradoException.class, () -> useCase.desativar(ID));
+        verify(pecaInsumoPortOut, never()).salvar(any());
+    }
+
+    private static PecaInsumo entidade(Long id, String nome) {
+        PecaInsumo e = PecaInsumo.reconstituir(
+                id,
+                nome,
+                nome.toLowerCase(),
+                null,
+                5,
+                0,
+                new BigDecimal("10.00"),
+                true,
+                null,
+                null);
+        return e;
+    }
+
+    static Stream<Arguments> requestsInvalidos() {
+        String descricaoLonga = "x".repeat(501);
+        return Stream.of(
+                Arguments.of(request(null, 10, 0, "10"), "O campo nome é obrigatório"),
+                Arguments.of(request("Ab", 10, 0, "10"), "O nome deve ter no mínimo 3 caracteres"),
+                Arguments.of(request("Filtro", null, 0, "10"), "O campo quantidade é obrigatório"),
+                Arguments.of(request("Filtro", -1, 0, "10"), "Quantidade inválida"),
+                Arguments.of(request("Filtro", 10, 0, null), "O campo preco é obrigatório"),
+                Arguments.of(request("Filtro", 10, 0, "0"), "Preço inválido"),
+                Arguments.of(request("Filtro", 10, 0, "10.999"), "Preço inválido"),
+                Arguments.of(request("Filtro", 10, -1, "10"),
+                        "Quantidade reservada inválida. Deve ser entre 0 e a quantidade em estoque"),
+                Arguments.of(new PecaInsumoRequest("Filtro", descricaoLonga, 10, 0, new BigDecimal("10")),
+                        "A descrição deve ter no máximo 500 caracteres"));
+    }
+
+    @ParameterizedTest(name = "{1}")
+    @MethodSource("requestsInvalidos")
+    @DisplayName("criar responde 422 para dados inválidos, sem consultar a persistência")
+    void criarValidaCampos(PecaInsumoRequest request, String mensagem) {
+        assertThatThrownBy(() -> useCase.criar(request))
+                .isInstanceOf(DadoInvalidoException.class)
+                .hasMessage(mensagem);
+        verifyNoInteractions(pecaInsumoPortOut);
+    }
+
+    @Test
+    @DisplayName("criar sem reservado informado grava reservado zero e conta a operação")
+    void criarComReservadoNulo() {
+        when(pecaInsumoPortOut.existeAtivoPorNomeNormalizado("vela de ignicao")).thenReturn(false);
+        when(pecaInsumoPortOut.salvar(any())).thenAnswer(invocacao -> invocacao.getArgument(0));
+
+        PecaInsumoResponse response = useCase.criar(request("Vela de ignição", 8, null, "20"));
+
+        assertThat(response.reservado()).isZero();
+        assertThat(operacoes("criado")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("atualizar ajusta quantidade e preço e conta a operação")
+    void atualizarQuantidadeEPreco() {
+        PecaInsumo atual = peca("Filtro de óleo", "filtro de oleo", 10, 2, "30.00");
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(atual));
+        when(pecaInsumoPortOut.salvar(atual)).thenReturn(atual);
+
+        PecaInsumoResponse response = useCase.atualizar(ID, request("Filtro de óleo", 25, 2, "32.5"));
+
+        assertThat(response.quantidade()).isEqualTo(25);
+        assertThat(response.preco()).isEqualByComparingTo("32.50");
+        verify(pecaInsumoPortOut, never()).existeAtivoPorNomeNormalizado(any());
+        assertThat(operacoes("atualizado")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("atualizar trocando o nome confere a duplicidade do nome novo")
+    void atualizarTrocandoNome() {
+        PecaInsumo atual = peca("Filtro de óleo", "filtro de oleo", 10, 0, "30.00");
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(atual));
+        when(pecaInsumoPortOut.existeAtivoPorNomeNormalizado("filtro de ar")).thenReturn(false);
+        when(pecaInsumoPortOut.salvar(atual)).thenReturn(atual);
+
+        assertThat(useCase.atualizar(ID, request("Filtro de ar", 10, 0, "30")).nome()).isEqualTo("Filtro de ar");
+    }
+
+    @Test
+    @DisplayName("atualizar insumo inexistente responde 404")
+    void atualizarInexistente() {
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.empty());
+
+        var alteracao = request("Filtro", 1, 0, "1");
+
+        assertThatThrownBy(() -> useCase.atualizar(ID, alteracao))
+                .isInstanceOf(RecursoNaoEncontradoException.class);
+
+        verify(pecaInsumoPortOut, never()).salvar(any());
+    }
+
+    @Test
+    @DisplayName("desativar conta a operação")
+    void desativarContaOperacao() {
+        PecaInsumo atual = peca("Filtro de óleo", "filtro de oleo", 10, 0, "30.00");
+        when(pecaInsumoPortOut.buscarAtivoPorId(ID)).thenReturn(Optional.of(atual));
+
+        useCase.desativar(ID);
+
+        verify(pecaInsumoPortOut).salvar(atual);
+        assertThat(operacoes("desativado")).isEqualTo(1);
+    }
+
+    private static PecaInsumoRequest request(String nome, Integer quantidade, Integer reservado, String preco) {
+        return new PecaInsumoRequest(nome, null, quantidade, reservado, preco == null ? null : new BigDecimal(preco));
+    }
+
+    private static PecaInsumo peca(String nome, String nomeNormalizado, int quantidade, int reservado,
+                                         String preco) {
+        PecaInsumo peca = PecaInsumo.reconstituir(
+                ID,
+                nome,
+                nomeNormalizado,
+                null,
+                quantidade,
+                reservado,
+                new BigDecimal(preco),
+                true,
+                null,
+                null);
+        return peca;
+    }
+
+    private double operacoes(String operacao) {
+        var contador = meterRegistry.find("oficina.cadastro.operacoes")
+                .tags("entidade", "peca_insumo", "operacao", operacao).counter();
+        return contador == null ? 0 : contador.count();
+    }
+}
